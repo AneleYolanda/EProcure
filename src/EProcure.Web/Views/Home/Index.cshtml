@@ -1,8 +1,65 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model EProcure.Web.ViewModels.Home.HomeViewModel
+@using EProcure.Web.Infrastructure
+@{
+    ViewData["Title"] = "Public-sector tenders";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="py-4 py-md-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <p class="eyebrow">South African procurement marketplace</p>
+            <h1 class="display-4 fw-bold">Find and apply for public-sector tenders across South Africa</h1>
+            <p class="lead text-muted mt-3">One clear place for suppliers to discover opportunities from municipalities, development zones and public organisations.</p>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Register as a supplier</a>
+                <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Login">Log in</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="surface-card">
+                <p class="eyebrow">Search opportunities</p>
+                <label class="visually-hidden" for="tenderSearch">Search tenders</label>
+                <input id="tenderSearch" class="form-control form-control-lg" type="search" placeholder="Title, reference or category" />
+                <p class="small text-muted mt-2 mb-0">Marketplace search and filters are coming next.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section aria-labelledby="latest-heading" class="mt-4">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <p class="eyebrow">Open now</p>
+            <h2 id="latest-heading">Latest tenders</h2>
+        </div>
+    </div>
+
+    @if (Model.LatestTenders.Count == 0)
+    {
+        <div class="surface-card"><p class="mb-0 text-muted">No open tenders match your search.</p></div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var tender in Model.LatestTenders)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <article class="surface-card h-100">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            @if (!string.IsNullOrWhiteSpace(tender.OrganisationLogoPath))
+                            {
+                                <img src="@tender.OrganisationLogoPath" alt="" width="40" height="40" />
+                            }
+                            <span class="small fw-semibold">@tender.OrganisationName</span>
+                        </div>
+                        <span class="badge text-bg-light">@tender.Category</span>
+                        <h3 class="h5 mt-3">@tender.Title</h3>
+                        <p class="small text-muted mb-2">@tender.ReferenceNumber</p>
+                        <p class="small mb-1"><strong>Closes:</strong> @SaTime.ToSast(tender.ClosingDateUtc).ToString("dd MMM yyyy HH:mm") SAST</p>
+                        <p class="small mb-0"><strong>Fee:</strong> @tender.TenderFee.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-ZA"))</p>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+</section>

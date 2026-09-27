@@ -1,0 +1,34 @@
+@model EProcure.Web.ViewModels.Admin.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-heading">
+    <p class="eyebrow">Admin workspace</p>
+    <h1>Welcome, @User.Identity?.Name — @Model.OrganisationName</h1>
+    <p class="text-muted">A current view of procurement activity for your organisation.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="metric-card">
+            <span class="metric-label">Open tenders</span>
+            <strong class="metric-value">@Model.OpenTenderCount</strong>
+            <span class="text-muted">Published and still open</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card">
+            <span class="metric-label">Submissions received</span>
+            <strong class="metric-value">@Model.SubmissionCount</strong>
+            <span class="text-muted">Paid applications visible to staff</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="metric-card">
+            <span class="metric-label">Closing this week</span>
+            <strong class="metric-value">@Model.ClosingWithinSevenDaysCount</strong>
+            <span class="text-muted">The next seven days</span>
+        </div>
+    </div>
+</div>

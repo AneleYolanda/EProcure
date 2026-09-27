@@ -1,10 +1,12 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Infrastructure;
+using EProcure.Web.Services;
 using EProcure.Web.Tenancy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,9 @@ builder.Services
 // Add our custom claims principal factory so the signed-in user's ClaimsPrincipal
 // includes the tenant claim "eprocure:org_id" when the user has an OrganisationId.
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, OrganisationClaimsPrincipalFactory>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<ICurrentOrganisation, CurrentOrganisation>();
+builder.Services.AddScoped<DemoDataSeeder>();
 
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the
@@ -53,9 +58,30 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SupplierOnly", policy => policy.RequireRole(AppRoles.Supplier));
+    options.AddPolicy("OrgStaff", policy => policy.RequireRole(AppRoles.OrgAdmin, AppRoles.Evaluator));
+    options.AddPolicy("OrgAdminOnly", policy => policy.RequireRole(AppRoles.OrgAdmin));
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+builder.Services.AddControllersWithViews(options =>
+{
+    // Protect every POST by default; public GET pages can opt out through [AllowAnonymous].
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<DemoDataSeeder>();
+    await seeder.SeedAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -71,6 +97,10 @@ app.UseRouting();
 
 app.UseAuthentication(); // who are you? (reads the Identity cookie)
 app.UseAuthorization();  // are you allowed? (roles)
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

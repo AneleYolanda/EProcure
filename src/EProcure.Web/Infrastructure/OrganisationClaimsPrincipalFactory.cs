@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using EProcure.Web.Domain;
+using EProcure.Web.Tenancy;
 
 namespace EProcure.Web.Infrastructure;
 
@@ -12,8 +13,6 @@ namespace EProcure.Web.Infrastructure;
 /// </summary>
 public class OrganisationClaimsPrincipalFactory : UserClaimsPrincipalFactory<ApplicationUser, ApplicationRole>
 {
-    public const string OrganisationClaimType = "eprocure:org_id";
-
     public OrganisationClaimsPrincipalFactory(
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
@@ -30,8 +29,12 @@ public class OrganisationClaimsPrincipalFactory : UserClaimsPrincipalFactory<App
         // If the user has an organisation id, add it as a claim. We store the integer as a string.
         if (user.OrganisationId != null)
         {
-            identity.RemoveClaim(identity.FindFirst(OrganisationClaimType));
-            identity.AddClaim(new Claim(OrganisationClaimType, user.OrganisationId.Value.ToString()));
+            var existingClaim = identity.FindFirst(TenantClaimTypes.OrganisationId);
+            if (existingClaim is not null)
+            {
+                identity.RemoveClaim(existingClaim);
+            }
+            identity.AddClaim(new Claim(TenantClaimTypes.OrganisationId, user.OrganisationId.Value.ToString()));
         }
 
         return identity;

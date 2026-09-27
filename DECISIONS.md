@@ -232,3 +232,62 @@ with specific prequalification criteria (such as a stipulated minimum B-BBEE sta
 this is stated in the tender documents. Blocking ineligible bidders up front, with a clear reason,
 treats all bidders equally and transparently (Constitution s217). The rule is applied identically to
 everyone, with no override.
+
+---
+
+## D15. Custom AccountController instead of scaffolded Identity UI
+
+**What:** Account pages use a small MVC `AccountController` and project Razor views rather than the
+scaffolded Identity UI.
+
+**Why:** The application needs a supplier-only registration flow, POPIA consent capture, generic login
+errors, role-based redirects and the Modernist visual language. Keeping these actions in the application
+makes every behaviour visible and explainable to the technical reviewer.
+
+**Alternatives considered:** Scaffolded Identity UI would provide standard pages quickly.
+
+**Why not:** It adds a separate UI area and makes the required supplier-only workflow and branding less
+direct to review.
+
+---
+
+## D16. Areas separate supplier and organisation staff workflows
+
+**What:** Supplier and organisation staff dashboards live in `Areas/Supplier` and `Areas/Admin`, with
+explicit policies on their controllers.
+
+**Why:** The two roles have different data boundaries, navigation and visual priorities. Area routing makes
+the boundary visible in URLs and in the code review.
+
+**Alternatives considered:** One controller with role checks in every action.
+
+**Why not:** Repeated checks are easier to omit and would mix tenant administration with supplier activity.
+
+---
+
+## D17. Validate organisation colours before injecting CSS
+
+**What:** The admin layout accepts database branding colours only when they match `^#[0-9A-Fa-f]{6}$`,
+otherwise using the RBIDZ navy/gold fallback.
+
+**Why:** Branding is tenant-configurable, but values must not become arbitrary CSS. Validation keeps the
+layout safe and guarantees a usable fallback.
+
+**Alternatives considered:** Trusting the database value or adding a colour-picker package.
+
+**Why not:** Trusting values is unsafe, and a package is unnecessary for the fixed six-digit hex format.
+
+---
+
+## D18. Development demo seeding uses user-secrets
+
+**What:** Demo users and sample tenders are created idempotently only in Development. The password is read
+from `DemoSeed:Password` in user-secrets.
+
+**Why:** Reviewers need repeatable data, but credentials must never be in code, appsettings or git. The
+seeder skips account creation and logs a setup warning when the secret is missing.
+
+**Alternatives considered:** HasData passwords, appsettings credentials, or manual SQL scripts.
+
+**Why not:** Migrations and configuration files are committed and would expose a credential; manual scripts
+are not repeatable on application start.

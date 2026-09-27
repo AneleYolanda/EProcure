@@ -1,0 +1,41 @@
+@model EProcure.Web.ViewModels.Supplier.SupplierDashboardViewModel
+@{
+    ViewData["Title"] = "Supplier dashboard";
+}
+
+<div class="page-heading">
+    <p class="eyebrow">Supplier workspace</p>
+    <h1>Welcome, @Model.FullName</h1>
+    <p class="text-muted">Find opportunities and keep your supplier information ready.</p>
+</div>
+
+@if (!Model.HasCompanyProfile)
+{
+    <div class="notice-card">
+        <div>
+            <p class="eyebrow">One important next step</p>
+            <h2>Create your company profile</h2>
+            <p>Complete your legal entity details before applying for a tender.</p>
+        </div>
+        <a class="btn btn-primary" href="#company-profile">Create profile</a>
+    </div>
+}
+
+<div class="row g-3 mt-1">
+    <div class="col-md-6">
+        <div class="surface-card h-100">
+            <p class="eyebrow">Marketplace</p>
+            <h2>Browse tenders</h2>
+            <p class="text-muted">Search open opportunities from public-sector organisations.</p>
+            <a class="btn btn-outline-primary" asp-area="" asp-controller="Home" asp-action="Index">Browse tenders</a>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="surface-card h-100">
+            <p class="eyebrow">Your activity</p>
+            <h2>My applications</h2>
+            <p class="text-muted">Application tracking will appear here as you apply.</p>
+            <a class="btn btn-outline-primary" href="#coming-soon">Coming soon</a>
+        </div>
+    </div>
+</div>

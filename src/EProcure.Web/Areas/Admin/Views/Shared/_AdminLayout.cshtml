@@ -1,0 +1,71 @@
+@using System.Text.RegularExpressions
+@using EProcure.Web.Domain
+@using EProcure.Web.Services
+@using Microsoft.AspNetCore.Identity
+@inject ICurrentOrganisation CurrentOrganisation
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var organisation = await CurrentOrganisation.GetAsync();
+    var primary = organisation?.PrimaryColour;
+    var accent = organisation?.AccentColour;
+    var validColour = new Regex("^#[0-9A-Fa-f]{6}$");
+    if (!validColour.IsMatch(primary ?? string.Empty)) primary = "#0B2545";
+    if (!validColour.IsMatch(accent ?? string.Empty)) accent = "#C9A227";
+    var signedInUser = await UserManager.GetUserAsync(User);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @(organisation?.Code ?? "eProcure")</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root { --org-primary: @primary; --org-accent: @accent; }
+    </style>
+</head>
+<body class="admin-shell">
+    <div class="admin-offcanvas offcanvas offcanvas-start" tabindex="-1" id="adminMenu" aria-labelledby="adminMenuLabel">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title" id="adminMenuLabel">@(organisation?.Name ?? "eProcure")</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button>
+        </div>
+        <div class="offcanvas-body">
+            <partial name="_AdminNavigation" />
+        </div>
+    </div>
+    <div class="admin-frame">
+        <aside class="admin-sidebar d-none d-md-flex flex-column">
+            <div class="admin-brand">
+                @if (!string.IsNullOrWhiteSpace(organisation?.LogoPath))
+                {
+                    <img src="@organisation.LogoPath" alt="@(organisation.Name) logo" />
+                }
+                <span>@(organisation?.Name ?? "eProcure")</span>
+            </div>
+            <partial name="_AdminNavigation" />
+        </aside>
+        <div class="admin-content">
+            <header class="admin-header">
+                <button class="btn btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminMenu" aria-controls="adminMenu">Menu</button>
+                <div>
+                    <span class="eyebrow">@(organisation?.Code ?? "Organisation") workspace</span>
+                    <strong>@(organisation?.Name ?? "Organisation")</strong>
+                </div>
+                <div class="admin-user">
+                    <span>@(signedInUser?.FullName ?? User.Identity?.Name)</span>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">Log out</button>
+                    </form>
+                </div>
+            </header>
+            <main class="container-fluid admin-main" role="main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,5 +1,7 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
+using EProcure.Web.Services;
+using EProcure.Web.Tenancy;
 using EProcure.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,24 +19,27 @@ public class AccountController : Controller
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly EProcureDbContext _db;
+    private readonly IAuditService _audit;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         RoleManager<ApplicationRole> roleManager,
-        EProcureDbContext db)
+        EProcureDbContext db,
+        IAuditService audit)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _db = db;
+        _audit = audit;
     }
 
     [HttpGet]
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
-        ViewData["ReturnUrl"] = returnUrl;
+        ViewData["ReturnUrl"] = IsLocalReturnUrl(returnUrl) ? returnUrl : null;
         return View(new LoginViewModel());
     }
 
@@ -43,6 +48,7 @@ public class AccountController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
+        returnUrl = IsLocalReturnUrl(returnUrl) ? returnUrl : null;
         ViewData["ReturnUrl"] = returnUrl;
         if (!ModelState.IsValid) return View(model);
 
@@ -56,18 +62,19 @@ public class AccountController : Controller
             {
                 if (await _userManager.IsInRoleAsync(user, AppRoles.Supplier))
                 {
-                    return LocalRedirect(returnUrl ?? "/Supplier/Dashboard");
+                    return Redirect(returnUrl ?? "/Supplier/Dashboard");
                 }
                 if (await _userManager.IsInRoleAsync(user, AppRoles.OrgAdmin) || await _userManager.IsInRoleAsync(user, AppRoles.Evaluator))
                 {
-                    return LocalRedirect(returnUrl ?? "/Admin/Dashboard");
+                    return Redirect(returnUrl ?? "/Admin/Dashboard");
                 }
             }
 
             // Fallback to home.
-            return LocalRedirect(returnUrl ?? "/");
+            return Redirect(returnUrl ?? "/");
         }
 
+        await _audit.LogAsync("Account.LoginFailed", "Account", model.Email, null);
         ModelState.AddModelError(string.Empty, "Invalid email or password.");
         return View(model);
     }
@@ -118,6 +125,8 @@ public class AccountController : Controller
         _db.SupplierProfiles.Add(profile);
         await _db.SaveChangesAsync();
 
+        await _audit.LogAsync("Account.Registered", "ApplicationUser", user.Id, null);
+
         // Sign in the new user.
         await _signInManager.SignInAsync(user, isPersistent: false);
 
@@ -136,5 +145,10 @@ public class AccountController : Controller
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    private bool IsLocalReturnUrl(string? returnUrl)
+    {
+        return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl);
     }
 }

@@ -74,5 +74,43 @@ feat: solution skeleton, multi-tenant data model and initial migration
 - Unique indexes: one submission per company per tender, tender ref per org
 - Restrict deletes for records retention; enums stored as text
 - Seed: RBIDZ and Mzansi Valley LM organisations, Supplier/OrgAdmin/Evaluator roles
-- Docs: DECISIONS.md, BUILD_LOG.md, docs/DATA_MODEL.md, InitialCreate.sql
+ Docs: DECISIONS.md, BUILD_LOG.md, docs/DATA_MODEL.md, InitialCreate.sql
+```
+
+---
+
+## Step 2: Authentication, roles, tenant claim, demo data and branded layouts (2026-09-28)
+
+### Added
+- Custom supplier-only account flow with Login, Register, Logout and AccessDenied views.
+- Generic login errors, lockout-on-failure, local return-url validation and POPIA consent timestamp.
+- `OrganisationClaimsPrincipalFactory` adding `eprocure:org_id` from `TenantClaimTypes.OrganisationId`.
+- Global antiforgery protection, SupplierOnly/OrgStaff/OrgAdminOnly policies and authenticated fallback policy.
+- Audit service events for `Account.Registered` and `Account.LoginFailed`.
+- Admin and Supplier areas with protected dashboards and area-first routing.
+- Request-scoped organisation branding service and validated CSS colour variables.
+- Mobile-first public/supplier layout, supplier bottom navigation and responsive branded admin layout.
+- Public home page with six latest open tenders across organisations, SAST dates and Rand formatting.
+- Plain-language POPIA privacy notice.
+- Development-only, idempotent demo seeder for five users, two supplier companies and seven tenders.
+- `Infrastructure/SaTime.cs` with Windows time-zone lookup and fixed UTC+2 fallback.
+
+### Manual tests
+1. Build the solution: expect 0 errors and 0 warnings.
+2. Configure `DemoSeed:Password` with user-secrets and start in Development: expect five users and seven tenders in LocalDB.
+3. Open `/`: expect HTTP 200 and tender cards; draft and expired demo tenders are excluded.
+4. Open `/Account/Login`: expect HTTP 200; anonymous `/Admin/Dashboard` redirects to login.
+5. Log in over HTTPS as `admin@rbidz.demo`: expect redirect to `/Admin/Dashboard`, navy/gold RBIDZ branding and RBIDZ-only metrics.
+6. Log in over HTTPS as `admin@mvlm.demo`: expect teal/coral MVLM branding and no RBIDZ branding.
+7. Open `/Home/Privacy`: expect HTTP 200 and the POPIA notice.
+8. Resize the public and admin layouts to 375px: expect responsive navigation and no intentional horizontal overflow.
+9. Run the app a second time: expect no duplicate demo users or tenders.
+
+### Environment note
+- The existing `C:\Users\techn\EProcure.mdf` and log were attached to LocalDB because the database name existed while the migration tool initially reported a missing database. The migration was already current afterward.
+
+### Commit message
+```
+feat: authentication, roles, tenant claim, branded layouts, and demo data
+```
 ```
