@@ -762,3 +762,14 @@ a.ep-action:hover { background: #F7FAFC; }
 
 .ep-confirm__row--block { display: block; }
 
+
+/* Audit trail at narrower widths: Details is the column that matters, so it keeps its room. */
+@media (min-width: 992px) and (max-width: 1279.98px) {
+  .ep-register__head--audit, .ep-register__row--audit { grid-template-columns: 128px 170px 130px minmax(0, 1fr); }
+  .ep-register__head--audit > :nth-child(5), .ep-register__row--audit > :nth-child(5) { display: none; } /* IP address */
+}
+@media (max-width: 991.98px) {
+  /* Card layout: when + who on the first line, action on the second, details in full on the third. */
+  .ep-register__row--audit > :nth-child(4) { display: block; grid-column: 1 / -1; grid-row: 3; white-space: normal; }
+  .ep-register__row--audit > :nth-child(5) { display: none; }
+}

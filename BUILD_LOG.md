@@ -506,6 +506,14 @@ test: automated tests for tenant isolation, eligibility, applications, uploads a
 - Signed-out visitors who open an unknown URL are sent to Sign in (every page requires sign-in by default, so the
   site's structure is not revealed). The "Page not found" page is for signed-in users; it is checked in the
   Visual Studio run because the sandbox cannot reach LocalDB.
+- Visual Studio run, signed in: `/Supplier/Applications/Details/99999`, another supplier's application and an
+  unknown URL all return 404 with "Page not found"; a form posted without its security token returns 400 with
+  "This form has expired". Every supplier page (feed, tender, applications, upload step, profile, company) and
+  every admin page (portal login, dashboard, register, create, tender, application, audit) loads with no CSP
+  violations; RBIDZ brand colours (inline style) and the phone menu drawer (site.js) still work.
+- Found while checking: the audit trail squeezed its Details column to "E..." between 992 and 1279 px, and hid it
+  completely on phones (the generic card layout hides the 4th column). Fixed with audit-specific rules: the IP column
+  is dropped at mid widths, and on phones each entry is a card with the details in full.
 
 ### Manual tests
 1. Signed in, open a URL that does not exist, e.g. `/Supplier/Applications/Details/99999`: "Page not found" in the app's style.
