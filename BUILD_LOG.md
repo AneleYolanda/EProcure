@@ -625,3 +625,12 @@ fix: accent shade readable on light grey surfaces too; contrast verified on ever
 ```
 feat: sealed bids, BEC evaluation with PPPFA points, and BAC award
 ```
+
+### Layout check after restart (Step 12)
+- Scoresheet at 1280 px: full-width table, formula and committee cards below. At 1100 px the split-points columns are
+  dropped (rank, bidder, price, total, evaluation remain).
+- Phone (375 px): the scoresheet overlapped price and total; now each bid is a card (rank; bidder and total; price and
+  evaluation badge). The evaluation list overlapped its badge and count; now reference and stage, title, progress.
+  Long console titles now end with "…" instead of pushing the role badge off screen.
+- The award notice was at the very bottom of the supplier tender page on phones; it now sits under the title.
+- The formula list is stacked (label above text) instead of squeezed into a right-aligned column.

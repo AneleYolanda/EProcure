@@ -395,7 +395,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
 .ep-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ep-adminbar { flex: none; height: 64px; background: #fff; border-bottom: 1px solid #E1E9F0; display: flex; align-items: center; gap: 18px; padding: 0 26px; position: sticky; top: 0; z-index: 20; }
 .ep-adminbar__menu { display: none; background: none; border: 1px solid #D6E2EC; border-radius: 8px; padding: 7px; color: var(--ep-ink); }
-.ep-adminbar__title { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
+.ep-adminbar__title { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .ep-adminbar__spacer { flex: 1; }
 .ep-adminbar__search { display: flex; align-items: center; gap: 9px; background: #F4F7FA; border: 1px solid #E1E9F0; border-radius: 8px; height: 38px; padding: 0 12px; width: 280px; }
 .ep-adminbar__search input { flex: 1; min-width: 0; border: 0; background: none; font-size: 12.5px; height: 36px; color: var(--ep-ink); }
@@ -797,10 +797,30 @@ a.ep-action:hover { background: #F7FAFC; }
   .ep-register__head--score > :nth-child(6), .ep-register__row--score > :nth-child(6) { display: none; }
 }
 @media (max-width: 991.98px) {
-  .ep-register__row--score > :nth-child(4), .ep-register__row--score > :nth-child(7) { display: block; }
+  /* Phone card: rank on the left; bidder and total on the first line; price and evaluation on the second. */
+  .ep-register__row--score { grid-template-columns: 26px minmax(0, 1fr) auto; grid-template-areas: "rank bidder total" "rank price badge"; gap: 6px 12px; align-items: start; }
+  .ep-register__row--score > :nth-child(1) { grid-area: rank; }
+  .ep-register__row--score > :nth-child(2) { grid-area: bidder; }
+  .ep-register__row--score > :nth-child(4) { grid-area: price; display: block; color: var(--ep-muted); }
+  .ep-register__row--score > :nth-child(7) { grid-area: total; display: block; text-align: right; }
+  .ep-register__row--score > :nth-child(7)::after { content: " pts"; font-weight: 400; color: var(--ep-muted); }
+  .ep-register__row--score > :nth-child(8) { grid-area: badge; justify-self: end; }
   .ep-register__row--score > :nth-child(3), .ep-register__row--score > :nth-child(5), .ep-register__row--score > :nth-child(6) { display: none; }
 }
+
+/* Formula list: label above its text, so long formulas read naturally. */
+.ep-kvs--stacked .ep-kv { flex-direction: column; gap: 3px; }
+.ep-kvs--stacked .ep-kv__v { text-align: left; font-weight: 500; }
 
 /* Supplier award notice */
 .ep-award { border-color: var(--ep-success-border); background: var(--ep-success-soft); }
 .ep-award .ep-kv { border-bottom-color: color-mix(in srgb, var(--ep-success-border) 60%, transparent); }
+@media (max-width: 991.98px) {
+  /* Evaluation list on phones: reference and stage, then the title, then progress. */
+  .ep-register__row--eval { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "ref stage" "title title" "count count"; }
+  .ep-register__row--eval > :nth-child(1) { grid-area: ref; }
+  .ep-register__row--eval > :nth-child(2) { grid-area: title; white-space: normal; }
+  .ep-register__row--eval > :nth-child(3) { grid-area: stage; }
+  .ep-register__row--eval > :nth-child(5) { grid-area: count; display: block; color: var(--ep-muted); }
+  .ep-register__row--eval > :nth-child(4), .ep-register__row--eval > :nth-child(6) { display: none; }
+}
