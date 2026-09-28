@@ -666,3 +666,9 @@ feat: sealed bids, BEC evaluation with PPPFA points, and BAC award
 ```
 feat: password reset, email notifications, staff management and bid withdrawal
 ```
+
+### Checked after restart (Steps 12 and 13 layout fixes)
+- Roles and users at 1280 px, 1100 px and phone width: names and emails visible, role picker, status and actions on
+  one row (cards on phones); invite form below the list.
+- Scoresheet formula list shows each label above its text.
+- Supplier tender page on a phone: the award notice sits directly under the title.
