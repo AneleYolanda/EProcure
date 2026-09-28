@@ -1,0 +1,3 @@
+
+# Demo PDFs must not have their line endings converted
+*.pdf binary

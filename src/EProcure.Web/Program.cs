@@ -127,7 +127,32 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// Friendly pages for empty error responses (404, 400 ...); the status code itself is kept.
+app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
+
 app.UseHttpsRedirection();
+
+// ---- Security headers on every response ----
+// Everything (scripts, styles, fonts, images) is served from this site, so the browser is told to refuse
+// anything else. 'unsafe-inline' for styles only: the layouts write the organisation's brand colours in a
+// small <style> block. No inline scripts exist. frame-ancestors 'none' stops the site being framed (clickjacking).
+// Development also allows localhost on other ports for Visual Studio's hot reload / Browser Link.
+var isDev = app.Environment.IsDevelopment();
+var connectSources = isDev ? "'self' ws://localhost:* wss://localhost:* http://localhost:* https://localhost:*" : "'self'";
+var scriptSources = isDev ? "'self' http://localhost:* https://localhost:*" : "'self'";
+var contentSecurityPolicy = $"default-src 'self'; script-src {scriptSources}; style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; " +
+    $"frame-ancestors 'none'; connect-src {connectSources}";
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["Content-Security-Policy"] = contentSecurityPolicy;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "DENY";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+    await next();
+});
 
 // ---- Culture ----
 // South African English, but with "." as the decimal separator for every visitor and every machine.

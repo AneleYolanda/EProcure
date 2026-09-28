@@ -1,0 +1,21 @@
+@* Shown for empty error responses (404, 400, ...), in the same style as Error.cshtml. *@
+@model int
+@{
+    var (title, text) = Model switch
+    {
+        404 => ("Page not found", "The page or record you asked for does not exist, or you do not have access to it."),
+        400 => ("This form has expired", "For your security, forms expire after a while or when you sign in again. Go back, refresh the page and try again."),
+        _ => ("Something went wrong", "Nothing you did caused this. Please try again in a moment.")
+    };
+    ViewData["Title"] = title;
+    ViewData["Shell"] = "auth";
+    ViewData["HideTabBar"] = true;
+}
+<div class="ep-auth">
+    <div class="ep-otp__icon ep-otp__icon--warning">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.6" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+    </div>
+    <h1 class="ep-otp__title">@title</h1>
+    <p class="ep-otp__text">@text</p>
+    <a class="ep-btn ep-btn--primary ep-mt-26" asp-area="" asp-controller="Home" asp-action="Index">Go to my start page</a>
+</div>

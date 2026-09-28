@@ -554,3 +554,22 @@ manual testing. Known gap: SQL Server-only behaviour (e.g. the exact wording of 
 was missing would have seen every platform-level audit entry (supplier sign-ins, draft applications). No real account
 was affected (every staff account has an organisation), but the tenant wall must fail closed. The other filters compare
 non-nullable columns and were already safe; the "fails closed" test now covers all of them.
+
+---
+
+## D41. Security headers and friendly error pages
+
+**What:** Every response carries a Content-Security-Policy that allows scripts, styles, fonts and images only from
+eProcure itself (`script-src 'self'`, no inline scripts; inline styles allowed only for the organisation's brand
+colours), `frame-ancestors 'none'` and `X-Frame-Options: DENY` (no framing), `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin` and a Permissions-Policy that switches off camera, microphone,
+location and browser payments. In Development, localhost on other ports is also allowed for Visual Studio's hot
+reload. Empty error responses show a page in the app's style ("Page not found", "This form has expired") with the
+original status code.
+
+**Why:** The app handles bid documents and personal data (POPIA). If someone ever managed to inject HTML, the CSP stops
+it from loading or running scripts from elsewhere. Blocking framing stops clickjacking on buttons like "Submit" or
+"Save status". The not-found page never says whether a record exists in another organisation.
+
+**Alternative:** A nonce-based CSP would also remove `'unsafe-inline'` for styles; not worth it for two small style
+blocks whose values are validated as `#RRGGBB` (BrandColours.Safe).

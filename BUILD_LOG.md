@@ -484,3 +484,35 @@ feat: application tracking for suppliers and application review for organisation
 ```
 test: automated tests for tenant isolation, eligibility, applications, uploads and payments
 ```
+
+---
+
+## Step 9: Demo script and final polish
+
+### What was built
+- **README** rewritten: first-time setup (user-secrets for the demo password, F5 creates the database), demo accounts,
+  a 10-minute demo script across two browser windows (organisation publishes, supplier registers and applies,
+  organisation reviews, supplier sees the outcome, safety rules), how each requirement is met, mocks and known limits.
+- `docs/demo-files/`: `sample-document.pdf` (valid) and `not-really-a-pdf.pdf` (text renamed to .pdf, rejected).
+  `.gitattributes` marks PDFs as binary so Git never changes their line endings.
+- Security headers on every response (DECISIONS D41).
+- Friendly status pages: `/Home/Status/{code}` for empty 404/400/other responses, keeping the status code.
+
+### Verified
+- 72 of 72 automated tests pass after the changes; build has 0 warnings.
+- Separate Production build on https://localhost:5250: every response has the CSP, X-Frame-Options, nosniff,
+  Referrer-Policy and Permissions-Policy headers. Splash (with its photo), sign-in, register and privacy pages
+  render normally with the IBM Plex font and all scripts; the browser reports no CSP violations.
+- Signed-out visitors who open an unknown URL are sent to Sign in (every page requires sign-in by default, so the
+  site's structure is not revealed). The "Page not found" page is for signed-in users; it is checked in the
+  Visual Studio run because the sandbox cannot reach LocalDB.
+
+### Manual tests
+1. Signed in, open a URL that does not exist, e.g. `/Supplier/Applications/Details/99999`: "Page not found" in the app's style.
+2. Browser developer tools > Network > any page > Response headers: Content-Security-Policy, X-Frame-Options, etc.
+3. Click through the demo script in the README; the browser console shows no "Content Security Policy" errors.
+
+### Commit message
+```
+docs: demo script and setup guide; feat: security headers and friendly error pages
+```
