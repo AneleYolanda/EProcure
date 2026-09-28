@@ -1,0 +1,37 @@
+@* Received applications (design screen "sApps" of the admin console). Paid / submitted only, this organisation only. *@
+@model ReceivedApplicationsViewModel
+@{
+    ViewData["Title"] = Model.TenderReference is null ? "Applications" : $"Applications · {Model.TenderReference}";
+    ViewData["Nav"] = "applications";
+}
+<div class="ep-stack">
+    <div class="ep-panel__sub">
+        Applications appear here only once they are submitted (tender fee paid, or no fee). Unpaid drafts are never visible to staff.
+        @if (Model.TenderId is int tid)
+        {
+            <text> Showing <strong>@Model.TenderReference</strong> only. <a asp-action="Index">Show all tenders</a> · <a asp-controller="Tenders" asp-action="Details" asp-route-id="@tid">Back to the tender</a></text>
+        }
+    </div>
+
+    <section class="ep-register" aria-label="Applications">
+        <div class="ep-register__head ep-register__head--apps" aria-hidden="true">
+            <div>Reference</div><div>Company</div><div>Status</div><div>Tender</div><div>Submitted</div><div>Checks</div><div></div>
+        </div>
+        @foreach (var row in Model.Rows)
+        {
+            <a class="ep-register__row ep-register__row--apps" asp-action="Details" asp-route-id="@row.Id">
+                <span class="ep-register__ref">@row.ReferenceNumber</span>
+                <span class="ep-register__title">@row.CompanyName <span class="ep-register__cell--muted">· @EligibilityRules.Describe(row.DeclaredLevel)</span></span>
+                <span class="@SubmissionStatuses.BadgeCss(row.Status)">@SubmissionStatuses.Label(row.Status)</span>
+                <span class="ep-register__cell ep-register__cell--muted">@row.TenderReference</span>
+                <span class="ep-register__cell ep-register__cell--muted">@(row.SubmittedAtUtc is DateTime at ? DisplayFormat.Date(at) : "—")</span>
+                <span class="@(row.FlagCount == 0 ? "ep-badge ep-badge--success" : "ep-badge ep-badge--warning")">@(row.FlagCount == 0 ? $"{row.DocumentCount} docs" : $"{row.FlagCount} flag{(row.FlagCount == 1 ? "" : "s")}")</span>
+                <svg class="ep-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </a>
+        }
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="ep-register__empty">No submitted applications yet.</div>
+        }
+    </section>
+</div>

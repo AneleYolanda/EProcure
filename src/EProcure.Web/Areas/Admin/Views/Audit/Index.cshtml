@@ -1,0 +1,37 @@
+@* The organisation's audit trail (design screen "sAudit"): who did what, when, from where. Read-only. *@
+@model AuditPageViewModel
+@{
+    ViewData["Title"] = "Audit trail";
+    ViewData["Nav"] = "audit";
+}
+<div class="ep-stack">
+    <div class="ep-panel__sub">Append-only record of actions in your organisation's workspace, newest first. Entries cannot be edited or deleted from the app.</div>
+    <section class="ep-register" aria-label="Audit entries">
+        <div class="ep-register__head ep-register__head--audit" aria-hidden="true">
+            <div>When (SAST)</div><div>Action</div><div>By</div><div>Details</div><div>IP address</div>
+        </div>
+        @foreach (var row in Model.Rows)
+        {
+            <div class="ep-register__row ep-register__row--audit">
+                <span class="ep-register__cell ep-register__cell--muted">@DisplayFormat.DateTime(row.OccurredAtUtc)</span>
+                <span class="ep-register__ref">@row.Action</span>
+                <span class="ep-register__cell">@row.Who</span>
+                <span class="ep-register__cell ep-register__cell--muted ep-register__title" title="@row.Details">@row.Details</span>
+                <span class="ep-register__cell ep-register__cell--muted">@row.IpAddress</span>
+            </div>
+        }
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="ep-register__empty">No recorded actions yet.</div>
+        }
+    </section>
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="ep-pills" aria-label="Pages">
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <a class="ep-pill@(p == Model.Page ? " ep-pill--active" : "")" asp-action="Index" asp-route-page="@p" aria-current="@(p == Model.Page ? "page" : null)">@p</a>
+            }
+        </nav>
+    }
+</div>

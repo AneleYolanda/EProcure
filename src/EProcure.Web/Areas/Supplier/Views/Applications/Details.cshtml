@@ -1,0 +1,91 @@
+@* Design screen "sAppDetail": status, what to do next, answers, documents and "Your audit trail". *@
+@model MyApplicationDetailsViewModel
+@{
+    ViewData["Title"] = Model.TenderReference;
+    ViewData["Tab"] = "applications";
+    ViewData["BackUrl"] = Url.Action("Index");
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<div class="ep-screen__body">
+    <div>
+        <span class="@SubmissionStatuses.BadgeCss(Model.Status)">@SubmissionStatuses.Label(Model.Status)</span>
+        <h1 class="ep-detail-title ep-mt-14">@Model.TenderTitle</h1>
+        <div class="ep-detail-org">@Model.OrganisationName · bidding as @Model.CompanyName@(Model.ReferenceNumber is null ? "" : " · " + Model.ReferenceNumber)</div>
+    </div>
+
+    @switch (Model.Status)
+    {
+        case SubmissionStatus.Draft:
+            <div class="ep-blocked">
+                <div class="ep-blocked__title">Not submitted yet</div>
+                <div class="ep-blocked__text">The organisation cannot see this application. Finish the steps before the closing date.</div>
+                <a class="ep-btn ep-btn--primary ep-mt-14" asp-action="Step" asp-route-id="@Model.Id" asp-route-n="1">Continue application</a>
+            </div>
+            break;
+        case SubmissionStatus.AwaitingPayment:
+            <div class="ep-blocked">
+                <div class="ep-blocked__title">Not submitted: fee unpaid</div>
+                <div class="ep-blocked__text">The organisation cannot see this application. It is only submitted once the tender fee clears.</div>
+                <a class="ep-btn ep-btn--primary ep-mt-14" asp-action="Pay" asp-route-id="@Model.Id">Pay tender fee</a>
+            </div>
+            break;
+        case SubmissionStatus.Unsuccessful:
+            <div class="ep-card">
+                <h2 class="ep-card__title">Not awarded</h2>
+                <p class="ep-card__text">The organisation has recorded that this bid was not successful. The reason, if given, is in the timeline below.</p>
+            </div>
+            break;
+        default:
+            <div class="ep-card">
+                <h2 class="ep-card__title">With @Model.OrganisationName</h2>
+                <p class="ep-card__text">Your application and documents are with the organisation and locked. Status changes made by the evaluation team appear in the timeline below.</p>
+            </div>
+            break;
+    }
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Your audit trail</h2>
+        <div class="ep-q__note">Every change to your application, with who and when.</div>
+        <div class="ep-timeline">
+            @foreach (var item in Model.Timeline)
+            {
+                <div class="ep-timeline__item">
+                    <div class="ep-timeline__rail"><span class="ep-timeline__dot"></span><span class="ep-timeline__line"></span></div>
+                    <div class="ep-timeline__body">
+                        <div class="ep-timeline__what">@item.What</div>
+                        <div class="ep-timeline__who">@item.Who · @DisplayFormat.DateTime(item.WhenUtc)</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Your answers</h2>
+        <div class="ep-kvs">
+            @foreach (var (question, answer) in Model.Answers)
+            {
+                <div class="ep-kv"><span class="ep-kv__k">@question</span><span class="ep-kv__v">@answer</span></div>
+            }
+        </div>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Documents (@Model.Documents.Count)</h2>
+        <ul class="ep-doclist">
+            @foreach (var d in Model.Documents)
+            {
+                <li>
+                    <span class="ep-grow"><span class="ep-docrow__name">@d.Requirement</span><span class="ep-docrow__meta">@d.FileName · @Math.Max(1, d.SizeBytes / 1024) KB · @DisplayFormat.DateTime(d.UploadedAtUtc)</span></span>
+                    <a class="ep-textbtn" asp-action="Document" asp-route-id="@d.Id">Download</a>
+                </li>
+            }
+        </ul>
+        @if (Model.PaymentReference is not null && Model.PaymentStatus == PaymentStatus.Paid)
+        {
+            <div class="ep-q__note ep-mt-14">Tender fee @DisplayFormat.Fee(Model.AmountPaid) paid · payment reference @Model.PaymentReference</div>
+        }
+    </section>
+</div>

@@ -406,3 +406,43 @@ feat: supplier company profile with eligibility checks
 ```
 feat: tender page for suppliers and application wizard with PDF uploads and payment
 ```
+
+---
+
+## Step 7: Application tracking (suppliers) and application review (organisations)
+
+### What was built
+- **Supplier** `Applications/Index` ("My applications", design "sApps"): every application with its status, tender and
+  organisation. `Applications/Details`: status banner, the full timeline, their SBD answers, documents (downloadable
+  by the owner only) and payment reference. Tab bar and web nav link "Applications"; the confirmation page links here.
+- **Admin** `Submissions/Index` (register of submitted applications, filter by tender) and `Submissions/Details`
+  (company, SBD answers with red flags, documents with SHA-256 fingerprint and download, history, status form).
+  Tender details has a "View applications" button. Sidebar: Applications and Audit trail are now live.
+- **Admin** `Audit/Index`: the organisation's audit trail, newest first, 50 per page, read-only.
+- `SubmissionStatuses`: labels, badge colours, allowed next statuses and red flags in one place.
+
+### Verified in the browser (Visual Studio run)
+- RBIDZ admin: 2 applications listed (EP-2026-000001, EP-2026-000002). Details shows 5 documents, answers and history.
+  Download returns the PDF (`application/pdf`, attachment). Status set to Under evaluation with a note: flash shown,
+  history updated, form now offers only "Not awarded". Forged request for "Awarded" → "That status change is not allowed."
+- Audit trail: Submission.Viewed, Document.Downloaded and Submission.StatusChanged recorded with name and IP.
+- MVLM admin: Applications empty; RBIDZ application and document ids → 404; MVLM audit has no RBIDZ entries.
+- RBIDZ evaluator: no status form; a forced status POST → Access denied; can read and download.
+- Test supplier: list shows "Under evaluation"; the timeline shows the note from "Richards Bay Industrial Development
+  Zone"; own PDF downloads; another supplier's application and document → 404.
+- Step 6 fixes re-checked: SBD question text sits inside its card; after the "give details" error the three answers
+  are still selected.
+- Small fix after testing: long audit details show in full on hover.
+
+### Manual tests
+1. As a supplier, open Applications: every application with its status. Open one and download a document.
+2. As the organisation's SCM Officer, open Applications, open a bid, download a PDF, set "Under evaluation" with a note.
+3. As the supplier again: the note appears on the timeline, from the organisation (not a person).
+4. Open Audit trail: the view, download and status change are listed.
+5. As the other organisation's admin, paste the first organisation's application URL: not found.
+6. As the evaluator: no status form.
+
+### Commit message
+```
+feat: application tracking for suppliers and application review for organisations
+```

@@ -117,7 +117,11 @@
             {
                 <section class="ep-side-card">
                     <h3 class="ep-side-card__title">Applications</h3>
-                    <div class="ep-side-card__text">@(Model.Applications == 0 ? "No paid applications yet." : $"{Model.Applications} paid application{(Model.Applications == 1 ? "" : "s")}.") Unpaid applications are not visible to staff. Reviewing applications arrives in Step 7.</div>
+                    <div class="ep-side-card__text">@(Model.Applications == 0 ? "No submitted applications yet." : $"{Model.Applications} submitted application{(Model.Applications == 1 ? "" : "s")}.") Unpaid applications are not visible to staff.</div>
+                    @if (Model.Applications > 0)
+                    {
+                        <a class="ep-abtn ep-abtn--primary ep-abtn--block" asp-controller="Submissions" asp-action="Index" asp-route-tenderId="@Model.Id">View applications</a>
+                    }
                 </section>
             }
 

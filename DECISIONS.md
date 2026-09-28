@@ -494,3 +494,37 @@ shown with a warning; it does not stop the application. Only the B-BBEE pre-qual
 **Why:** "Digitise, do not automate decisions." Whether a declared interest or a listing disqualifies a bid is for the
 evaluation committee. The B-BBEE minimum is different: it is a published pre-qualification criterion applied identically
 to every bidder, so the system enforces it.
+
+---
+
+## D36. Staff see a bid only after it is submitted; documents go through a checked download
+
+**What:** An organisation's staff see an application once it is Submitted (tender fee verified, or no fee). Drafts and
+unpaid applications stay invisible, enforced by the same query filter as tenant isolation. Uploaded PDFs are never
+linked directly: `/Admin/Submissions/Document/{id}` loads the document through the tenant-filtered query and then
+streams it, and every view of a bid and every download is written to the audit trail. BEC members (Evaluators) can read
+and download; only the SCM Officer (OrgAdmin) records status changes.
+
+**Why:** "The documents are sent to the company concerned" means that organisation's staff and nobody else can open
+them. Verified: MVLM's admin gets 404 for RBIDZ's application and document ids, and another supplier gets 404 for
+someone else's application. The audit record answers "who opened this bid, and when" (PFMA/MFMA record keeping).
+
+---
+
+## D37. Status changes are limited, noted, and never an award
+
+**What:** Staff can move an application only along allowed paths: Submitted to Under evaluation or Not awarded, and
+Under evaluation to Not awarded. Each change needs a note, which the supplier sees on their timeline. "Awarded" is not
+offered here and a forged request for it is refused; awards come later with an `AwardRecord` and the BAC decision.
+
+**Why:** Digitise, do not automate decisions. The system records what the committee decided; it does not offer
+shortcuts that skip the adjudication step.
+
+---
+
+## D38. Suppliers see the organisation, not staff names
+
+**What:** On the supplier's timeline, changes made by staff show the organisation's name (for example "Richards Bay
+Industrial Development Zone"); the supplier's own actions show "You". Staff names stay in the organisation's audit trail.
+
+**Why:** POPIA minimum disclosure, and it protects evaluators from being contacted or lobbied by bidders.

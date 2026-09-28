@@ -1,0 +1,34 @@
+@* Design screen "sApps": every application of the supplier's company, newest first. *@
+@model IReadOnlyList<MyApplicationRow>
+@{
+    ViewData["Title"] = "My applications";
+    ViewData["Tab"] = "applications";
+    ViewData["ScreenClass"] = "ep-screen--page";
+}
+<header class="ep-page-head">
+    <h1 class="ep-page-head__title">My applications</h1>
+    <div class="ep-page-head__sub">Every application your company has started or submitted</div>
+</header>
+
+<section class="ep-tender-list" aria-label="Applications">
+    @foreach (var row in Model)
+    {
+        var inProgress = row.Status is SubmissionStatus.Draft or SubmissionStatus.AwaitingPayment;
+        <a class="ep-tender-card" asp-action="Details" asp-route-id="@row.Id">
+            <div class="ep-tender-card__top">
+                <span class="ep-tender-card__ref">@row.TenderReference</span>
+                <span class="@SubmissionStatuses.BadgeCss(row.Status)">@SubmissionStatuses.Label(row.Status)</span>
+            </div>
+            <h2 class="ep-tender-card__title">@row.TenderTitle</h2>
+            <div class="ep-tender-card__org">@row.OrganisationName</div>
+            <div class="ep-tender-card__foot">
+                <span class="ep-tender-card__org">@row.CompanyName</span>
+                <span class="ep-tender-card__days">@(inProgress ? "Continue application" : $"Submitted {DisplayFormat.Date(row.SubmittedAtUtc ?? row.CreatedAtUtc)}")</span>
+            </div>
+        </a>
+    }
+    @if (Model.Count == 0)
+    {
+        <div class="ep-empty">You have not applied for any tenders yet. <a asp-controller="Dashboard" asp-action="Index">Browse open tenders</a>.</div>
+    }
+</section>

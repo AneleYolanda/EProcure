@@ -489,3 +489,6 @@ C O M M I T _ M S G . t x t  
 COMMIT_MSG.txt
 # Uploaded application documents: supplier files must never be committed
 src/EProcure.Web/App_Data/uploads/
+
+# Local Claude Code launch settings
+.claude/

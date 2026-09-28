@@ -22,10 +22,8 @@
     var soonItems = new (string Label, string Path)[]
     {
         ("Approval queue", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5"),
-        ("Applications", "M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z"),
         ("BEC scoring", "M4 20V9M10 20V4M16 20v-8M22 20H2"),
         ("BAC adjudication", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5"),
-        ("Audit trail", "M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM12 7.5V12l3 2"),
         ("Roles and users", "M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a3 3 0 100-6M21.5 20a5.5 5.5 0 00-4-5.3")
     };
 }
@@ -62,6 +60,14 @@
                 <a class="ep-nav-item@(activeNav == "tenders" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Tenders" asp-action="Index" aria-current="@(activeNav == "tenders" ? "page" : null)">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3zM14 3v4h4" /></svg>
                     <span class="ep-nav-item__label">Tender register</span>
+                </a>
+                <a class="ep-nav-item@(activeNav == "applications" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Submissions" asp-action="Index" aria-current="@(activeNav == "applications" ? "page" : null)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z" /></svg>
+                    <span class="ep-nav-item__label">Applications</span>
+                </a>
+                <a class="ep-nav-item@(activeNav == "audit" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Audit" asp-action="Index" aria-current="@(activeNav == "audit" ? "page" : null)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM12 7.5V12l3 2" /></svg>
+                    <span class="ep-nav-item__label">Audit trail</span>
                 </a>
                 @foreach (var item in soonItems)
                 {

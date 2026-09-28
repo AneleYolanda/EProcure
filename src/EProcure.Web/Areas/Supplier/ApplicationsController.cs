@@ -39,6 +39,80 @@ public class ApplicationsController : Controller
 
     private string UserId => _userManager.GetUserId(User)!;
 
+    // GET /Supplier/Applications   (journey step 6: track my applications; design "sApps")
+    public async Task<IActionResult> Index(CancellationToken ct)
+    {
+        var companyId = await _db.SupplierProfiles.Where(p => p.UserId == UserId).Select(p => p.CompanyId).SingleOrDefaultAsync(ct);
+        // Only this supplier's own company: another company's applications are never part of the query.
+        var rows = companyId is null ? new List<MyApplicationRow>() : await _db.Submissions.AsNoTracking()
+            .Where(s => s.CompanyId == companyId)
+            .OrderByDescending(s => s.CreatedAtUtc)
+            .Select(s => new MyApplicationRow(s.Id, s.Tender.ReferenceNumber, s.Tender.Title, s.Tender.Organisation.Name,
+                s.Company.Name, s.Status, s.CreatedAtUtc, s.SubmittedAtUtc))
+            .ToListAsync(ct);
+        return View("Index", rows);
+    }
+
+    // GET /Supplier/Applications/Details/12   (design "sAppDetail")
+    public async Task<IActionResult> Details(int id, CancellationToken ct)
+    {
+        var s = await _applications.LoadAsync(id, UserId, ct);
+        if (s is null) return NotFound();
+
+        var history = await _db.SubmissionStatusHistory.AsNoTracking()
+            .Where(h => h.SubmissionId == id)
+            .OrderByDescending(h => h.ChangedAtUtc).ThenByDescending(h => h.Id)
+            .Select(h => new { h.Note, h.ToStatus, h.ChangedAtUtc, h.ChangedByUserId, h.ChangedByUser.FullName, h.ChangedByUser.OrganisationId })
+            .ToListAsync(ct);
+        string YesNo(bool? v) => v is null ? "Not answered" : v.Value ? "Yes" : "No";
+        var requirementNames = s.Tender.Requirements.ToDictionary(r => r.Id, r => r.Name);
+
+        return View("Details", new MyApplicationDetailsViewModel
+        {
+            Id = s.Id,
+            ReferenceNumber = s.ReferenceNumber,
+            TenderId = s.TenderId,
+            TenderReference = s.Tender.ReferenceNumber,
+            TenderTitle = s.Tender.Title,
+            OrganisationName = s.Tender.Organisation.Name,
+            CompanyName = s.Company.Name,
+            Status = s.Status,
+            PaymentStatus = s.PaymentStatus,
+            AmountPaid = s.AmountPaid,
+            PaymentReference = s.PaymentReference,
+            Answers = new List<(string, string)>
+            {
+                ("Registered on the CSD", YesNo(s.IsCsdRegistered)),
+                ("Tax compliant", YesNo(s.IsTaxCompliant)),
+                ("B-BBEE level declared", EligibilityRules.Describe(s.DeclaredBbbeeLevel)),
+                ("SBD 4: interest declared", YesNo(s.HasDeclaredInterest) + (s.InterestDetails is null ? "" : $" ({s.InterestDetails})")),
+                ("SBD 8: on a restricted list", s.ConfirmsNotRestricted is null ? "Not answered" : s.ConfirmsNotRestricted.Value ? "No" : $"Yes ({s.RestrictionDetails})"),
+                ("SBD 9: independent bid", s.ConfirmsIndependentBid is null ? "Not answered" : s.ConfirmsIndependentBid.Value ? "Confirmed" : "Cannot confirm")
+            },
+            Documents = s.Documents.OrderBy(d => d.UploadedAtUtc).Select(d => new MyApplicationDetailsViewModel.DocumentRow(
+                d.Id, d.TenderRequirementId is int r && requirementNames.TryGetValue(r, out var n) ? n : "Supporting document",
+                d.OriginalFileName, d.SizeBytes, d.UploadedAtUtc)).ToList(),
+            // The supplier sees who acted: themselves as "You", organisation staff by organisation (not by name).
+            Timeline = history.Select(h => new MyApplicationDetailsViewModel.TimelineItem(
+                h.Note ?? SubmissionStatuses.Label(h.ToStatus),
+                h.ChangedByUserId == UserId ? "You" : h.OrganisationId is null ? h.FullName : s.Tender.Organisation.Name,
+                h.ChangedAtUtc)).ToList()
+        });
+    }
+
+    // GET /Supplier/Applications/Document/7   Download one of your OWN uploaded PDFs.
+    public async Task<IActionResult> Document(int id, [FromServices] IFileStorage files, CancellationToken ct)
+    {
+        var companyId = await _db.SupplierProfiles.Where(p => p.UserId == UserId).Select(p => p.CompanyId).SingleOrDefaultAsync(ct);
+        var document = await _db.UploadedDocuments.AsNoTracking()
+            .SingleOrDefaultAsync(d => d.Id == id && d.Submission.CompanyId == companyId, ct);
+        if (document is null) return NotFound();
+
+        var stream = await files.OpenReadAsync(document.StorageKey, ct);
+        if (stream is null) return NotFound();
+        return File(stream, "application/pdf", document.OriginalFileName);
+    }
+
     // POST /Supplier/Applications/Start/5   (5 = tender id)
     [HttpPost]
     public async Task<IActionResult> Start(int id, CancellationToken ct)

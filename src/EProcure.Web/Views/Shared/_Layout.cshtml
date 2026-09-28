@@ -40,7 +40,7 @@
                 {
                     <nav class="ep-webnav__links" aria-label="Main">
                         <a class="@NavCss("tenders")" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" aria-current="@(tab == "tenders" ? "page" : null)">Tenders</a>
-                        <span class="ep-webnav__link ep-webnav__link--soon" aria-disabled="true" title="Coming in a later step">Applications<span class="ep-soon-pill">Soon</span></span>
+                        <a class="@NavCss("applications")" asp-area="Supplier" asp-controller="Applications" asp-action="Index" aria-current="@(tab == "applications" ? "page" : null)">Applications</a>
                         <a class="@NavCss("profile")" asp-area="Supplier" asp-controller="Profile" asp-action="Index" aria-current="@(tab == "profile" ? "page" : null)">Profile</a>
                     </nav>
                 }
