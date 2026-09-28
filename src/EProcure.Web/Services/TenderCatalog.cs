@@ -1,0 +1,42 @@
+namespace EProcure.Web.Services;
+
+/// <summary>Fixed lists used by the tender form. Kept in code (not the database) for the MVP.</summary>
+public static class TenderCatalog
+{
+    public static readonly string[] Categories =
+    {
+        "Construction", "Security Services", "ICT", "Professional Services", "Goods & Supplies",
+        "Maintenance", "Cleaning & Hygiene", "Transport", "Other"
+    };
+
+    /// <summary>
+    /// The standard South African bid documents shown as tick-boxes (design step "Documents").
+    /// Anything else can be typed as an extra requirement, one per line.
+    /// </summary>
+    public static readonly string[] StandardDocuments =
+    {
+        "Signed bidding document",
+        "CSD registration summary",
+        "SARS tax compliance PIN",
+        "B-BBEE certificate or sworn affidavit",
+        "CIPC registration certificate",
+        "SBD 4 — Declaration of interest",
+        "SBD 6.1 — Preference points claim",
+        "SBD 8 — Past supply chain practices",
+        "SBD 9 — Independent bid determination",
+        "Pricing schedule",
+        "Letter of intent from a financial institution",
+        "Health and safety plan"
+    };
+
+    /// <summary>Ticked by default on a new tender.</summary>
+    public static readonly string[] DefaultDocuments =
+    {
+        "Signed bidding document", "CSD registration summary", "SARS tax compliance PIN",
+        "B-BBEE certificate or sworn affidavit", "SBD 4 — Declaration of interest",
+        "SBD 9 — Independent bid determination", "Pricing schedule"
+    };
+
+    public const int MaxRequirements = 20;
+    public const int MaxRequirementLength = 200;
+}

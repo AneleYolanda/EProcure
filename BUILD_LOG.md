@@ -228,3 +228,65 @@ feat: AddDesignFields migration, demo data for design fields, splash crash fix
 ```
 feat: restyle bidder app and admin console to the Claude Design prototypes
 ```
+
+---
+
+## Step 3: Organisation admins create, edit, publish and cancel tenders (2026-09-28)
+
+### Added
+- **Migration `AddTenderPublishingFields`** (`docs/schema/AddTenderPublishingFields.sql`): `Tenders.PointSystem`
+  (existing rows set to EightyTwenty; generated default "" hand-edited, as in AddDesignFields),
+  `CancelledAtUtc`, `CancellationReason`.
+- `Services/TenderService` (+ `ITenderService`): every tender rule in one place. Organisation and creator always come
+  from the signed-in user; reference unique per organisation (checked first, and the database's unique index caught
+  with a friendly message); closing date at least 1 hour ahead; 1 to 20 required documents; only drafts can be
+  edited; publishing re-checks everything on the server; cancelling needs a reason and deletes nothing.
+- `Services/TenderStages`, `TenderCatalog` (categories and the standard SA bid documents).
+- `Areas/Admin/TendersController` and views, in the prototype's design:
+  - **Tender register** (`/Admin/Tenders`): stage filter pills with counts, search (top bar), table, "Create tender".
+  - **Create / Edit draft**: step list + cards for details, pre-qualification (minimum B-BBEE level),
+    evaluation method (80/20 or 90/10, pre-selected from the organisation's default) and documents (tick-boxes plus
+    "other, one per line") (DECISIONS D26).
+  - **Tender page**: facts, scope, pre-qualification, documents; publish card with checks and an "I confirm" tick box;
+    cancel page with a required reason; history timeline from the audit trail.
+- Sidebar "Tender register" is now a real link; the top-bar search searches tenders; dashboard "Needs your action"
+  items link to the tender.
+- `Program.cs`: fixed request culture (DECISIONS D27). Admin layout now loads jQuery for form validation.
+- Audit: `Tender.Created`, `Tender.Updated`, `Tender.Published`, `Tender.Cancelled` with the organisation id.
+
+### Verified in the browser
+- RBIDZ register lists 5 tenders with correct stages (1 Draft, 3 Advertised, 1 Under evaluation).
+- Create with an existing reference and a past closing date: both errors shown, typed values kept ("500.00" read
+  correctly). Create correctly: draft `RBIDZ/2026/021` with 8 documents, 90/10 pre-selected (RBIDZ default).
+- Publish without the tick box: refused. With it: stage Advertised, history "Draft created" then "Published".
+- Opening Edit on a published tender: back to the tender page with "Only draft tenders can be edited."
+- Cancel with a 2-character reason: refused. A test draft `TEST/CANCEL/001` cancelled with a reason: stage
+  Cancelled, reason on the page and in the history, Cancel button gone.
+- As `admin@mvlm.demo`: RBIDZ tender ids 1 and 4 (details, edit, cancel) return **404**; MVLM's own tender opens;
+  the register lists only the 2 MVLM tenders; a publish POST without the anti-forgery token returns 400.
+- As `evaluator@rbidz.demo` (BEC member): no Create / Edit / Publish / Cancel controls; direct GET Create and POST
+  Publish (with a valid token) both end on Access denied; the draft stays a draft (DECISIONS D28).
+- As `supplier2@demo.co.za`: `RBIDZ/2026/021` appears in the marketplace ("Not eligible": needs Level 4);
+  the draft `RBIDZ/2026/017` and the cancelled test tender do not.
+- Test data left in the local database: tender `RBIDZ/2026/021` (published) and `TEST/CANCEL/001` (cancelled).
+
+### Manual tests
+1. Sign in at `/admin/rbidz` as `admin@rbidz.demo`; open Tender register: stage pills and table.
+2. Create tender with reference `RBIDZ/2026/014`: "Your organisation already has a tender with this reference."
+3. Same reference in MVLM (`admin@mvlm.demo`): allowed (unique per organisation, not globally).
+4. Closing date in the past: "The closing date must be at least 1 hour from now."
+5. Save a valid draft: it is NOT in the supplier marketplace.
+6. Publish without ticking the box: refused. Tick and publish: it appears in the marketplace with the RBIDZ name.
+7. Try to edit the published tender: not possible.
+8. Cancel a draft with a short reason: refused. With a proper reason: Cancelled, reason kept, visible in History.
+9. Sign in as `evaluator@rbidz.demo`: tenders visible, no create/edit/publish/cancel; `/Admin/Tenders/Create` goes to
+   Access denied.
+10. As `admin@mvlm.demo`, open `/Admin/Tenders/Details/1` (an RBIDZ tender): 404.
+11. SQL: `SELECT Action, EntityId, OrganisationId, OccurredAtUtc FROM AuditLog WHERE EntityType='Tender'` shows
+    Tender.Created / Published / Cancelled with OrganisationId 1.
+12. SQL: `DELETE FROM Organisations WHERE Code='RBIDZ'` fails with a foreign-key error (restrict delete).
+
+### Commit message
+```
+feat: org admins create, edit, publish and cancel tenders
+```

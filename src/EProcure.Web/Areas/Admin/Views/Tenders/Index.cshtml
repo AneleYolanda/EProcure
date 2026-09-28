@@ -1,0 +1,62 @@
+@* Design screen "sTenders": stage filter pills, "Create tender" and the register table.
+   Shows only this organisation's tenders (tenant filter). *@
+@model TenderRegisterViewModel
+@{
+    ViewData["Title"] = "Tender register";
+    ViewData["Nav"] = "tenders";
+    var total = Model.Counts.Values.Sum();
+}
+<div class="ep-stack">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+
+    <div class="ep-toolbar">
+        <nav class="ep-pills" aria-label="Filter by stage">
+            <a class="ep-pill@(Model.Stage is null ? " ep-pill--active" : "")" asp-action="Index" asp-route-q="@Model.Query"
+               aria-current="@(Model.Stage is null ? "page" : null)">All<span class="ep-pill__n">@total</span></a>
+            @foreach (var stage in TenderStages.All)
+            {
+                var key = TenderStages.Key(stage);
+                <a class="ep-pill@(Model.Stage == key ? " ep-pill--active" : "")" asp-action="Index" asp-route-stage="@key" asp-route-q="@Model.Query"
+                   aria-current="@(Model.Stage == key ? "page" : null)">@TenderStages.Label(stage)<span class="ep-pill__n">@Model.Counts[stage]</span></a>
+            }
+        </nav>
+        <span class="ep-grow"></span>
+        @if (Model.CanCreate)
+        {
+            <a class="ep-abtn ep-abtn--primary" asp-action="Create">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                Create tender
+            </a>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Query))
+    {
+        <div class="ep-panel__sub">Showing results for “@Model.Query”. <a asp-action="Index" asp-route-stage="@Model.Stage">Clear search</a></div>
+    }
+
+    <section class="ep-register" aria-label="Tenders">
+        <div class="ep-register__head" aria-hidden="true">
+            <div>Reference</div><div>Title</div><div>Stage</div><div>Est. value</div><div>Closing</div><div>Applications</div><div></div>
+        </div>
+        @foreach (var row in Model.Rows)
+        {
+            <a class="ep-register__row" asp-action="Details" asp-route-id="@row.Id">
+                <span class="ep-register__ref">@row.ReferenceNumber</span>
+                <span class="ep-register__title">@row.Title</span>
+                <span class="@TenderStages.BadgeCss(row.Stage)">@TenderStages.Label(row.Stage)</span>
+                <span class="ep-register__cell">@(row.EstimatedValue is decimal v ? DisplayFormat.Rand(v) : "—")</span>
+                <span class="ep-register__cell ep-register__cell--muted">@(row.Stage == TenderStage.UnderEvaluation ? "Closed " : "")@DisplayFormat.Date(row.ClosingDateUtc)</span>
+                <span class="ep-register__cell ep-register__cell--strong">@(row.Applications == 0 ? "—" : $"{row.Applications} bid{(row.Applications == 1 ? "" : "s")}")</span>
+                <svg class="ep-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </a>
+        }
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="ep-register__empty">No tenders here yet.@(Model.CanCreate ? " Use “Create tender” to start a draft." : "")</div>
+        }
+    </section>
+</div>

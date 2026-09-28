@@ -39,7 +39,17 @@ public class Tender
     /// </summary>
     public BbbeeLevel? MinimumBbbeeLevel { get; set; }
 
+    /// <summary>
+    /// Preference point system that will be used to evaluate this tender (80/20 or 90/10).
+    /// Pre-filled from the organisation's default; recorded here, never calculated by the system.
+    /// </summary>
+    public PreferencePointSystem PointSystem { get; set; } = PreferencePointSystem.EightyTwenty;
+
     public TenderStatus Status { get; set; } = TenderStatus.Draft;
+
+    /// <summary>When and why the tender was cancelled (both required when Status = Cancelled).</summary>
+    public DateTime? CancelledAtUtc { get; set; }
+    public string? CancellationReason { get; set; }
 
     public string CreatedByUserId { get; set; } = string.Empty;
     public ApplicationUser CreatedByUser { get; set; } = null!;

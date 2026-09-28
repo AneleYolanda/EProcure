@@ -369,3 +369,47 @@ because enums are stored as text (D9), so SQL cannot compare levels.
 **Decision for now:** Keep the exact design colours, as requested. **Recommendation:** before production, darken
 the button colour (e.g. `#0E6FA8` instead of `#1CA3EC`) or make button text larger and bolder. Changing one token
 in `eprocure.css` fixes it everywhere.
+
+---
+
+## D26. Tender form: all four steps on one page
+
+**What:** The prototype's "New tender" shows one step at a time (Details, Pre-qualification, Evaluation method,
+Documents, Review). We keep its look (numbered step list on the left, one card per step) but show all steps on one
+page, with the step list as jump links, and save in one POST. The tender page itself is the "Review" step.
+
+**Why:** A multi-request wizard needs somewhere to keep half-finished data between steps (session or partial rows)
+and more code to explain. One form is simpler, works without JavaScript, and loses nothing if the admin jumps around.
+
+**Alternative:** A true server-side wizard. Worth it only if the form grows much larger.
+
+---
+
+## D27. Fixed culture: South African English with "." as the decimal separator
+
+**What:** `Program.cs` sets every request to en-ZA, but with "." for decimals, and ignores the browser's language.
+
+**Why:** en-ZA uses a comma for decimals, so on a laptop set to the South Africa region a fee typed as "500.00"
+was read incorrectly. HTML number fields always send ".", so the server must read ".". Fixing the culture also
+means the app behaves the same on every machine and every browser.
+
+---
+
+## D28. Evaluators (BEC members) are read-only on tenders
+
+**What:** Viewing tenders needs the OrgStaff policy; creating, editing, publishing and cancelling need OrgAdminOnly.
+The buttons are hidden for evaluators and the server refuses the requests anyway (checked: direct requests with a
+valid anti-forgery token still end on Access denied).
+
+**Why:** Separation of duties: the people who evaluate bids should not also shape the tender they evaluate.
+
+---
+
+## D29. Tender stage is derived, and cancelling never deletes
+
+**What:** The register's stage (Draft, Advertised, Under evaluation, Awarded, Cancelled) is worked out from the stored
+status plus the closing date, so a published tender shows "Under evaluation" the moment it closes, with no background
+job. Cancelling sets status Cancelled with a required reason (10 to 1000 characters) and time; the row is kept.
+
+**Why:** No scheduled job to maintain, and the register can never be out of date. Keeping cancelled tenders
+(with reasons) is required for records retention and audit (D10).

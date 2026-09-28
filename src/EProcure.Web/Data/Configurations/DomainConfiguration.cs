@@ -70,6 +70,7 @@ public class TenderConfiguration : IEntityTypeConfiguration<Tender>
         b.Property(t => t.ReferenceNumber).HasMaxLength(50).IsRequired();
         b.Property(t => t.Category).HasMaxLength(100).IsRequired();
         b.Property(t => t.Description).HasMaxLength(8000).IsRequired();
+        b.Property(t => t.CancellationReason).HasMaxLength(1000);
 
         // Many tenders -> one Organisation (the tenant). Required.
         b.HasOne(t => t.Organisation)

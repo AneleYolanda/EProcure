@@ -44,6 +44,7 @@ public class DashboardController : Controller
             .AsNoTracking()
             .Select(t => new
             {
+                t.Id,
                 t.ReferenceNumber,
                 t.Title,
                 t.Status,
@@ -66,13 +67,13 @@ public class DashboardController : Controller
         var actions = new List<ActionItem>();
         if (isOrgAdmin)
         {
-            actions.AddRange(drafts.Select(t => new ActionItem(
+            actions.AddRange(drafts.Select(t => new ActionItem(t.Id,
                 $"{t.ReferenceNumber} is still a draft", $"{t.Title} · not visible to suppliers", "Draft", "neutral", "file")));
-            actions.AddRange(closingSoon.Select(t => new ActionItem(
+            actions.AddRange(closingSoon.Select(t => new ActionItem(t.Id,
                 $"{t.ReferenceNumber} closes {DisplayFormat.DateTime(t.ClosingDateUtc)}",
                 $"{t.Title} · {Plural(t.Applications, "application")} so far", "Closing soon", "warning", "clock")));
         }
-        actions.AddRange(closed.Select(t => new ActionItem(
+        actions.AddRange(closed.Select(t => new ActionItem(t.Id,
             $"{t.ReferenceNumber} has closed",
             $"{t.Title} · {Plural(t.Applications, "application")} to evaluate", "Evaluate", "info", "inbox")));
 

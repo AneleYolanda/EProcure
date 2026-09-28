@@ -21,7 +21,6 @@
     // MVP scope, so they are shown greyed with "Soon" and are not links.
     var soonItems = new (string Label, string Path)[]
     {
-        ("Tender register", "M7 3h7l4 4v14H7V3zM14 3v4h4"),
         ("Approval queue", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5"),
         ("Applications", "M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z"),
         ("BEC scoring", "M4 20V9M10 20V4M16 20v-8M22 20H2"),
@@ -60,6 +59,10 @@
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h7v7H4V4zM13 4h7v7h-7V4zM4 13h7v7H4v-7zM13 13h7v7h-7v-7z" /></svg>
                     <span class="ep-nav-item__label">Dashboard</span>
                 </a>
+                <a class="ep-nav-item@(activeNav == "tenders" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Tenders" asp-action="Index" aria-current="@(activeNav == "tenders" ? "page" : null)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3zM14 3v4h4" /></svg>
+                    <span class="ep-nav-item__label">Tender register</span>
+                </a>
                 @foreach (var item in soonItems)
                 {
                     <span class="ep-nav-item ep-nav-item--soon" aria-disabled="true" title="Coming in a later step">
@@ -92,11 +95,11 @@
                 </button>
                 <h1 class="ep-adminbar__title">@ViewData["Title"]</h1>
                 <div class="ep-adminbar__spacer"></div>
-                <label class="ep-adminbar__search" title="Search arrives with the tender register (Step 3)">
+                <form class="ep-adminbar__search" method="get" asp-area="Admin" asp-controller="Tenders" asp-action="Index" role="search">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
-                    <span class="ep-visually-hidden">Search (coming soon)</span>
-                    <input placeholder="Search tenders, bidders, references" disabled />
-                </label>
+                    <label class="ep-visually-hidden" for="ep-admin-search">Search tenders</label>
+                    <input id="ep-admin-search" type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search tenders by title or reference" />
+                </form>
                 <span class="ep-role-badge">@roleLabel</span>
             </header>
             <main class="ep-content">
@@ -104,6 +107,7 @@
             </main>
         </div>
     </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

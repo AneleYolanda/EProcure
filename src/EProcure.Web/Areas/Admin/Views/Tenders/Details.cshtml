@@ -1,0 +1,150 @@
+@* One tender (layout of design screens "sApproval" / "sPublish"): facts on the left, actions and history
+   on the right. Publishing needs a tick-box confirmation; cancelling goes to its own page with a reason. *@
+@model TenderDetailsViewModel
+@{
+    ViewData["Title"] = Model.ReferenceNumber;
+    ViewData["Nav"] = "tenders";
+    var isDraft = Model.Stage == TenderStage.Draft;
+    var canCancel = Model.CanManage && (Model.Stage is TenderStage.Draft or TenderStage.Advertised);
+}
+<div class="ep-stack">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">@flashError</div>
+    }
+
+    <div class="ep-detail">
+        <div class="ep-detail__main">
+            <section class="ep-section">
+                <div class="ep-detail__head">
+                    <div class="ep-grow">
+                        <div class="ep-detail__ref">@Model.ReferenceNumber · @Model.Category</div>
+                        <h2 class="ep-detail__title">@Model.Title</h2>
+                        <div class="ep-detail__meta">
+                            Created by @Model.CreatedBy · @DisplayFormat.DateTime(Model.CreatedAtUtc)
+                            @if (Model.PublishedAtUtc is DateTime published)
+                            {
+                                <text> · published @DisplayFormat.DateTime(published)</text>
+                            }
+                        </div>
+                    </div>
+                    <span class="@TenderStages.BadgeCss(Model.Stage)">@TenderStages.Label(Model.Stage)</span>
+                </div>
+                <div class="ep-facts">
+                    <div class="ep-fact"><div class="ep-fact__k">Closing (SAST)</div><div class="ep-fact__v">@DisplayFormat.DateTime(Model.ClosingDateUtc)</div></div>
+                    <div class="ep-fact"><div class="ep-fact__k">Tender fee</div><div class="ep-fact__v">@DisplayFormat.Fee(Model.TenderFee)</div></div>
+                    <div class="ep-fact"><div class="ep-fact__k">Est. value</div><div class="ep-fact__v">@(Model.EstimatedValue is decimal v ? DisplayFormat.Rand(v) : "Not shown")</div></div>
+                    <div class="ep-fact"><div class="ep-fact__k">Evaluation</div><div class="ep-fact__v">@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20")</div></div>
+                </div>
+            </section>
+
+            @if (Model.CancellationReason is not null)
+            {
+                <div class="ep-warning-note">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+                    <div><strong>Cancelled.</strong> @Model.CancellationReason</div>
+                </div>
+            }
+
+            <section class="ep-section">
+                <h3 class="ep-section__title">Scope of work</h3>
+                <div class="ep-prose">@Model.Description</div>
+            </section>
+
+            <section class="ep-section">
+                <h3 class="ep-section__title">Pre-qualification</h3>
+                <div class="ep-section__sub">These are gates, not preferences. All bidders are held to them equally.</div>
+                <ul class="ep-bullets">
+                    <li>Registered on the Central Supplier Database (declared by every bidder)</li>
+                    <li>Valid SARS tax compliance status (declared by every bidder)</li>
+                    <li>@(Model.MinimumBbbeeLevel is BbbeeLevel level ? $"{EligibilityRules.Describe(level)} or better" : "No minimum B-BBEE level")</li>
+                </ul>
+            </section>
+
+            <section class="ep-section">
+                <h3 class="ep-section__title">Required documents (@Model.Requirements.Count)</h3>
+                <ul class="ep-bullets">
+                    @foreach (var requirement in Model.Requirements)
+                    {
+                        <li>@requirement</li>
+                    }
+                </ul>
+            </section>
+        </div>
+
+        <aside class="ep-detail__side">
+            @if (isDraft && Model.CanManage)
+            {
+                <section class="ep-side-card" aria-labelledby="publish-title">
+                    <h3 class="ep-side-card__title" id="publish-title">Publish to bidders</h3>
+                    <div class="ep-side-card__text">Publishing makes this tender visible to every supplier in the eProcure marketplace. After that it is locked so every bidder sees the same terms.</div>
+                    <div class="ep-checks">
+                        @foreach (var check in Model.PublishChecks)
+                        {
+                            <div class="ep-check@(check.Passed ? "" : " ep-check--fail")">
+                                <span class="ep-check__dot">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="@(check.Passed ? "M5 13l4 4L19 7" : "M12 6v7M12 16.5v.5")" /></svg>
+                                </span>
+                                <span>
+                                    <span class="ep-check__label">@check.Label</span>
+                                    <span class="ep-check__meta">@check.Meta</span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                    <form asp-action="Publish" asp-route-id="@Model.Id" method="post">
+                        <label class="ep-confirm">
+                            <input type="checkbox" name="confirm" value="true" @(Model.CanPublish ? "" : "disabled") />
+                            <span>I confirm the details are final and ready for bidders.</span>
+                        </label>
+                        <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block" @(Model.CanPublish ? "" : "disabled")>Publish tender</button>
+                    </form>
+                    <a class="ep-abtn ep-abtn--block" asp-action="Edit" asp-route-id="@Model.Id">Edit draft</a>
+                </section>
+            }
+            else if (isDraft)
+            {
+                <section class="ep-side-card">
+                    <h3 class="ep-side-card__title">Draft</h3>
+                    <div class="ep-side-card__text">Only an SCM Officer can edit or publish this tender. BEC members have read-only access so the people who evaluate bids do not also shape the tender.</div>
+                </section>
+            }
+            else
+            {
+                <section class="ep-side-card">
+                    <h3 class="ep-side-card__title">Applications</h3>
+                    <div class="ep-side-card__text">@(Model.Applications == 0 ? "No paid applications yet." : $"{Model.Applications} paid application{(Model.Applications == 1 ? "" : "s")}.") Unpaid applications are not visible to staff. Reviewing applications arrives in Step 7.</div>
+                </section>
+            }
+
+            @if (canCancel)
+            {
+                <a class="ep-abtn ep-abtn--danger ep-abtn--block" asp-action="Cancel" asp-route-id="@Model.Id">Cancel this tender</a>
+            }
+
+            <section class="ep-side-card" aria-labelledby="history-title">
+                <h3 class="ep-side-card__title" id="history-title">History</h3>
+                <div class="ep-timeline">
+                    @foreach (var item in Model.History)
+                    {
+                        <div class="ep-timeline__item">
+                            <div class="ep-timeline__rail"><span class="ep-timeline__dot"></span><span class="ep-timeline__line"></span></div>
+                            <div class="ep-timeline__body">
+                                <div class="ep-timeline__what">@item.What</div>
+                                <div class="ep-timeline__who">@item.Who · @DisplayFormat.DateTime(item.WhenUtc)</div>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.History.Count == 0)
+                    {
+                        <div class="ep-side-card__text">No recorded actions yet. (Demo tenders were created by the seeder, which does not write audit entries.)</div>
+                    }
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>

@@ -1,0 +1,35 @@
+﻿@* Cancelling is a deliberate second step with a required reason. Nothing is deleted: the tender
+   stays on record as "Cancelled" and the reason is written to the tender and the audit trail. *@
+@model CancelTenderViewModel
+@{
+    ViewData["Title"] = "Cancel tender";
+    ViewData["Nav"] = "tenders";
+}
+<div class="ep-stack ep-narrow">
+    <section class="ep-section">
+        <div class="ep-detail__ref">@Model.ReferenceNumber</div>
+        <h2 class="ep-detail__title">@Model.Title</h2>
+
+        <div class="ep-warning-note ep-mt-18">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+            <div>Cancelling removes this tender from the marketplace and cannot be undone. It stays on record with your reason, which is kept in the audit trail.</div>
+        </div>
+
+        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="ep-mt-18">
+            <div asp-validation-summary="ModelOnly"></div>
+            <label class="ep-afield" asp-for="Reason">REASON FOR CANCELLING
+                <textarea class="ep-ainput" asp-for="Reason" rows="4" placeholder="e.g. Budget withdrawn by the end-user department"></textarea>
+                <span asp-validation-for="Reason"></span>
+            </label>
+            <div class="ep-form-actions ep-mt-18">
+                <a class="ep-abtn" asp-action="Details" asp-route-id="@Model.Id">Keep the tender</a>
+                <span class="ep-grow"></span>
+                <button type="submit" class="ep-abtn ep-abtn--danger">Cancel tender</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -55,7 +55,7 @@
             </div>
             @foreach (var item in Model.ActionItems)
             {
-                <div class="ep-action">
+                <a class="ep-action" asp-controller="Tenders" asp-action="Details" asp-route-id="@item.TenderId">
                     <span class="@ToneIcon(item.Tone)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="@IconPath(item.Icon)" /></svg>
                     </span>
@@ -64,7 +64,8 @@
                         <span class="ep-action__meta">@item.Meta</span>
                     </span>
                     <span class="@ToneBadge(item.Tone)">@item.Tag</span>
-                </div>
+                    <svg class="ep-chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                </a>
             }
             @if (Model.ActionItems.Count == 0)
             {

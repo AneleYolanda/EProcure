@@ -1,0 +1,10 @@
+@model TenderFormViewModel
+@{
+    ViewData["Title"] = "Create tender";
+    ViewData["Nav"] = "tenders";
+}
+<partial name="_TenderForm" model="Model" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

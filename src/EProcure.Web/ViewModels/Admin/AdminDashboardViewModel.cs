@@ -18,7 +18,7 @@ public class AdminDashboardViewModel
 
     /// <param name="Tone">"neutral", "warning" or "info": picks the icon and tag colours.</param>
     /// <param name="Icon">"file", "clock" or "inbox".</param>
-    public record ActionItem(string Title, string Meta, string Tag, string Tone, string Icon);
+    public record ActionItem(int TenderId, string Title, string Meta, string Tag, string Tone, string Icon);
 
     /// <param name="Colour">A fixed design colour for the bar, e.g. "#B9CBDA".</param>
     public record PipelineStage(string Label, int Count, int Percent, string Colour);

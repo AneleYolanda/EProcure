@@ -1,3 +1,4 @@
+using System.Globalization;
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Infrastructure;
@@ -7,6 +8,7 @@ using EProcure.Web.Services.External;
 using EProcure.Web.Tenancy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 
@@ -47,6 +49,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IOtpSender, MockOtpSender>();
 builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
+builder.Services.AddScoped<ITenderService, TenderService>();
 
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the
@@ -96,6 +99,23 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ---- Culture ----
+// South African English, but with "." as the decimal separator for every visitor and every machine.
+// Without this, a server set to the South Africa region reads "500.00" wrongly (en-ZA uses a comma),
+// and the same form could behave differently on two laptops. Browser language is deliberately ignored.
+var southAfrica = (CultureInfo)CultureInfo.GetCultureInfo("en-ZA").Clone();
+southAfrica.NumberFormat.NumberDecimalSeparator = ".";
+southAfrica.NumberFormat.CurrencyDecimalSeparator = ".";
+var localization = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(southAfrica),
+    SupportedCultures = new[] { southAfrica },
+    SupportedUICultures = new[] { southAfrica }
+};
+localization.RequestCultureProviders.Clear();
+app.UseRequestLocalization(localization);
+
 app.UseStaticFiles();
 app.UseRouting();
 

@@ -1,0 +1,158 @@
+﻿@* The tender form (design screen "sCreate"), shared by Create and Edit.
+   The prototype shows one step at a time; here all four steps are on one page with the step list as
+   jump links, so nothing is lost if the admin moves between steps and the form posts in one go.
+   ViewData["FormAction"] is "Create" or "Edit"; ViewData["TenderId"] is set for Edit. *@
+@model TenderFormViewModel
+@{
+    var isEdit = ViewData["TenderId"] is int;
+    var levels = Enum.GetValues<BbbeeLevel>().Where(l => l != BbbeeLevel.NonCompliant).ToList();
+    var otherDocs = Model.OtherDocuments ?? string.Empty;
+    string Checked(bool on) => on ? "checked" : "";
+}
+<form method="post" asp-action="@(isEdit ? "Edit" : "Create")" asp-route-id="@ViewData["TenderId"]" novalidate>
+    <div class="ep-create">
+        <aside class="ep-steps" aria-label="Form steps">
+            <div class="ep-steps__caption">@(isEdit ? "EDIT DRAFT" : "NEW TENDER")</div>
+            <nav class="ep-steps__list">
+                <a class="ep-step" href="#details"><span class="ep-step__no">1</span>Tender details</a>
+                <a class="ep-step" href="#prequalification"><span class="ep-step__no">2</span>Pre-qualification</a>
+                <a class="ep-step" href="#evaluation"><span class="ep-step__no">3</span>Evaluation method</a>
+                <a class="ep-step" href="#documents"><span class="ep-step__no">4</span>Documents</a>
+            </nav>
+            <div class="ep-steps__note">Saved as a draft. Nothing is visible to bidders until you publish it from the tender page.</div>
+        </aside>
+
+        <div class="ep-create__main">
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <section class="ep-section" id="details" aria-labelledby="details-title">
+                <h2 class="ep-section__title" id="details-title">1. Tender details</h2>
+                <div class="ep-form-grid">
+                    <label class="ep-afield" asp-for="ReferenceNumber">TENDER REFERENCE
+                        <input class="ep-ainput" asp-for="ReferenceNumber" placeholder="e.g. RBIDZ/2026/021" />
+                        <span asp-validation-for="ReferenceNumber"></span>
+                    </label>
+                    <label class="ep-afield" asp-for="Category">CATEGORY
+                        <select class="ep-ainput" asp-for="Category">
+                            <option value="">Choose a category</option>
+                            @foreach (var category in TenderCatalog.Categories)
+                            {
+                                <option value="@category" selected="@(Model.Category == category)">@category</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Category"></span>
+                    </label>
+                    <label class="ep-afield ep-span-2" asp-for="Title">TITLE
+                        <input class="ep-ainput" asp-for="Title" placeholder="e.g. Supply and installation of network infrastructure" />
+                        <span asp-validation-for="Title"></span>
+                    </label>
+                    <label class="ep-afield ep-span-2" asp-for="Description">SCOPE OF WORK
+                        <textarea class="ep-ainput" asp-for="Description" rows="5" placeholder="What the organisation needs, where and for how long."></textarea>
+                        <span asp-validation-for="Description"></span>
+                    </label>
+                    <label class="ep-afield" asp-for="EstimatedValue">ESTIMATED CONTRACT VALUE (R)
+                        <input class="ep-ainput" asp-for="EstimatedValue" type="number" min="0" step="1" inputmode="numeric" placeholder="Optional" />
+                        <span class="ep-afield__hint">Shown to bidders as “Est. R…”. Leave empty if confidential.</span>
+                        <span asp-validation-for="EstimatedValue"></span>
+                    </label>
+                    <label class="ep-afield" asp-for="TenderFee">TENDER FEE (R)
+                        <input class="ep-ainput" asp-for="TenderFee" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" />
+                        <span class="ep-afield__hint">0 means free. Bidders pay it before their application is submitted.</span>
+                        <span asp-validation-for="TenderFee"></span>
+                    </label>
+                    <label class="ep-afield" asp-for="ClosingDateLocal">CLOSING DATE AND TIME (SAST)
+                        <input class="ep-ainput" asp-for="ClosingDateLocal" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <span class="ep-afield__hint">At least 1 hour from now. No applications are accepted after it.</span>
+                        <span asp-validation-for="ClosingDateLocal"></span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="ep-section" id="prequalification" aria-labelledby="preq-title">
+                <h2 class="ep-section__title" id="preq-title">2. Pre-qualification criteria</h2>
+                <div class="ep-section__sub">These become hard gates in the app. A bidder who fails one cannot start or pay for an application; the block is shown to them with the reason, and the same rule applies to every bidder.</div>
+                <div class="ep-criteria">
+                    <div class="ep-criterion ep-criterion--on">
+                        <span class="ep-switch" aria-hidden="true"></span>
+                        <span class="ep-criterion__text">
+                            <span class="ep-criterion__label">Registered on the Central Supplier Database</span>
+                            <span class="ep-criterion__meta">Always asked of every bidder (SBD declarations)</span>
+                        </span>
+                    </div>
+                    <div class="ep-criterion ep-criterion--on">
+                        <span class="ep-switch" aria-hidden="true"></span>
+                        <span class="ep-criterion__text">
+                            <span class="ep-criterion__label">Valid SARS tax compliance status</span>
+                            <span class="ep-criterion__meta">Always asked of every bidder (SBD declarations)</span>
+                        </span>
+                    </div>
+                    <fieldset class="ep-criterion ep-criterion--stack@(Model.MinimumBbbeeLevel is not null ? " ep-criterion--on" : "")">
+                        <legend class="ep-visually-hidden">Minimum B-BBEE status level</legend>
+                        <span class="ep-criterion__text">
+                            <span class="ep-criterion__label">Minimum B-BBEE status level</span>
+                            <span class="ep-criterion__meta">Bidders at a weaker level are blocked. Level 1 is the strongest.</span>
+                        </span>
+                        <div class="ep-radio-pills">
+                            <label class="ep-radio-pill"><input type="radio" name="MinimumBbbeeLevel" value="" @Checked(Model.MinimumBbbeeLevel is null) /><span>No requirement</span></label>
+                            @foreach (var level in levels)
+                            {
+                                <label class="ep-radio-pill"><input type="radio" name="MinimumBbbeeLevel" value="@level" @Checked(Model.MinimumBbbeeLevel == level) /><span>Level @((int)level)</span></label>
+                            }
+                        </div>
+                    </fieldset>
+                </div>
+            </section>
+
+            <section class="ep-section" id="evaluation" aria-labelledby="eval-title">
+                <h2 class="ep-section__title" id="eval-title">3. Evaluation method</h2>
+                <div class="ep-section__sub">Recorded for the evaluation committee. eProcure does not score bids or choose a winner.</div>
+                <fieldset class="ep-options ep-fieldset">
+                    <legend class="ep-visually-hidden">Preference point system</legend>
+                    <label class="ep-option">
+                        <input type="radio" name="PointSystem" value="@PreferencePointSystem.EightyTwenty" @Checked(Model.PointSystem == PreferencePointSystem.EightyTwenty) />
+                        <span class="ep-option__card">
+                            <span class="ep-option__label">80/20 price and preference</span>
+                            <span class="ep-option__meta">80 points for price, 20 for specific goals. Usually for contracts up to R50 million.</span>
+                        </span>
+                    </label>
+                    <label class="ep-option">
+                        <input type="radio" name="PointSystem" value="@PreferencePointSystem.NinetyTen" @Checked(Model.PointSystem == PreferencePointSystem.NinetyTen) />
+                        <span class="ep-option__card">
+                            <span class="ep-option__label">90/10 price and preference</span>
+                            <span class="ep-option__meta">90 points for price, 10 for specific goals. Usually for contracts above R50 million.</span>
+                        </span>
+                    </label>
+                </fieldset>
+            </section>
+
+            <section class="ep-section" id="documents" aria-labelledby="docs-title">
+                <h2 class="ep-section__title" id="docs-title">4. Required documents and forms</h2>
+                <div class="ep-section__sub">The bidder's checklist is generated from this list. Each item must be uploaded as a PDF.</div>
+                <fieldset class="ep-docs ep-fieldset">
+                    <legend class="ep-visually-hidden">Standard documents</legend>
+                    @foreach (var doc in TenderCatalog.StandardDocuments)
+                    {
+                        <label class="ep-doc">
+                            <input type="checkbox" name="SelectedDocuments" value="@doc" @Checked(Model.SelectedDocuments.Contains(doc)) />
+                            <span class="ep-doc__card">
+                                <span class="ep-doc__box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg></span>
+                                <span class="ep-doc__label">@doc</span>
+                            </span>
+                        </label>
+                    }
+                </fieldset>
+                <span asp-validation-for="SelectedDocuments" class="ep-field-error"></span>
+                <label class="ep-afield ep-mt-18" asp-for="OtherDocuments">OTHER REQUIRED DOCUMENTS (ONE PER LINE)
+                    <textarea class="ep-ainput" name="OtherDocuments" id="OtherDocuments" rows="3" placeholder="e.g. CIDB registration certificate">@otherDocs</textarea>
+                    <span asp-validation-for="OtherDocuments"></span>
+                </label>
+            </section>
+
+            <div class="ep-form-actions">
+                <a class="ep-abtn" href="@(isEdit ? Url.Action("Details", new { id = ViewData["TenderId"] }) : Url.Action("Index"))">Cancel</a>
+                <span class="ep-grow"></span>
+                <button type="submit" class="ep-abtn ep-abtn--primary">@(isEdit ? "Save changes" : "Save draft")</button>
+            </div>
+        </div>
+    </div>
+</form>
