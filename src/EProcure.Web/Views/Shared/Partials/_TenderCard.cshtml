@@ -1,15 +1,40 @@
-@model dynamic
-<article class="ep-tender-card">
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <div class="title">@Model.Title</div>
-            <div class="meta">@Model.OrganisationName • @Model.ClosingDate</div>
-        </div>
-        <div>
-            <span class="ep-badge @Model.StatusClass">@Model.Status</span>
-        </div>
+@*
+    One tender in the feed (design "sFeed" card). Not a link yet: the tender detail page is Step 5.
+    Eligibility badge: "You qualify" (green) / "Not eligible" (amber), from EligibilityRules.
+*@
+@model TenderCardViewModel
+@{
+    var now = DateTime.UtcNow;
+    var (badgeCss, badgeText) = Model.Eligibility.Outcome switch
+    {
+        EligibilityOutcome.Qualifies => ("ep-badge ep-badge--success", "You qualify"),
+        EligibilityOutcome.NotEligible => ("ep-badge ep-badge--warning", "Not eligible"),
+        _ => ("ep-badge", "Check eligibility")
+    };
+}
+<article class="ep-tender-card" aria-labelledby="tender-@Model.Id">
+    <div class="ep-tender-card__top">
+        <span class="ep-tender-card__ref">@Model.ReferenceNumber</span>
+        <span class="@badgeCss" title="@Model.Eligibility.Reason">@badgeText</span>
     </div>
-    <div class="mt-2">
-        <div class="ep-eyebrow">@Model.ShortDescription</div>
+    <h2 class="ep-tender-card__title" id="tender-@Model.Id">@Model.Title</h2>
+    <div class="ep-tender-card__org">@Model.OrganisationName</div>
+    <div class="ep-tender-card__chips">
+        <span class="ep-chip">@Model.Category</span>
+        @if (Model.EstimatedValue is decimal value)
+        {
+            <span class="ep-chip">Est. @DisplayFormat.Rand(value)</span>
+        }
+    </div>
+    <div class="ep-tender-card__foot">
+        <div>
+            <div class="ep-caption">Closes</div>
+            <div class="ep-tender-card__value">@DisplayFormat.Date(Model.ClosingDateUtc)</div>
+        </div>
+        <div>
+            <div class="ep-caption">Tender fee</div>
+            <div class="ep-tender-card__value">@DisplayFormat.Fee(Model.TenderFee)</div>
+        </div>
+        <div class="ep-tender-card__days">@DisplayFormat.ClosesIn(Model.ClosingDateUtc, now)</div>
     </div>
 </article>

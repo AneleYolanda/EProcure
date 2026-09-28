@@ -1,34 +1,122 @@
-@model EProcure.Web.ViewModels.Admin.AdminDashboardViewModel
+@* Design screen "sDash": 4 KPI cards, "Needs your action", "Pipeline by stage", "Compliance watch".
+   Every number is real and limited to the signed-in user's organisation (see DashboardController). *@
+@model AdminDashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    ViewData["Nav"] = "dashboard";
+
+    string IconPath(string icon) => icon switch
+    {
+        "clock" => "M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM12 7.5V12l3 2",
+        "inbox" => "M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z",
+        _ => "M7 3h7l4 4v14H7V3zM14 3v4h4"
+    };
+    string ToneBadge(string tone) => tone switch { "warning" => "ep-badge ep-badge--warning", "info" => "ep-badge ep-badge--info", _ => "ep-badge" };
+    string ToneIcon(string tone) => tone switch { "warning" => "ep-action__icon ep-action__icon--warning", "info" => "ep-action__icon ep-action__icon--info", _ => "ep-action__icon" };
 }
-
-<div class="page-heading">
-    <p class="eyebrow">Admin workspace</p>
-    <h1>Welcome, @User.Identity?.Name — @Model.OrganisationName</h1>
-    <p class="text-muted">A current view of procurement activity for your organisation.</p>
-</div>
-
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span class="metric-label">Open tenders</span>
-            <strong class="metric-value">@Model.OpenTenderCount</strong>
-            <span class="text-muted">Published and still open</span>
+<div class="ep-stack">
+    <section class="ep-kpis" aria-label="Key figures">
+        <div class="ep-kpi">
+            <div class="ep-kpi__label">Open tenders</div>
+            <div class="ep-kpi__value">@Model.OpenTenderCount</div>
+            @if (Model.ClosingWithinSevenDaysCount > 0)
+            {
+                <div class="ep-kpi__note ep-kpi__note--warning">@Model.ClosingWithinSevenDaysCount close within 7 days</div>
+            }
+            else
+            {
+                <div class="ep-kpi__note">None close within 7 days</div>
+            }
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span class="metric-label">Submissions received</span>
-            <strong class="metric-value">@Model.SubmissionCount</strong>
-            <span class="text-muted">Paid applications visible to staff</span>
+        <div class="ep-kpi">
+            <div class="ep-kpi__label">Applications received</div>
+            <div class="ep-kpi__value">@Model.SubmissionCount</div>
+            <div class="ep-kpi__note">Paid applications only</div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span class="metric-label">Closing this week</span>
-            <strong class="metric-value">@Model.ClosingWithinSevenDaysCount</strong>
-            <span class="text-muted">The next seven days</span>
+        <div class="ep-kpi">
+            <div class="ep-kpi__label">Awaiting evaluation</div>
+            <div class="ep-kpi__value">@Model.ClosedCount</div>
+            <div class="ep-kpi__note">Tenders past their closing date</div>
+        </div>
+        <div class="ep-kpi">
+            <div class="ep-kpi__label">Draft tenders</div>
+            <div class="ep-kpi__value">@Model.DraftCount</div>
+            <div class="ep-kpi__note">Not visible to suppliers</div>
+        </div>
+    </section>
+
+    <div class="ep-dash-grid">
+        <section class="ep-panel" aria-labelledby="actions-title">
+            <div class="ep-panel__head">
+                <div>
+                    <h2 class="ep-panel__title" id="actions-title">Needs your action</h2>
+                    <div class="ep-panel__sub">Items where the process is waiting on the @Model.RoleLabel</div>
+                </div>
+            </div>
+            @foreach (var item in Model.ActionItems)
+            {
+                <div class="ep-action">
+                    <span class="@ToneIcon(item.Tone)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="@IconPath(item.Icon)" /></svg>
+                    </span>
+                    <span class="ep-action__text">
+                        <span class="ep-action__title">@item.Title</span>
+                        <span class="ep-action__meta">@item.Meta</span>
+                    </span>
+                    <span class="@ToneBadge(item.Tone)">@item.Tag</span>
+                </div>
+            }
+            @if (Model.ActionItems.Count == 0)
+            {
+                <div class="ep-panel__empty">Nothing is waiting on you right now.</div>
+            }
+        </section>
+
+        <div class="ep-side-col">
+            <section class="ep-pipeline" aria-labelledby="pipeline-title">
+                <h2 class="ep-panel__title" id="pipeline-title">Pipeline by stage</h2>
+                <div class="ep-pipeline__list">
+                    @foreach (var stage in Model.Pipeline)
+                    {
+                        <div>
+                            <div class="ep-pipeline__row">
+                                <span class="ep-pipeline__label">@stage.Label</span>
+                                <span class="ep-pipeline__n">@stage.Count</span>
+                            </div>
+                            <div class="ep-pipeline__track" role="img" aria-label="@stage.Label: @stage.Count">
+                                <div class="ep-pipeline__fill" style="width:@(stage.Percent)%;background:@stage.Colour"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="ep-compliance" aria-labelledby="compliance-title">
+                <h2 class="ep-compliance__title" id="compliance-title">Compliance watch</h2>
+                <div class="ep-compliance__list">
+                    <div class="ep-compliance__item">
+                        <span class="ep-compliance__dot"></span>
+                        <span>
+                            <span class="ep-compliance__label">Tenant isolation active</span>
+                            <span class="ep-compliance__meta">You see only @Model.OrganisationCode tenders, applications and audit entries</span>
+                        </span>
+                    </div>
+                    <div class="ep-compliance__item">
+                        <span class="ep-compliance__dot"></span>
+                        <span>
+                            <span class="ep-compliance__label">No bid visible before payment</span>
+                            <span class="ep-compliance__meta">Unpaid applications are hidden from staff until the tender fee clears</span>
+                        </span>
+                    </div>
+                    <div class="ep-compliance__item">
+                        <span class="ep-compliance__dot"></span>
+                        <span>
+                            <span class="ep-compliance__label">Audit trail recording</span>
+                            <span class="ep-compliance__meta">@Model.AuditEntriesLastSevenDays @(Model.AuditEntriesLastSevenDays == 1 ? "action" : "actions") logged in the last 7 days</span>
+                        </span>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </div>

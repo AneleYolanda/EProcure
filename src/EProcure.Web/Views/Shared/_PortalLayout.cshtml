@@ -1,0 +1,23 @@
+@* Full-screen layout for an organisation's admin splash and sign-in (/admin/{orgCode}).
+   Colours come from OrgPortalViewModel, already validated as #RRGGBB by BrandColours.Safe. *@
+@model EProcure.Web.ViewModels.Account.OrgPortalViewModel
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="@Model.PrimaryColour" />
+    <title>@ViewData["Title"] · @Model.OrgCode · eProcure</title>
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/eprocure.css" asp-append-version="true" />
+    <style>:root { --org-primary: @Model.PrimaryColour; --org-accent: @Model.AccentColour; }</style>
+</head>
+<body class="ep-admin-body">
+    <div class="ep-portal">
+        @RenderBody()
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -291,3 +291,81 @@ seeder skips account creation and logs a setup warning when the secret is missin
 
 **Why not:** Migrations and configuration files are committed and would expose a credential; manual scripts
 are not repeatable on application start.
+
+---
+
+## D19. Own design-system stylesheet; Bootstrap CSS removed
+
+**What:** All styling lives in `wwwroot/css/eprocure.css` (tokens and components copied from the Claude Design
+prototypes). Bootstrap's CSS and JS are no longer loaded; jQuery stays only for form validation.
+
+**Why:** "Must look exactly like the prototype." Bootstrap's own defaults (typography, form controls, spacing)
+kept overriding the design and made pixel matching a fight. One stylesheet, one source of truth, easier to explain.
+
+**Alternatives:** Theme Bootstrap with Sass variables (needs a Sass build step and still leaves Bootstrap's look
+underneath); Tailwind (a build step and a new tool to explain). Not worth it for ~15 screens.
+
+---
+
+## D20. Bidder side is a phone app in a centred column; no fake device frame
+
+**What:** On phones the bidder screens fill the screen; on larger screens the same screens sit in a 480px column.
+The iOS status-bar space in the prototype (~44px at the top of each screen) is removed.
+
+**Why:** The prototype is an iPhone app and suppliers mostly use phones. Drawing an iPhone bezel on a website would be fake.
+
+---
+
+## D21. Out-of-scope design features shown as "Soon", never as dead buttons
+
+**What:** Menu items from the prototype that the MVP does not have (Approval queue, BEC scoring, BAC adjudication,
+Roles and users; Tender register, Applications and Audit trail until their steps) are shown greyed with a "Soon"
+pill and are not links. TenderBuddy, "For you", notifications and the company switcher are hidden.
+
+**Why:** Users and the reviewer must never see a button that does nothing, and the app must not suggest features
+(such as automated scoring) that it does not have. Showing the full menu keeps the demo recognisable against the design.
+
+---
+
+## D22. Organisation-branded admin entrance: /admin/{orgCode}
+
+**What:** `/admin/rbidz` shows RBIDZ's splash and sign-in in its colours; `/admin/mvlm` shows MVLM's.
+
+**Why / security:** The URL only changes the LOOK of these two pages. After sign-in the tenant still comes from the
+signed cookie claim. A user can only sign in at their own organisation's address: if the password is right but the
+organisation is wrong, they are signed straight back out and get the same "Invalid email or password." message
+(no hint which organisation an email belongs to), and the attempt is audited.
+The routes use `Order = 100`, so they rank below `/Admin/{controller}`: `/Admin/Dashboard` can never be mistaken
+for an organisation code.
+
+---
+
+## D23. Six-digit OTP via Identity; demo code passed in TempData
+
+**What:** Phone codes come from ASP.NET Identity's phone token provider (6 digits, time-limited, nothing stored in
+the database). The prototype shows 5 boxes; we show 6. The mock sender passes the code to the page in TempData.
+
+**Why:** Re-using Identity's provider avoids writing our own OTP security. TempData (an encrypted cookie) replaced
+Session, which is not enabled in this app; the earlier code threw an error on every real registration.
+
+---
+
+## D24. B-BBEE eligibility rule as one pure function
+
+**What:** `Services/EligibilityRules.CheckBbbee(companyLevel, tenderMinimum)`, with no database access.
+The feed uses it now to label cards "You qualify" / "Not eligible"; Step 6 will call the same function as the
+hard stop on every application POST.
+
+**Why:** One rule in one place, applied identically to everyone, and easy to unit-test (Step 8). It runs in C#
+because enums are stored as text (D9), so SQL cannot compare levels.
+
+---
+
+## D25. Accessibility risk in the design's colours (flagged, not changed)
+
+**What:** White text on the design's blue `#1CA3EC` has a contrast ratio of about 2.9:1; white on MVLM's coral
+`#E4572E` is about 3.4:1. WCAG AA needs 4.5:1 for normal text (3:1 for large text).
+
+**Decision for now:** Keep the exact design colours, as requested. **Recommendation:** before production, darken
+the button colour (e.g. `#0E6FA8` instead of `#1CA3EC`) or make button text larger and bolder. Changing one token
+in `eprocure.css` fixes it everywhere.

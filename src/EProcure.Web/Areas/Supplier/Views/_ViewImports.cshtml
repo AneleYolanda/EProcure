@@ -1,0 +1,9 @@
+@* Views inside an Area do NOT inherit Views/_ViewImports.cshtml, so the tag helpers
+   (asp-area, asp-action, the anti-forgery token on forms) must be switched on here too. *@
+@using EProcure.Web
+@using EProcure.Web.Domain
+@using EProcure.Web.Infrastructure
+@using EProcure.Web.Services
+@using EProcure.Web.ViewModels.Supplier
+@using EProcure.Web.ViewModels.Tenders
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

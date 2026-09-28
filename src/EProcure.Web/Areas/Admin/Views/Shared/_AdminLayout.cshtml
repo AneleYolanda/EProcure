@@ -1,71 +1,110 @@
-@using System.Text.RegularExpressions
-@using EProcure.Web.Domain
-@using EProcure.Web.Services
+@*
+    Admin console shell (design block "inApp"): 246px sidebar in the organisation's primary colour,
+    64px top bar, content on #F4F7FA. The organisation comes from the signed-in user's tenant claim
+    (ICurrentOrganisation), never from the URL. Colours are validated as #RRGGBB before use.
+    Pages set ViewData["Title"] (top bar) and ViewData["Nav"] (active sidebar item).
+*@
 @using Microsoft.AspNetCore.Identity
 @inject ICurrentOrganisation CurrentOrganisation
 @inject UserManager<ApplicationUser> UserManager
 @{
     var organisation = await CurrentOrganisation.GetAsync();
-    var primary = organisation?.PrimaryColour;
-    var accent = organisation?.AccentColour;
-    var validColour = new Regex("^#[0-9A-Fa-f]{6}$");
-    if (!validColour.IsMatch(primary ?? string.Empty)) primary = "#0B2545";
-    if (!validColour.IsMatch(accent ?? string.Empty)) accent = "#C9A227";
+    var primary = BrandColours.Safe(organisation?.PrimaryColour, BrandColours.DefaultPrimary);
+    var accent = BrandColours.Safe(organisation?.AccentColour, BrandColours.DefaultAccent);
     var signedInUser = await UserManager.GetUserAsync(User);
+    var displayName = signedInUser?.FullName ?? User.Identity?.Name ?? string.Empty;
+    var roleLabel = RoleLabels.For(User);
+    var activeNav = ViewData["Nav"] as string;
+
+    // The design's full console menu. Only "Dashboard" exists so far; the others are built in
+    // later steps (Tender register: Step 3, Applications and Audit trail: Step 7) or are out of
+    // MVP scope, so they are shown greyed with "Soon" and are not links.
+    var soonItems = new (string Label, string Path)[]
+    {
+        ("Tender register", "M7 3h7l4 4v14H7V3zM14 3v4h4"),
+        ("Approval queue", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5"),
+        ("Applications", "M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z"),
+        ("BEC scoring", "M4 20V9M10 20V4M16 20v-8M22 20H2"),
+        ("BAC adjudication", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5"),
+        ("Audit trail", "M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM12 7.5V12l3 2"),
+        ("Roles and users", "M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a3 3 0 100-6M21.5 20a5.5 5.5 0 00-4-5.3")
+    };
 }
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-ZA">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - @(organisation?.Code ?? "eProcure")</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <style>
-        :root { --org-primary: @primary; --org-accent: @accent; }
-    </style>
+    <title>@ViewData["Title"] · @(organisation?.Code ?? "eProcure") · eProcure</title>
+    <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/eprocure.css" asp-append-version="true" />
+    <style>:root { --org-primary: @primary; --org-accent: @accent; }</style>
 </head>
-<body class="admin-shell">
-    <div class="admin-offcanvas offcanvas offcanvas-start" tabindex="-1" id="adminMenu" aria-labelledby="adminMenuLabel">
-        <div class="offcanvas-header">
-            <h2 class="offcanvas-title" id="adminMenuLabel">@(organisation?.Name ?? "eProcure")</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button>
-        </div>
-        <div class="offcanvas-body">
-            <partial name="_AdminNavigation" />
-        </div>
-    </div>
-    <div class="admin-frame">
-        <aside class="admin-sidebar d-none d-md-flex flex-column">
-            <div class="admin-brand">
-                @if (!string.IsNullOrWhiteSpace(organisation?.LogoPath))
-                {
-                    <img src="@organisation.LogoPath" alt="@(organisation.Name) logo" />
-                }
-                <span>@(organisation?.Name ?? "eProcure")</span>
+<body class="ep-admin-body">
+    <div class="ep-console">
+        <aside class="ep-sidebar" id="ep-sidebar" aria-label="Console">
+            <div class="ep-sidebar__brand">
+                <span class="ep-logo-circle ep-logo-circle--38">
+                    @if (!string.IsNullOrWhiteSpace(organisation?.LogoPath))
+                    {
+                        <img src="@organisation.LogoPath" alt="" />
+                    }
+                </span>
+                <span>
+                    <span class="ep-sidebar__org">@organisation?.Code</span>
+                    <span class="ep-sidebar__orgsub" title="@organisation?.Name">@organisation?.Name</span>
+                </span>
             </div>
-            <partial name="_AdminNavigation" />
+            <nav class="ep-sidebar__nav" aria-label="Console sections">
+                <a class="ep-nav-item@(activeNav == "dashboard" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" aria-current="@(activeNav == "dashboard" ? "page" : null)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h7v7H4V4zM13 4h7v7h-7V4zM4 13h7v7H4v-7zM13 13h7v7h-7v-7z" /></svg>
+                    <span class="ep-nav-item__label">Dashboard</span>
+                </a>
+                @foreach (var item in soonItems)
+                {
+                    <span class="ep-nav-item ep-nav-item--soon" aria-disabled="true" title="Coming in a later step">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="@item.Path" /></svg>
+                        <span class="ep-nav-item__label">@item.Label</span>
+                        <span class="ep-nav-item__pill">Soon</span>
+                    </span>
+                }
+            </nav>
+            <div class="ep-sidebar__spacer"></div>
+            <div class="ep-sidebar__user">
+                <span class="ep-sidebar__initials" aria-hidden="true">@DisplayFormat.Initials(displayName)</span>
+                <span class="ep-sidebar__who">
+                    <span class="ep-sidebar__name">@displayName</span>
+                    <span class="ep-sidebar__role">@roleLabel</span>
+                </span>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="ep-sidebar__signout" aria-label="Sign out" title="Sign out">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 12H4m0 0l4-4m-4 4l4 4" /><path d="M11 4h7a2 2 0 012 2v12a2 2 0 01-2 2h-7" /></svg>
+                    </button>
+                </form>
+            </div>
         </aside>
-        <div class="admin-content">
-            <header class="admin-header">
-                <button class="btn btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminMenu" aria-controls="adminMenu">Menu</button>
-                <div>
-                    <span class="eyebrow">@(organisation?.Code ?? "Organisation") workspace</span>
-                    <strong>@(organisation?.Name ?? "Organisation")</strong>
-                </div>
-                <div class="admin-user">
-                    <span>@(signedInUser?.FullName ?? User.Identity?.Name)</span>
-                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">Log out</button>
-                    </form>
-                </div>
+        <div class="ep-scrim" data-ep-menu aria-hidden="true"></div>
+
+        <div class="ep-main">
+            <header class="ep-adminbar">
+                <button type="button" class="ep-adminbar__menu" data-ep-menu aria-controls="ep-sidebar" aria-expanded="false" aria-label="Open menu">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                </button>
+                <h1 class="ep-adminbar__title">@ViewData["Title"]</h1>
+                <div class="ep-adminbar__spacer"></div>
+                <label class="ep-adminbar__search" title="Search arrives with the tender register (Step 3)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
+                    <span class="ep-visually-hidden">Search (coming soon)</span>
+                    <input placeholder="Search tenders, bidders, references" disabled />
+                </label>
+                <span class="ep-role-badge">@roleLabel</span>
             </header>
-            <main class="container-fluid admin-main" role="main">
+            <main class="ep-content">
                 @RenderBody()
             </main>
         </div>
     </div>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

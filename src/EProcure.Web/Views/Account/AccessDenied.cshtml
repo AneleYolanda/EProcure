@@ -1,6 +1,11 @@
 @{
     ViewData["Title"] = "Access denied";
 }
-
-<h1>Access denied</h1>
-<p>You do not have permission to view this page.</p>
+<div class="ep-auth">
+    <div class="ep-otp__icon ep-otp__icon--warning">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+    </div>
+    <h1 class="ep-otp__title">You do not have access to that page</h1>
+    <p class="ep-otp__text">Your role does not allow it. Roles are assigned by your organisation and cannot be self-assigned.</p>
+    <a class="ep-btn ep-btn--primary ep-mt-26" asp-area="" asp-controller="Home" asp-action="Index">Go to my start page</a>
+</div>

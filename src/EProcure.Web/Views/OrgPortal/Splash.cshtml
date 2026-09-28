@@ -1,0 +1,24 @@
+@* Design screen "sSplash" of the admin console, branded for one organisation.
+   Continues to that organisation's sign-in page after 2 seconds. *@
+@model EProcure.Web.ViewModels.Account.OrgPortalViewModel
+@{
+    Layout = "_PortalLayout";
+    ViewData["Title"] = "Administration";
+    var loginUrl = $"/admin/{Model.OrgCode.ToLowerInvariant()}/login";
+}
+<div class="ep-portal-splash" data-ep-autocontinue="@loginUrl" data-ep-delay="2000">
+    <div class="ep-portal__grid" aria-hidden="true"></div>
+    <div class="ep-portal-splash__inner">
+        <div class="ep-logo-circle ep-logo-circle--132">
+            @if (!string.IsNullOrWhiteSpace(Model.LogoPath))
+            {
+                <img src="@Model.LogoPath" alt="@Model.OrgName logo" />
+            }
+        </div>
+        <div class="ep-portal-splash__org">@Model.OrgName</div>
+        <h1 class="ep-portal-splash__product"><span class="ep-e">e</span>Procure<span class="ep-dim"> administration</span></h1>
+        <div class="ep-portal-splash__bar" aria-hidden="true"><span></span></div>
+        <div class="ep-portal-splash__loading">Loading your procurement workspace</div>
+    </div>
+    <a class="ep-portal-splash__continue" href="@loginUrl">Continue to sign in</a>
+</div>

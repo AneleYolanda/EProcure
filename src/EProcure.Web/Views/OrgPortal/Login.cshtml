@@ -1,0 +1,89 @@
+@* Design screen "sLogin" of the admin console: branded story panel on the left, sign-in form on the right.
+   Copy is adjusted where the prototype describes features we do not have yet (DESIGN_SPEC.md section 6). *@
+@model EProcure.Web.ViewModels.Account.OrgPortalViewModel
+@{
+    Layout = "_PortalLayout";
+    ViewData["Title"] = "Sign in";
+    var formAction = $"/admin/{Model.OrgCode.ToLowerInvariant()}/login";
+}
+<section class="ep-portal-hero" aria-label="@Model.OrgName">
+    <div class="ep-portal__grid" aria-hidden="true"></div>
+    <div class="ep-portal-hero__brand">
+        <span class="ep-logo-circle ep-logo-circle--60">
+            @if (!string.IsNullOrWhiteSpace(Model.LogoPath))
+            {
+                <img src="@Model.LogoPath" alt="" />
+            }
+        </span>
+        <span>
+            <span class="ep-portal-hero__org">@Model.OrgName</span>
+            <span class="ep-portal-hero__orgsub">Procurement administration · @Model.OrgCode</span>
+        </span>
+    </div>
+    <div class="ep-portal-hero__copy">
+        <p class="ep-portal-hero__headline">Every tender, every bid, every decision — on one auditable record.</p>
+        <p class="ep-portal-hero__body">eProcure applies the rules you configure: pre-qualification gates that treat every bidder the same, bids that stay hidden until the tender fee clears, and an append-only audit trail for the Auditor-General.</p>
+    </div>
+    <div class="ep-portal-hero__stats">
+        <div>
+            <div class="ep-portal-hero__stat-v">@Model.OpenTenders</div>
+            <div class="ep-portal-hero__stat-k">Open tenders</div>
+        </div>
+        <div>
+            <div class="ep-portal-hero__stat-v">@Model.RegisteredSuppliers.ToString("#,0").Replace(",", " ")</div>
+            <div class="ep-portal-hero__stat-k">Registered suppliers</div>
+        </div>
+        <div>
+            <div class="ep-portal-hero__stat-v">@Model.TendersThisYear</div>
+            <div class="ep-portal-hero__stat-k">Tenders this year</div>
+        </div>
+    </div>
+</section>
+
+<section class="ep-portal-form" aria-labelledby="signin-title">
+    <h1 class="ep-portal-form__title" id="signin-title">Sign in to the console</h1>
+    <div class="ep-portal-form__sub">Your role determines what you can see and do. Roles cannot be self-assigned.</div>
+
+    <form action="@formAction" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly"></div>
+        <div class="ep-portal-form__fields">
+            <label class="ep-portal-field" asp-for="Form.Email">WORK EMAIL
+                <input class="ep-portal-input" asp-for="Form.Email" autocomplete="username" data-ep-email-input />
+                <span asp-validation-for="Form.Email" class="field-validation-error"></span>
+            </label>
+            <label class="ep-portal-field" asp-for="Form.Password">PASSWORD
+                <input class="ep-portal-input" asp-for="Form.Password" autocomplete="current-password" data-ep-password-input />
+                <span asp-validation-for="Form.Password" class="field-validation-error"></span>
+            </label>
+        </div>
+
+        @if (Model.DemoAccounts.Count > 0)
+        {
+            <div class="ep-portal-form__caption">SIGN IN AS (DEMO · DEVELOPMENT ONLY)</div>
+            <div class="ep-demo-accounts">
+                @foreach (var account in Model.DemoAccounts)
+                {
+                    <button type="button" class="ep-choice" data-ep-fill-email="@account.Email" aria-pressed="false">
+                        <span class="ep-choice__dot"><span></span></span>
+                        <span>
+                            <span class="ep-choice__label">@account.Label</span>
+                            <span class="ep-choice__meta">@account.Meta</span>
+                        </span>
+                    </button>
+                }
+            </div>
+        }
+
+        <button type="submit" class="ep-portal-form__submit">Sign in</button>
+    </form>
+
+    <div class="ep-portal-form__foot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.5" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+        <span>Accounts lock for 15 minutes after 5 failed attempts. Sign-ins last up to 8 hours and are renewed while you are active. Failed sign-in attempts are recorded in the audit trail.</span>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

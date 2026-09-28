@@ -1,52 +1,31 @@
 using System.Diagnostics;
-using EProcure.Web.Data;
-using EProcure.Web.Domain.Enums;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using EProcure.Web.ViewModels.Home;
+using EProcure.Web.Domain;
 using EProcure.Web.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EProcure.Web.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly EProcureDbContext _db;
-
-    public HomeController(EProcureDbContext db)
-    {
-        _db = db;
-    }
-
+    /// <summary>
+    /// "/" sends each kind of visitor to their own starting screen:
+    /// signed out → splash (design "sSplash"), supplier → tender feed, organisation staff → console.
+    /// </summary>
     [AllowAnonymous]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
-        // Show splash page for anonymous users
-        if (!(User?.Identity?.IsAuthenticated ?? false))
+        if (User.Identity?.IsAuthenticated != true)
         {
             return View("Splash");
         }
 
-        var now = DateTime.UtcNow;
-        var tenders = await _db.Tenders
-            .AsNoTracking()
-            .Where(t => t.Status == TenderStatus.Published && t.ClosingDateUtc > now)
-            .OrderBy(t => t.ClosingDateUtc)
-            .Take(6)
-            .Select(t => new OpenTenderCardViewModel
-            {
-                Id = t.Id,
-                OrganisationName = t.Organisation.Name,
-                OrganisationLogoPath = t.Organisation.LogoPath,
-                Title = t.Title,
-                ReferenceNumber = t.ReferenceNumber,
-                Category = t.Category,
-                ClosingDateUtc = t.ClosingDateUtc,
-                TenderFee = t.TenderFee
-            })
-            .ToListAsync(cancellationToken);
+        if (User.IsInRole(AppRoles.OrgAdmin) || User.IsInRole(AppRoles.Evaluator))
+        {
+            return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+        }
 
-        return View(new HomeViewModel { LatestTenders = tenders });
+        return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
     }
 
     [AllowAnonymous]

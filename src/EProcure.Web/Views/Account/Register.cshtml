@@ -1,41 +1,48 @@
+@* Design screen "sRegister". Adds "Confirm password" (not in the prototype) as a safety check.
+   Public registration always creates a SUPPLIER account; staff accounts cannot be self-registered. *@
 @model EProcure.Web.ViewModels.Account.RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Create your profile";
+    ViewData["BackUrl"] = Url.Action("Login", "Account");
 }
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
 
-<h1>Register as a supplier</h1>
+<form asp-controller="Account" asp-action="Register" method="post" class="ep-register__body" novalidate>
+    <div asp-validation-summary="ModelOnly"></div>
 
-<form asp-action="Register" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="mb-3">
-        <label asp-for="FullName" class="form-label"></label>
-        <input asp-for="FullName" class="form-control" />
-        <span asp-validation-for="FullName" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Password" class="form-label"></label>
-        <input asp-for="Password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="ConfirmPassword" class="form-label"></label>
-        <input asp-for="ConfirmPassword" class="form-control" />
-        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="PhoneNumber" class="form-label"></label>
-        <input asp-for="PhoneNumber" class="form-control" placeholder="0XXXXXXXXX or +27XXXXXXXXX" />
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-    </div>
-    <div class="mb-3 form-check">
-        <input asp-for="PopiaConsent" class="form-check-input" />
-        <label asp-for="PopiaConsent" class="form-check-label"></label>
-        <span asp-validation-for="PopiaConsent" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Register</button>
+    <label class="ep-field" asp-for="FullName">FULL NAME
+        <input class="ep-input" asp-for="FullName" placeholder="Thandeka Ndlovu" autocomplete="name" />
+        <span asp-validation-for="FullName"></span>
+    </label>
+    <label class="ep-field" asp-for="Email">EMAIL ADDRESS (THIS IS YOUR USERNAME)
+        <input class="ep-input" asp-for="Email" placeholder="you@company.co.za" autocomplete="email" />
+        <span asp-validation-for="Email"></span>
+    </label>
+    <label class="ep-field" asp-for="PhoneNumber">CELLPHONE NUMBER
+        <input class="ep-input" asp-for="PhoneNumber" type="tel" placeholder="082 000 0000" autocomplete="tel" inputmode="tel" />
+        <span asp-validation-for="PhoneNumber"></span>
+    </label>
+    <label class="ep-field" asp-for="Password">PASSWORD
+        <input class="ep-input" asp-for="Password" placeholder="Minimum 10 characters" autocomplete="new-password" />
+        <span asp-validation-for="Password"></span>
+    </label>
+    <label class="ep-field" asp-for="ConfirmPassword">CONFIRM PASSWORD
+        <input class="ep-input" asp-for="ConfirmPassword" placeholder="Type it again" autocomplete="new-password" />
+        <span asp-validation-for="ConfirmPassword"></span>
+    </label>
+
+    <label class="ep-check-card" asp-for="PopiaConsent">
+        <input type="checkbox" asp-for="PopiaConsent" />
+        <span class="ep-check-card__box" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg>
+        </span>
+        <span class="ep-check-card__text">I consent to eProcure processing the personal and company information above for the purpose of tender registration and evaluation, as required by POPIA. Only information needed for procurement is collected. Read the <a asp-controller="Home" asp-action="Privacy">privacy notice</a>.</span>
+    </label>
+    <span asp-validation-for="PopiaConsent" class="field-validation-error"></span>
+
+    <button type="submit" class="ep-btn ep-btn--primary ep-mt-8">Send OTP to my phone</button>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -29,6 +29,8 @@ public class RegisterViewModel
 
     [Required(ErrorMessage = "Phone number is required for verification")]
     [Display(Name = "South African cellphone number")]
-    [RegularExpression(@"^(0[0-9]{9}|\+27[0-9]{9})$", ErrorMessage = "Enter a valid SA cellphone (0XXXXXXXXX or +27XXXXXXXXX)")]
+    // Accepts how people actually type numbers: 0821234567, 082 123 4567 or +27 82 123 4567.
+    // Spaces are removed before saving (see AccountController.Register).
+    [RegularExpression(@"^\s*(0\d{2}\s?\d{3}\s?\d{4}|\+27\s?\d{2}\s?\d{3}\s?\d{4})\s*$", ErrorMessage = "Enter a valid South African cellphone number, e.g. 082 123 4567.")]
     public string PhoneNumber { get; set; } = string.Empty;
 }

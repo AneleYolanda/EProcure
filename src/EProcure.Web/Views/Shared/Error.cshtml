@@ -1,25 +1,19 @@
-﻿@model ErrorViewModel
+@* Shown outside Development when something unexpected goes wrong. Never shows technical details,
+   only a request ID the support team can look up in the logs. *@
+@model ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = "Something went wrong";
+    ViewData["HideTabBar"] = true;
 }
-
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
-
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
-
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+<div class="ep-auth">
+    <div class="ep-otp__icon ep-otp__icon--warning">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.6" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+    </div>
+    <h1 class="ep-otp__title">Something went wrong</h1>
+    <p class="ep-otp__text">Nothing you did caused this. Please try again in a moment.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="ep-otp__text">If it keeps happening, give support this reference: <strong>@Model.RequestId</strong></p>
+    }
+    <a class="ep-btn ep-btn--primary ep-mt-26" asp-area="" asp-controller="Home" asp-action="Index">Go to my start page</a>
+</div>

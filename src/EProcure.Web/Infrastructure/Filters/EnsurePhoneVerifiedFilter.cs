@@ -54,7 +54,8 @@ public class EnsurePhoneVerifiedFilter : IAsyncActionFilter
             return;
         }
 
-        // Not verified and not on VerifyPhone; redirect.
-        context.Result = new RedirectToActionResult("VerifyPhone", "Account", null);
+        // Not verified and not on VerifyPhone; redirect. area = "" is essential: without it MVC keeps the
+        // current area and sends the user to /Supplier/Account/VerifyPhone, which does not exist.
+        context.Result = new RedirectToActionResult("VerifyPhone", "Account", new { area = "" });
     }
 }

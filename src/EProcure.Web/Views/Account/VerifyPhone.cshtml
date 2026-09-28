@@ -1,37 +1,44 @@
+@* Design screen "sOtp". Six boxes (Identity's phone codes have 6 digits; the prototype shows 5).
+   Every box is a form field named "Digits", so the page also works without JavaScript. *@
 @model EProcure.Web.ViewModels.Account.VerifyPhoneViewModel
 @{
-    ViewData["Title"] = "Verify Phone Number";
+    ViewData["Title"] = "Verify your number";
+    ViewData["HideTabBar"] = true;
 }
-
-<h1>Verify Your Phone Number</h1>
-
-@if (TempData["DemoOtp"] is string demoCode)
-{
-    <div style="background-color: #FDF8EF; border: 1px solid #F0DFC0; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-        <strong style="color: #B4791C;">DEMO MODE:</strong> Your code is <code style="background-color: #FDF2DC; padding: 2px 6px; border-radius: 4px;">@demoCode</code>
+<div class="ep-auth">
+    <div class="ep-otp__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5" /><path d="M10.5 18.5h3" /></svg>
     </div>
-}
+    <h1 class="ep-otp__title">Verify your number</h1>
+    <p class="ep-otp__text">We sent a 6-digit code to <strong>@Model.PhoneDisplay</strong>. Your account is ready to use once the code is verified.</p>
 
-<p>We've sent a verification code to your phone number. Enter it below to complete registration.</p>
+    @if (Model.DemoCode is not null)
+    {
+        <div class="ep-demo-box ep-mt-18" role="status">
+            <strong>DEMO MODE · NO SMS WAS SENT</strong>
+            Your code is <code>@Model.DemoCode</code>
+        </div>
+    }
 
-<form asp-action="VerifyPhone" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <div class="mb-3">
-        <label asp-for="Code" class="form-label"></label>
-        <input asp-for="Code" class="form-control" placeholder="Enter 6-digit code" />
-        <span asp-validation-for="Code" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Verify Code</button>
-</form>
-
-<p style="margin-top: 16px;">
-    <form asp-action="ResendCode" method="post" style="display: inline;">
-        Didn't receive a code? <button type="submit" class="btn btn-link" style="padding: 0; margin: 0;">Resend code</button>
+    <form asp-controller="Account" asp-action="VerifyPhone" method="post">
+        <div asp-validation-summary="ModelOnly" class="ep-mt-18"></div>
+        <fieldset class="ep-otp__boxes" data-ep-otp>
+            <legend class="ep-visually-hidden">Verification code, one digit per box</legend>
+            @for (var i = 0; i < 6; i++)
+            {
+                <input class="ep-otp__box" name="Digits" inputmode="numeric" pattern="[0-9]" maxlength="1"
+                       autocomplete="@(i == 0 ? "one-time-code" : "off")" aria-label="Digit @(i + 1) of 6" />
+            }
+        </fieldset>
+        <button type="submit" class="ep-btn ep-btn--primary ep-mt-26">Verify and continue</button>
     </form>
-</p>
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+    <form asp-controller="Account" asp-action="ResendCode" method="post" class="ep-otp__resend">
+        <button type="submit" class="ep-textbtn ep-textbtn--muted">Resend code</button>
+    </form>
+
+    <div class="ep-auth__spacer"></div>
+    <form asp-controller="Account" asp-action="Logout" method="post" class="ep-otp__resend">
+        <button type="submit" class="ep-textbtn ep-textbtn--muted">Sign out</button>
+    </form>
+</div>

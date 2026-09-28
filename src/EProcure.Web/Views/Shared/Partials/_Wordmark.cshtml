@@ -1,4 +1,4 @@
-@* Wordmark partial: e in accent, Procure in ink *@
-<a class="ep-wordmark" asp-area="" asp-controller="Home" asp-action="Index">
-    <span class="ep-e">e</span>Procure
-</a>
+@* The eProcure wordmark: "e" in accent blue, "Procure" in ink (or white on dark backgrounds).
+   Pass a CSS modifier as the model, e.g. "ep-wordmark--sm" or "ep-wordmark--xl ep-wordmark--light". *@
+@model string?
+<span class="ep-wordmark @Model"><span class="ep-e">e</span>Procure</span>

@@ -1,5 +1,6 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
+using EProcure.Web.Infrastructure;
 using EProcure.Web.Services;
 using EProcure.Web.Services.External;
 using EProcure.Web.Tenancy;
@@ -60,7 +61,10 @@ public class AccountController : Controller
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
         {
-            // Determine role to route the user to the appropriate area.
+            // A safe (local) return address wins, e.g. the page that sent them to sign in.
+            if (returnUrl is not null) return LocalRedirect(returnUrl);
+
+            // Otherwise route by role to the right area.
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
@@ -104,10 +108,9 @@ public class AccountController : Controller
             return View(model);
         }
 
-        // Normalize SA phone number to +27 format.
-        var normalizedPhone = model.PhoneNumber.StartsWith("0")
-            ? "+27" + model.PhoneNumber.Substring(1)
-            : model.PhoneNumber;
+        // Normalise the SA cellphone to +27XXXXXXXXX (spaces removed) so it is stored one way only.
+        var digitsOnly = model.PhoneNumber.Replace(" ", string.Empty).Trim();
+        var normalizedPhone = digitsOnly.StartsWith("0") ? "+27" + digitsOnly[1..] : digitsOnly;
 
         var user = new ApplicationUser
         {
@@ -172,9 +175,13 @@ public class AccountController : Controller
 
     [HttpGet]
     [Authorize]
-    public IActionResult VerifyPhone()
+    public async Task<IActionResult> VerifyPhone()
     {
-        return View(new VerifyPhoneViewModel());
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+        if (user.PhoneNumberConfirmed) return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
+
+        return View(BuildVerifyModel(user, new VerifyPhoneViewModel()));
     }
 
     [HttpPost]
@@ -182,8 +189,6 @@ public class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> VerifyPhone(VerifyPhoneViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
-
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Unauthorized();
 
@@ -191,19 +196,36 @@ public class AccountController : Controller
         if (string.IsNullOrEmpty(user.PhoneNumber))
         {
             ModelState.AddModelError(string.Empty, "No phone number on file.");
-            return View(model);
+            return View(BuildVerifyModel(user, model));
+        }
+
+        if (model.Code.Length != 6 || !model.Code.All(char.IsDigit))
+        {
+            ModelState.AddModelError(string.Empty, "Enter all 6 digits of the code.");
+            return View(BuildVerifyModel(user, model));
         }
 
         var result = await _userManager.ChangePhoneNumberAsync(user, user.PhoneNumber, model.Code);
         if (result.Succeeded)
         {
+            TempData.Remove(MockOtpSender.TempDataKey);
             await _audit.LogAsync("Account.PhoneVerified", "ApplicationUser", user.Id, null);
             await _signInManager.RefreshSignInAsync(user);
             return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
         }
 
         ModelState.AddModelError(string.Empty, "That code is incorrect or has expired.");
-        return View(model);
+        return View(BuildVerifyModel(user, model));
+    }
+
+    /// <summary>Adds the display-only parts of the Verify phone page (number, demo code).</summary>
+    private VerifyPhoneViewModel BuildVerifyModel(ApplicationUser user, VerifyPhoneViewModel model)
+    {
+        model.PhoneDisplay = DisplayFormat.Cellphone(user.PhoneNumber);
+        // Peek keeps the demo code for the next request too, so it stays visible after a wrong attempt.
+        model.DemoCode = TempData.Peek(MockOtpSender.TempDataKey) as string;
+        model.Digits = Array.Empty<string>(); // never echo digits back into the boxes
+        return model;
     }
 
     [HttpPost]

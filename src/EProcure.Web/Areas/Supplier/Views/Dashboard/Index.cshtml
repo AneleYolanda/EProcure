@@ -1,41 +1,62 @@
-@model EProcure.Web.ViewModels.Supplier.SupplierDashboardViewModel
+@* Design screen "sFeed": search, "All tenders" tab, category chips, tender cards.
+   The search and chips are ordinary GET links/forms, so they work without JavaScript and can be bookmarked. *@
+@model SupplierDashboardViewModel
 @{
-    ViewData["Title"] = "Supplier dashboard";
+    ViewData["Title"] = "Tenders";
+    ViewData["Tab"] = "tenders";
+    ViewData["ScreenClass"] = "ep-screen--page";
 }
+<header class="ep-feed-head">
+    <div class="ep-feed-head__row">
+        <h1 class="ep-visually-hidden">Open tenders</h1>
+        <partial name="~/Views/Shared/Partials/_Wordmark.cshtml" model="@("ep-wordmark--sm")" />
+        <span class="ep-grow"></span>
+        @if (Model.CompanyName is not null)
+        {
+            <a class="ep-company-tile" asp-area="Supplier" asp-controller="Profile" asp-action="Index" title="Bidding as @Model.CompanyName">
+                <span class="ep-company-tile__initials">@DisplayFormat.Initials(Model.CompanyName)</span>
+                <span class="ep-visually-hidden">Bidding as @Model.CompanyName</span>
+            </a>
+        }
+    </div>
+    <form method="get" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" role="search">
+        <label class="ep-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6B7B" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
+            <span class="ep-visually-hidden">Search tenders</span>
+            <input type="search" name="q" value="@Model.Query" placeholder="Search tenders, organisations, reference" />
+        </label>
+        @if (Model.Category is not null)
+        {
+            <input type="hidden" name="category" value="@Model.Category" />
+        }
+    </form>
+    <nav class="ep-tabs" aria-label="Feed">
+        <a class="ep-tabs__tab ep-tabs__tab--active" aria-current="page" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index">All tenders</a>
+    </nav>
+</header>
 
-<div class="page-heading">
-    <p class="eyebrow">Supplier workspace</p>
-    <h1>Welcome, @Model.FullName</h1>
-    <p class="text-muted">Find opportunities and keep your supplier information ready.</p>
-</div>
+<nav class="ep-filter-chips" aria-label="Filter by category">
+    <a class="ep-filter-chip@(Model.Category is null ? " ep-filter-chip--active" : "")"
+       asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" asp-route-q="@Model.Query">All</a>
+    @foreach (var category in Model.Categories)
+    {
+        <a class="ep-filter-chip@(Model.Category == category ? " ep-filter-chip--active" : "")"
+           asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" asp-route-q="@Model.Query" asp-route-category="@category">@category</a>
+    }
+</nav>
 
-@if (!Model.HasCompanyProfile)
+@if (Model.CompanyName is null)
 {
-    <div class="notice-card">
-        <div>
-            <p class="eyebrow">One important next step</p>
-            <h2>Create your company profile</h2>
-            <p>Complete your legal entity details before applying for a tender.</p>
-        </div>
-        <a class="btn btn-primary" href="#company-profile">Create profile</a>
-    </div>
+    <div class="ep-info-strip">Add your company profile to see which tenders <strong>you qualify for</strong>. Company profiles arrive in the next step.</div>
 }
 
-<div class="row g-3 mt-1">
-    <div class="col-md-6">
-        <div class="surface-card h-100">
-            <p class="eyebrow">Marketplace</p>
-            <h2>Browse tenders</h2>
-            <p class="text-muted">Search open opportunities from public-sector organisations.</p>
-            <a class="btn btn-outline-primary" asp-area="" asp-controller="Home" asp-action="Index">Browse tenders</a>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="surface-card h-100">
-            <p class="eyebrow">Your activity</p>
-            <h2>My applications</h2>
-            <p class="text-muted">Application tracking will appear here as you apply.</p>
-            <a class="btn btn-outline-primary" href="#coming-soon">Coming soon</a>
-        </div>
-    </div>
-</div>
+<section class="ep-tender-list" aria-label="Tenders">
+    @foreach (var tender in Model.Tenders)
+    {
+        <partial name="~/Views/Shared/Partials/_TenderCard.cshtml" model="tender" />
+    }
+    @if (Model.Tenders.Count == 0)
+    {
+        <div class="ep-empty">@(string.IsNullOrWhiteSpace(Model.Query) && Model.Category is null ? "There are no open tenders right now." : "No tenders match that search.")</div>
+    }
+</section>

@@ -1,15 +1,24 @@
-@* Bottom tab bar for suppliers *@
-<nav class="ep-tabbar" aria-label="Supplier navigation">
-    <a asp-area="" asp-controller="Home" asp-action="Index">
-        <svg width="22" height="22" aria-hidden="true"></svg>
+@*
+    Supplier bottom navigation (design block "showChrome"). Icons are copied from the prototype.
+    The page tells us which tab is active through ViewData["Tab"] ("tenders" or "profile").
+    "Applications" arrives in Step 7, so for now it is shown greyed out and is not a link.
+    The design's "For you" tab is out of MVP scope and hidden (see DESIGN_SPEC.md section 6).
+*@
+@{
+    var active = ViewData["Tab"] as string;
+    string Css(string key) => "ep-tabbar__item" + (active == key ? " ep-tabbar__item--active" : "");
+}
+<nav class="ep-tabbar" aria-label="Main">
+    <a class="@Css("tenders")" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" aria-current="@(active == "tenders" ? "page" : null)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-8z" /></svg>
         <span>Tenders</span>
     </a>
-    <a asp-area="Supplier" asp-controller="Dashboard" asp-action="Index">
-        <svg width="22" height="22" aria-hidden="true"></svg>
+    <span class="ep-tabbar__item ep-tabbar__item--soon" aria-disabled="true" title="Coming in a later step">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3zM14 3v4h4M10 12h6M10 16h4" /></svg>
         <span>Applications</span>
-    </a>
-    <a asp-area="" asp-controller="Account" asp-action="Manage">
-        <svg width="22" height="22" aria-hidden="true"></svg>
+    </span>
+    <a class="@Css("profile")" asp-area="Supplier" asp-controller="Profile" asp-action="Index" aria-current="@(active == "profile" ? "page" : null)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM5 21a7 7 0 0114 0" /></svg>
         <span>Profile</span>
     </a>
 </nav>

@@ -1,32 +1,39 @@
+@* POPIA privacy notice, in plain language. Mirrors the POPIA register in docs/DATA_MODEL.md;
+   keep the two in step when a field is added. Not legal advice. *@
 @{
     ViewData["Title"] = "POPIA privacy notice";
+    ViewData["BackUrl"] = Url.Action("Index", "Home");
+    ViewData["ScreenClass"] = "ep-screen--page";
 }
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
 
-<article class="page-heading">
-    <p class="eyebrow">Plain-language notice</p>
-    <h1>POPIA privacy notice</h1>
-    <p class="lead text-muted">This explains what eProcure collects and why. It is not legal advice.</p>
-</article>
+<div class="ep-screen__body">
+    <p class="ep-card__text">This explains what eProcure collects, why, and who can see it. It is written in plain language and is not legal advice.</p>
 
-<div class="surface-card mb-3">
-    <h2>What we collect</h2>
-    <p>For user accounts, we collect your full name, email address, optional phone number, password hash and account role. For supplier profiles, we collect optional job title and contact number plus the date you accepted this notice.</p>
-    <p>For supplier companies, we collect the legal name, CIPC registration number, SARS tax compliance PIN, CSD number, B-BBEE level and sector. Tender applications include SBD declarations, payment references and documents you choose to upload.</p>
-    <p>For accountability, we record the acting user, email, IP address, action and UTC timestamp in the audit log. We never collect card numbers, bank details, ID numbers, home addresses or dates of birth in this MVP.</p>
-</div>
-<div class="surface-card mb-3">
-    <h2>Why we collect it</h2>
-    <p>We use this information to authenticate users, protect tenant access, check tender eligibility, receive and evaluate applications, process a tender fee through the selected provider, communicate about an application and preserve an accountable procurement record.</p>
-</div>
-<div class="surface-card mb-3">
-    <h2>Who can see it</h2>
-    <p>You can see your own account, company, applications and documents. The organisation that owns a tender can see a supplier's company, application, documents and contact details only after the application becomes visible under the payment rules. Other organisations and suppliers cannot see them.</p>
-</div>
-<div class="surface-card mb-3">
-    <h2>Retention and your choices</h2>
-    <p>Procurement, payment and audit records are retained for the applicable public-sector records-management period. Documents are stored outside the public web folder and are served only after an ownership or tenant check. You may contact the platform operator to ask about access, correction or retention of your information.</p>
-</div>
-<div class="surface-card">
-    <h2>Contact</h2>
-    <p class="mb-0">For a privacy question, contact the eProcure platform operator through the programme contact channel supplied by your organisation.</p>
+    <section class="ep-card">
+        <h2 class="ep-card__title">What we collect</h2>
+        <p class="ep-card__text">Your account: full name, email address, cellphone number (suppliers verify it with a one-time code), a <em>hash</em> of your password (never the password itself) and your role. Your supplier profile: the date you gave POPIA consent.</p>
+        <p class="ep-card__text">Your company: legal name, CIPC registration number, SARS tax PIN, CSD number, B-BBEE level, enterprise size (EME, QSE or generic) and sector. Your applications: your answers to the SBD questions, the payment reference and the documents you upload.</p>
+        <p class="ep-card__text">For accountability we record who did what and when, with the IP address, in an audit log. We never collect card numbers, bank details, ID numbers, home addresses or dates of birth.</p>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Why we collect it</h2>
+        <p class="ep-card__text">To sign you in, keep each organisation's information separate, check whether you meet a tender's requirements, receive and evaluate your application, confirm your tender fee through the payment provider, and keep a trustworthy procurement record.</p>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Who can see it</h2>
+        <p class="ep-card__text">You can see your own account, company and applications. The organisation that posted a tender sees your company, application and documents only after your tender fee has cleared. Other organisations and other suppliers never see them.</p>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">How long we keep it</h2>
+        <p class="ep-card__text">Procurement, payment and audit records are kept for the public-sector records-management period. Uploaded documents are stored outside the public website and are only released after a check that you are allowed to see them.</p>
+    </section>
+
+    <section class="ep-card">
+        <h2 class="ep-card__title">Questions and your rights</h2>
+        <p class="ep-card__text">You may ask to see or correct your information, or ask how long it is kept. Contact the eProcure platform operator through the programme contact channel supplied by your organisation.</p>
+    </section>
 </div>

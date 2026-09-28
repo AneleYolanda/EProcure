@@ -1,33 +1,43 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace EProcure.Web.Services.External;
 
 /// <summary>
-/// Mock OTP sender for development/demo mode.
-/// Logs the code to ILogger and stores it in TempData["DemoOtp"] so it can be displayed on the VerifyPhone page.
+/// Development/demo stand-in for an SMS provider (Twilio, SMSPortal, ... later).
+/// Nothing is sent: the code is written to the log and put in TempData["DemoOtp"] so the
+/// Verify phone page can show it in a clearly marked DEMO MODE box.
+///
+/// TempData (a short-lived, encrypted cookie) is used instead of Session because Session is
+/// not switched on in this app; reading HttpContext.Session would throw.
 /// </summary>
 public class MockOtpSender : IOtpSender
 {
+    public const string TempDataKey = "DemoOtp";
+
     private readonly ILogger<MockOtpSender> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITempDataDictionaryFactory _tempDataFactory;
 
-    public MockOtpSender(ILogger<MockOtpSender> logger, IHttpContextAccessor httpContextAccessor)
+    public MockOtpSender(
+        ILogger<MockOtpSender> logger,
+        IHttpContextAccessor httpContextAccessor,
+        ITempDataDictionaryFactory tempDataFactory)
     {
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _tempDataFactory = tempDataFactory;
     }
 
     public Task SendAsync(string phoneNumber, string code)
     {
-        // Log the code so developers can see it during testing.
-        _logger.LogInformation("DEMO MODE: OTP code '{Code}' generated for phone {Phone}", code, phoneNumber);
+        _logger.LogInformation("DEMO MODE: OTP code {Code} generated for phone {Phone}", code, phoneNumber);
 
-        // Store in TempData so VerifyPhone can display it.
         var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Session != null)
+        if (httpContext is not null)
         {
-            httpContext.Session.SetString("DemoOtp", code);
+            var tempData = _tempDataFactory.GetTempData(httpContext);
+            tempData[TempDataKey] = code;
+            tempData.Save(); // make sure it survives the redirect to the Verify phone page
         }
 
         return Task.CompletedTask;
