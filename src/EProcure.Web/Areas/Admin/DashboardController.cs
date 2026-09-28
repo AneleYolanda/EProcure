@@ -50,7 +50,7 @@ public class DashboardController : Controller
                 t.Status,
                 t.ClosingDateUtc,
                 t.EvaluationSubmittedAtUtc,
-                Applications = t.Submissions.Count() // only paid submissions: the filter hides unpaid ones
+                Applications = t.Submissions.Count(s => s.Status != SubmissionStatus.Withdrawn) // paid, not withdrawn (the filter hides unpaid ones)
             })
             .ToListAsync(cancellationToken);
 

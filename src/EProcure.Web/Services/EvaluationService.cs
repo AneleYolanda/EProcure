@@ -80,11 +80,13 @@ public class EvaluationService : IEvaluationService
 {
     private readonly EProcureDbContext _db;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notifications;
 
-    public EvaluationService(EProcureDbContext db, IAuditService audit)
+    public EvaluationService(EProcureDbContext db, IAuditService audit, INotificationService notifications)
     {
         _db = db;
         _audit = audit;
+        _notifications = notifications;
     }
 
     public static bool IsSealed(DateTime closingUtc, DateTime nowUtc) => closingUtc > nowUtc;
@@ -125,8 +127,8 @@ public class EvaluationService : IEvaluationService
             .Select(t => new
             {
                 Tender = t,
-                Bids = t.Submissions.Count(),
-                Evaluated = t.Submissions.Count(s => s.Evaluation != null)
+                Bids = t.Submissions.Count(s => s.Status != SubmissionStatus.Withdrawn),
+                Evaluated = t.Submissions.Count(s => s.Status != SubmissionStatus.Withdrawn && s.Evaluation != null)
             })
             .ToListAsync(ct);
 
@@ -146,14 +148,14 @@ public class EvaluationService : IEvaluationService
         var now = DateTime.UtcNow;
         var stage = StageOf(tender, now);
         var frozen = tender.EvaluationSubmittedAtUtc is not null || tender.Status == TenderStatus.Awarded;
-        var scores = frozen ? FrozenScores(tender.Submissions) : LiveScores(tender);
+        var scores = frozen ? FrozenScores(Bids(tender)) : LiveScores(tender);
 
-        var evaluators = await NamesAsync(tender.Submissions.Where(s => s.Evaluation is not null).Select(s => s.Evaluation!.EvaluatedByUserId)
+        var evaluators = await NamesAsync(Bids(tender).Where(s => s.Evaluation is not null).Select(s => s.Evaluation!.EvaluatedByUserId)
             .Append(tender.EvaluationSubmittedByUserId ?? string.Empty), ct);
 
         var bids = scores.Select(line =>
         {
-            var s = tender.Submissions.Single(x => x.Id == line.SubmissionId);
+            var s = Bids(tender).Single(x => x.Id == line.SubmissionId);
             return new ScoresheetBid(s.Id, s.ReferenceNumber, s.Company.Name, s.DeclaredBbbeeLevel, s.Status,
                 SubmissionStatuses.RedFlags(s).Count, s.Evaluation,
                 s.Evaluation is null ? null : evaluators.GetValueOrDefault(s.Evaluation.EvaluatedByUserId),
@@ -200,6 +202,8 @@ public class EvaluationService : IEvaluationService
         var result = new ServiceResult();
         if (StageMessage(StageOf(submission.Tender, DateTime.UtcNow), EvaluationStage.Evaluating) is string blocked)
             return result.With(string.Empty, blocked);
+        if (submission.Status == SubmissionStatus.Withdrawn)
+            return result.With(string.Empty, "This bid was withdrawn by the bidder before the closing date and is not evaluated.");
 
         var reason = input.NonResponsiveReason?.Trim();
         var notes = string.IsNullOrWhiteSpace(input.Notes) ? null : input.Notes.Trim();
@@ -245,7 +249,7 @@ public class EvaluationService : IEvaluationService
         if (StageMessage(StageOf(tender, DateTime.UtcNow), EvaluationStage.Evaluating) is string blocked)
             return result.With(string.Empty, blocked);
 
-        var missing = tender.Submissions.Count(s => s.Evaluation is null);
+        var missing = Bids(tender).Count(s => s.Evaluation is null);
         if (missing > 0)
             return result.With(string.Empty, $"{missing} bid{(missing == 1 ? " has" : "s have")} not been evaluated yet. Every bid must be evaluated before the recommendation is submitted.");
 
@@ -268,7 +272,7 @@ public class EvaluationService : IEvaluationService
         // Freeze the scoresheet exactly as the BEC signs it off.
         foreach (var line in scores)
         {
-            var evaluation = tender.Submissions.Single(s => s.Id == line.SubmissionId).Evaluation!;
+            var evaluation = Bids(tender).Single(s => s.Id == line.SubmissionId).Evaluation!;
             evaluation.PricePoints = line.PricePoints;
             evaluation.PreferencePoints = line.PreferencePoints;
             evaluation.TotalPoints = line.TotalPoints;
@@ -281,10 +285,11 @@ public class EvaluationService : IEvaluationService
         tender.BacReturnNote = null;
         await _db.SaveChangesAsync(ct);
 
-        var recommended = tender.Submissions.Single(s => s.Id == chosen.SubmissionId);
+        var recommended = Bids(tender).Single(s => s.Id == chosen.SubmissionId);
         await _audit.LogAsync("Evaluation.Submitted", "Tender", tender.Id.ToString(), tender.OrganisationId,
             $"{tender.ReferenceNumber}: recommends {recommended.ReferenceNumber} {recommended.Company.Name}, {chosen.TotalPoints} points, rank {chosen.Rank}"
             + (trimmed is null ? string.Empty : $". Reasons: {trimmed}"));
+        await _notifications.RecommendationSubmittedAsync(tender, recommended.Company.Name, ct);
         return ServiceResult.Ok(tender.Id);
     }
 
@@ -300,7 +305,7 @@ public class EvaluationService : IEvaluationService
         if (trimmed is null || trimmed.Length < 10 || trimmed.Length > 2000)
             return result.With("ReturnReason", "Tell the BEC what must be reconsidered (10 to 2000 characters).");
 
-        foreach (var evaluation in tender.Submissions.Select(s => s.Evaluation).OfType<BidEvaluation>())
+        foreach (var evaluation in Bids(tender).Select(s => s.Evaluation).OfType<BidEvaluation>())
         {
             evaluation.PricePoints = evaluation.PreferencePoints = evaluation.TotalPoints = null;
             evaluation.Rank = null;
@@ -324,7 +329,7 @@ public class EvaluationService : IEvaluationService
         if (StageMessage(StageOf(tender, DateTime.UtcNow), EvaluationStage.AwaitingAdjudication) is string blocked)
             return result.With(string.Empty, blocked);
 
-        var winner = tender.Submissions.FirstOrDefault(s => s.Id == input.SubmissionId && s.Evaluation?.Rank is not null);
+        var winner = Bids(tender).FirstOrDefault(s => s.Id == input.SubmissionId && s.Evaluation?.Rank is not null);
         if (winner is null) result.With(nameof(input.SubmissionId), "Choose a responsive bid from the scoresheet.");
 
         var reference = input.CommitteeReference?.Trim();
@@ -364,8 +369,8 @@ public class EvaluationService : IEvaluationService
         });
         tender.Status = TenderStatus.Awarded;
 
-        var ranked = tender.Submissions.Count(s => s.Evaluation?.Rank is not null);
-        foreach (var bid in tender.Submissions)
+        var ranked = Bids(tender).Count(s => s.Evaluation?.Rank is not null);
+        foreach (var bid in Bids(tender))
         {
             if (bid.Id == winner.Id)
             {
@@ -387,24 +392,36 @@ public class EvaluationService : IEvaluationService
         await _db.SaveChangesAsync(ct);
         await _audit.LogAsync(deviates ? "Tender.AwardedAgainstRecommendation" : "Tender.Awarded", "Tender", tender.Id.ToString(), tender.OrganisationId,
             $"{tender.ReferenceNumber} awarded to {winner.ReferenceNumber} {winner.Company.Name} for {DisplayFormat.Money(winningEvaluation.BidPrice!.Value)}, decision reference {reference}");
+
+        // Every bidder gets the note that is now on their timeline (the email is a copy; the timeline is the record).
+        foreach (var bid in Bids(tender))
+            await _notifications.BidOutcomeAsync(bid, bid.StatusHistory.Last().Note!, ct);
         return ServiceResult.Ok(tender.Id);
     }
 
     // ------------------------------------------------------------------ helpers
 
+    /// <summary>
+    /// The bids that take part in the evaluation. Withdrawn bids are also excluded by the query, but EF Core can still
+    /// attach one that was loaded earlier in the same request, so the rule is applied here as well.
+    /// </summary>
+    private static IEnumerable<Submission> Bids(Tender tender) => tender.Submissions.Where(s => s.Status != SubmissionStatus.Withdrawn);
+
+
     /// <summary>Loads the tender with every bid the organisation can see (tenant and "submitted only" filters apply).</summary>
     private Task<Tender?> LoadTenderAsync(int tenderId, bool tracking, CancellationToken ct)
     {
         var query = _db.Tenders
-            .Include(t => t.Submissions).ThenInclude(s => s.Company)
-            .Include(t => t.Submissions).ThenInclude(s => s.Evaluation)
+            // Withdrawn bids are kept on record but are not part of the evaluation.
+            .Include(t => t.Submissions.Where(s => s.Status != SubmissionStatus.Withdrawn)).ThenInclude(s => s.Company)
+            .Include(t => t.Submissions.Where(s => s.Status != SubmissionStatus.Withdrawn)).ThenInclude(s => s.Evaluation)
             .AsSplitQuery();
         if (!tracking) query = query.AsNoTracking();
         return query.SingleOrDefaultAsync(t => t.Id == tenderId, ct);
     }
 
     private static IReadOnlyList<ScoreLine> LiveScores(Tender tender) =>
-        EvaluationRules.Score(tender.Submissions.Select(s => new BidInput(s.Id, s.Evaluation is not null,
+        EvaluationRules.Score(Bids(tender).Select(s => new BidInput(s.Id, s.Evaluation is not null,
             s.Evaluation?.IsResponsive == true, s.Evaluation?.BidPrice, s.DeclaredBbbeeLevel)), tender.PointSystem);
 
     /// <summary>The scoresheet as the BEC signed it off (points and ranks stored at submission).</summary>

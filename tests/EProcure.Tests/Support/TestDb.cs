@@ -55,6 +55,7 @@ public sealed class TestDb : IDisposable
             Id = id,
             UserName = $"{id}@example.test",
             NormalizedUserName = $"{id}@EXAMPLE.TEST",
+            NormalizedEmail = $"{id}@EXAMPLE.TEST",
             Email = $"{id}@example.test",
             FullName = $"Test {id}",
             OrganisationId = organisationId,

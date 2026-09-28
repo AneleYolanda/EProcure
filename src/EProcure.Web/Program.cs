@@ -40,7 +40,16 @@ builder.Services
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<EProcureDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddTokenProvider<InviteTokenProvider<ApplicationUser>>(InviteTokenProvider<ApplicationUser>.ProviderName);
+
+// Password-reset links work once (the password change updates the security stamp) and expire after 1 hour.
+// Staff invitations use their own provider so they can last 3 days.
+builder.Services.Configure<DataProtectionTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromHours(1));
+builder.Services.Configure<InviteTokenProviderOptions>(o => o.TokenLifespan = TimeSpan.FromDays(3));
+// Re-check each signed-in user's security stamp every minute (default 30): a deactivated account, a role change or a
+// password reset ends other sessions within a minute.
+builder.Services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.FromMinutes(1));
 // Add our custom claims principal factory so the signed-in user's ClaimsPrincipal
 // includes the tenant claim "eprocure:org_id" when the user has an OrganisationId.
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, OrganisationClaimsPrincipalFactory>();
@@ -56,6 +65,11 @@ switch (external["Otp"] ?? "Mock")
 {
     case "Mock": builder.Services.AddScoped<IOtpSender, MockOtpSender>(); break;
     default: throw new InvalidOperationException($"Unknown ExternalServices:Otp provider '{external["Otp"]}'.");
+}
+switch (external["Email"] ?? "Mock")
+{
+    case "Mock": builder.Services.AddSingleton<IEmailSender, MockEmailSender>(); break;
+    default: throw new InvalidOperationException($"Unknown ExternalServices:Email provider '{external["Email"]}'.");
 }
 switch (external["FileStorage"] ?? "Local")
 {
@@ -76,6 +90,9 @@ builder.Services.AddScoped<DemoDataSeeder>();
 builder.Services.AddScoped<ITenderService, TenderService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
+builder.Services.AddScoped<ILinkBuilder, LinkBuilder>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the

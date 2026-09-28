@@ -1,0 +1,34 @@
+@* Development-only demo mailbox: the emails the mock sender "sent", newest first. *@
+@model IReadOnlyList<EProcure.Web.Services.External.MockEmailSender.SentEmail>
+@{
+    ViewData["Title"] = "Demo mailbox";
+    ViewData["Shell"] = "app";
+    ViewData["HideTabBar"] = true;
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<div class="ep-screen__body">
+    <div class="ep-demo-box" role="note">
+        <strong>DEMO MODE · DEVELOPMENT ONLY</strong>
+        No real email leaves this laptop. These are the emails eProcure would have sent since the app started (newest first,
+        the latest @EProcure.Web.Services.External.MockEmailSender.Capacity). Refresh to see new ones.
+    </div>
+    <h1 class="ep-detail-title ep-mt-18">Demo mailbox (@Model.Count)</h1>
+
+    @foreach (var sent in Model)
+    {
+        var message = sent.Message;
+        <section class="ep-card ep-mail">
+            <div class="ep-caption">@DisplayFormat.DateTime(sent.SentAtUtc) · to @message.To</div>
+            <h2 class="ep-card__title">@message.Subject</h2>
+            <p class="ep-mail__body">@message.Body</p>
+            @if (message.LinkUrl is string url)
+            {
+                <a class="ep-btn ep-btn--primary ep-mt-14" href="@url">@(message.LinkText ?? "Open")</a>
+            }
+        </section>
+    }
+    @if (Model.Count == 0)
+    {
+        <p class="ep-card__text">No emails yet. Ask for a password reset, invite a staff member or submit an application.</p>
+    }
+</div>

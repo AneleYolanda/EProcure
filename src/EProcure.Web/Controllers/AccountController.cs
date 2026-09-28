@@ -1,3 +1,4 @@
+using System.Text;
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Infrastructure;
@@ -8,6 +9,7 @@ using EProcure.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EProcure.Web.Controllers;
@@ -24,6 +26,9 @@ public class AccountController : Controller
     private readonly EProcureDbContext _db;
     private readonly IAuditService _audit;
     private readonly IOtpSender _otpSender;
+    private readonly INotificationService _notifications;
+    private readonly ILinkBuilder _links;
+    private readonly IEmailSender _emailSender;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
@@ -31,7 +36,10 @@ public class AccountController : Controller
         RoleManager<ApplicationRole> roleManager,
         EProcureDbContext db,
         IAuditService audit,
-        IOtpSender otpSender)
+        IOtpSender otpSender,
+        INotificationService notifications,
+        ILinkBuilder links,
+        IEmailSender emailSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -39,6 +47,9 @@ public class AccountController : Controller
         _db = db;
         _audit = audit;
         _otpSender = otpSender;
+        _notifications = notifications;
+        _links = links;
+        _emailSender = emailSender;
     }
 
     [HttpGet]
@@ -253,6 +264,125 @@ public class AccountController : Controller
 
         return RedirectToAction(nameof(VerifyPhone));
     }
+
+    // ------------------------------------------------------------------ password reset and staff invitations
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
+
+    /// <summary>
+    /// Always shows the same "check your email" message, so the page cannot be used to find out which addresses
+    /// have accounts. A link is only emailed to an existing, active account.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model, CancellationToken ct)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.FindByEmailAsync(model.Email.Trim());
+        if (user is not null && StaffAccounts.IsActive(user) && user.Email is not null)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var link = _links.Absolute($"/Account/ResetPassword?userId={Uri.EscapeDataString(user.Id)}&code={Encode(token)}");
+            await _notifications.PasswordResetRequestedAsync(user, link, ct);
+            await _audit.LogAsync("Account.PasswordResetRequested", "ApplicationUser", user.Id, user.OrganisationId);
+        }
+
+        return View(new ForgotPasswordViewModel { Sent = true, Email = model.Email, ShowDemoMailbox = DemoMailboxAvailable });
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult ResetPassword(string? userId, string? code) =>
+        string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code)
+            ? LinkProblem()
+            : View("SetPassword", new SetPasswordViewModel { UserId = userId, Code = code });
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    public Task<IActionResult> ResetPassword(SetPasswordViewModel model, CancellationToken ct) => SetPasswordAsync(model, invitation: false, ct);
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> AcceptInvite(string? userId, string? code)
+    {
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code)) return LinkProblem();
+        var user = await _userManager.FindByIdAsync(userId);
+        return View("SetPassword", new SetPasswordViewModel
+        {
+            UserId = userId, Code = code, IsInvitation = true,
+            Greeting = user is null ? null : $"Welcome, {user.FullName}. Choose the password you will use to sign in to your organisation's eProcure workspace."
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    public Task<IActionResult> AcceptInvite(SetPasswordViewModel model, CancellationToken ct) => SetPasswordAsync(model, invitation: true, ct);
+
+    /// <summary>
+    /// Sets the password from an emailed link. The token is checked by Identity (signed, expires, and stops working
+    /// once used because the password change updates the security stamp). A wrong or expired link gets the same
+    /// message whether or not the account exists.
+    /// </summary>
+    private async Task<IActionResult> SetPasswordAsync(SetPasswordViewModel model, bool invitation, CancellationToken ct)
+    {
+        model.IsInvitation = invitation;
+        if (!ModelState.IsValid) return View("SetPassword", model);
+
+        var user = await _userManager.FindByIdAsync(model.UserId);
+        string token;
+        try { token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Code)); }
+        catch (FormatException) { return LinkProblem(); }
+        if (user is null || StaffAccounts.IsDeactivated(user)) return LinkProblem();
+
+        IdentityResult result;
+        if (invitation)
+        {
+            var valid = await _userManager.VerifyUserTokenAsync(user, InviteTokenProvider<ApplicationUser>.ProviderName, InviteTokenProvider<ApplicationUser>.Purpose, token);
+            if (!valid || !StaffAccounts.IsInvited(user)) return LinkProblem();
+            result = await _userManager.AddPasswordAsync(user, model.Password);
+        }
+        else
+        {
+            result = await _userManager.ResetPasswordAsync(user, token, model.Password);
+            if (!result.Succeeded && result.Errors.Any(e => e.Code == "InvalidToken")) return LinkProblem();
+        }
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors) ModelState.AddModelError(nameof(model.Password), error.Description);
+            return View("SetPassword", model);
+        }
+
+        // Opening the emailed link proves the address works.
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+        }
+        await _userManager.UpdateSecurityStampAsync(user); // ends any other open sessions
+        await _audit.LogAsync(invitation ? "Staff.InvitationAccepted" : "Account.PasswordReset", "ApplicationUser", user.Id, user.OrganisationId);
+        if (!invitation) await _notifications.PasswordChangedAsync(user, ct);
+
+        TempData["Flash"] = invitation ? "Your password is set. Sign in to your organisation's workspace." : "Your password has been changed. Sign in with the new password.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    private IActionResult LinkProblem()
+    {
+        TempData["FlashError"] = "That link is not valid or has expired. Links work once; ask for a new one.";
+        return RedirectToAction(nameof(ForgotPassword));
+    }
+
+    private static string Encode(string token) => WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+    private bool DemoMailboxAvailable =>
+        HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment() && _emailSender is MockEmailSender;
 
     private bool IsLocalReturnUrl(string? returnUrl)
     {

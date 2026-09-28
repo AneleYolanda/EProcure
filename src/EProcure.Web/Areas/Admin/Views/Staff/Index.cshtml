@@ -1,0 +1,109 @@
+@* "Roles and users": the organisation's staff, their roles and status, and the invite form. SCM Officers only. *@
+@model StaffPageViewModel
+@{
+    ViewData["Title"] = "Roles and users";
+    ViewData["Nav"] = "staff";
+}
+<div class="ep-stack">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">@flashError</div>
+    }
+    <div class="ep-panel__sub">
+        People who work in your organisation's eProcure workspace. <strong>SCM Officers</strong> create and publish tenders and
+        record the BAC's decisions; <strong>BEC members</strong> evaluate bids. Nobody can change their own role, and the
+        organisation always keeps at least one active SCM Officer. People are deactivated, never deleted, so their work stays on record.
+    </div>
+
+    <div class="ep-detail">
+        <div class="ep-detail__main">
+            <section class="ep-register" aria-label="Staff">
+                <div class="ep-register__head ep-register__head--staff" aria-hidden="true">
+                    <div>Person</div><div>Role</div><div>Status</div><div></div>
+                </div>
+                @foreach (var p in Model.People)
+                {
+                    <div class="ep-register__row ep-register__row--staff">
+                        <span class="ep-register__title">
+                            @p.FullName@(p.IsYou ? " (you)" : "")
+                            <span class="ep-score__sub">@p.Email</span>
+                        </span>
+                        @if (p.IsYou)
+                        {
+                            <span class="ep-register__cell">@StaffService.Label(p.Role)</span>
+                        }
+                        else
+                        {
+                            <form asp-action="Role" asp-route-id="@p.Id" method="post" class="ep-staff__role">
+                                <label class="ep-visually-hidden" for="role-@p.Id">Role of @p.FullName</label>
+                                <select class="ep-ainput ep-ainput--compact" id="role-@p.Id" name="role">
+                                    @foreach (var role in StaffService.StaffRoles)
+                                    {
+                                        <option value="@role" selected="@(role == p.Role)">@StaffService.Label(role)</option>
+                                    }
+                                </select>
+                                <button type="submit" class="ep-abtn ep-abtn--compact">Save</button>
+                            </form>
+                        }
+                        <span class="@(!p.IsActive ? "ep-badge" : p.IsInvited ? "ep-badge ep-badge--warning" : "ep-badge ep-badge--success")">
+                            @(!p.IsActive ? "Deactivated" : p.IsInvited ? "Invited" : "Active")
+                        </span>
+                        <span class="ep-staff__actions">
+                            @if (!p.IsYou)
+                            {
+                                @if (p.IsActive && p.IsInvited)
+                                {
+                                    <form asp-action="Resend" asp-route-id="@p.Id" method="post"><button type="submit" class="ep-textbtn">Resend invite</button></form>
+                                }
+                                @if (p.IsActive)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@p.Id" method="post"><button type="submit" class="ep-textbtn ep-textbtn--danger">Deactivate</button></form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Reactivate" asp-route-id="@p.Id" method="post"><button type="submit" class="ep-textbtn">Reactivate</button></form>
+                                }
+                            }
+                        </span>
+                    </div>
+                }
+            </section>
+        </div>
+
+        <aside class="ep-detail__side">
+            <section class="ep-side-card" aria-labelledby="invite-title">
+                <h3 class="ep-side-card__title" id="invite-title">Invite a person</h3>
+                <div class="ep-side-card__text">They get an email with a link to choose their own password. You never see or send passwords.</div>
+                <form asp-action="Invite" method="post" class="ep-mt-14">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <label class="ep-afield">FULL NAME
+                        <input class="ep-ainput" asp-for="Invite.FullName" maxlength="100" autocomplete="off" />
+                        <span asp-validation-for="Invite.FullName"></span>
+                    </label>
+                    <label class="ep-afield ep-mt-14">WORK EMAIL
+                        <input class="ep-ainput" asp-for="Invite.Email" type="email" maxlength="256" autocomplete="off" />
+                        <span asp-validation-for="Invite.Email"></span>
+                    </label>
+                    <div class="ep-afield ep-mt-14" role="radiogroup" aria-label="Role">ROLE
+                        <div class="ep-radio-pills">
+                            @foreach (var role in StaffService.StaffRoles)
+                            {
+                                <label class="ep-radio-pill"><input type="radio" asp-for="Invite.Role" value="@role" /><span>@StaffService.Label(role)</span></label>
+                            }
+                        </div>
+                        <span asp-validation-for="Invite.Role"></span>
+                    </div>
+                    <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block ep-mt-14">Send invitation</button>
+                </form>
+                @if (Model.ShowDemoMailbox)
+                {
+                    <div class="ep-side-card__text ep-mt-14">Demo mode: invitations appear in the <a href="/dev/mailbox" target="_blank" rel="noopener">demo mailbox</a>.</div>
+                }
+            </section>
+        </aside>
+    </div>
+</div>

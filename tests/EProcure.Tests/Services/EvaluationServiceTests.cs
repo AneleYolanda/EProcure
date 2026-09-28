@@ -18,6 +18,7 @@ public sealed class EvaluationServiceTests : IDisposable
     private readonly CancellationToken _ct = CancellationToken.None;
     private readonly string _evaluator;
     private readonly string _scmOfficer;
+    private readonly EProcure.Web.Services.External.MockEmailSender _mail = new();
 
     public EvaluationServiceTests()
     {
@@ -30,7 +31,7 @@ public sealed class EvaluationServiceTests : IDisposable
     private (EvaluationService Service, EProcureDbContext Context) As(int organisationId)
     {
         var context = _db.Context(TestTenant.Org(organisationId));
-        return (new EvaluationService(context, new AuditService(context, new HttpContextAccessor())), context);
+        return (new EvaluationService(context, new AuditService(context, new HttpContextAccessor()), Notifications.Into(_mail, context)), context);
     }
 
     /// <summary>A closed RBIDZ tender with three submitted bids. Returns (tender, levelOne, levelSix, levelTwo).</summary>
@@ -300,6 +301,72 @@ public sealed class EvaluationServiceTests : IDisposable
 
         Assert.Contains("future", future.Errors.Single().Message);
         Assert.Contains("before the tender closed", early.Errors.Single().Message);
+    }
+
+    [Fact]
+    public async Task A_withdrawn_bid_is_left_out_of_the_evaluation()
+    {
+        var t = ClosedTenderWithThreeBids();
+        await using (var arrange = _db.Marketplace())
+        {
+            (await arrange.Submissions.SingleAsync(s => s.Id == t.Umhlathi)).Status = SubmissionStatus.Withdrawn;
+            await arrange.SaveChangesAsync();
+        }
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+
+        var capture = await service.CaptureAsync(t.Umhlathi, Responsive(100m), _evaluator, _ct);
+        await service.CaptureAsync(t.Khanya, Responsive(1_150_000m), _evaluator, _ct);
+        await service.CaptureAsync(t.Siyakha, Responsive(1_240_000m), _evaluator, _ct);
+        var sheet = (await service.GetScoresheetAsync(t.Tender, _ct))!;
+
+        Assert.Contains("withdrawn", capture.Errors.Single().Message);
+        Assert.Equal(2, sheet.Bids.Count);
+        Assert.True(sheet.AllEvaluated); // the withdrawn bid does not block the recommendation
+        Assert.True((await service.SubmitRecommendationAsync(t.Tender, t.Siyakha, null, _evaluator, _ct)).Succeeded);
+    }
+
+    [Fact]
+    public async Task The_recommendation_is_emailed_to_the_organisations_active_scm_officers_only()
+    {
+        var t = ClosedTenderWithThreeBids();
+        const string scmRoleId = "8e445865-a24d-4543-a6c6-9443d048cdb9"; // seeded OrgAdmin role
+        var otherOrgAdmin = _db.AddUser(TestDb.Mvlm);
+        var deactivated = _db.AddUser(TestDb.Rbidz);
+        await using (var arrange = _db.Marketplace())
+        {
+            foreach (var id in new[] { _scmOfficer, otherOrgAdmin, deactivated })
+                arrange.UserRoles.Add(new Microsoft.AspNetCore.Identity.IdentityUserRole<string> { UserId = id, RoleId = scmRoleId });
+            (await arrange.Users.SingleAsync(u => u.Id == deactivated)).LockoutEnd = StaffAccounts.DeactivatedUntil;
+            await arrange.SaveChangesAsync();
+        }
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+        await EvaluateAllAsync(service, t);
+
+        await service.SubmitRecommendationAsync(t.Tender, t.Siyakha, null, _evaluator, _ct);
+
+        var email = Assert.Single(_mail.Sent, m => m.Message.Subject.StartsWith("BAC decision needed")).Message;
+        Assert.Equal($"{_scmOfficer}@example.test", email.To);
+        Assert.Equal($"/Admin/Evaluation/Tender/{t.Tender}", email.LinkUrl);
+    }
+
+    [Fact]
+    public async Task Every_bidder_is_emailed_the_outcome_with_the_same_note_as_the_timeline()
+    {
+        var t = ClosedTenderWithThreeBids();
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+        await EvaluateAllAsync(service, t);
+        await service.SubmitRecommendationAsync(t.Tender, t.Siyakha, null, _evaluator, _ct);
+
+        await service.AwardAsync(t.Tender, Award(t.Siyakha), _scmOfficer, _ct);
+
+        var outcomes = _mail.Sent.Where(m => m.Message.Subject.Contains(": TEST/")).Select(m => m.Message).ToList();
+        Assert.Equal(3, outcomes.Count);
+        Assert.Single(outcomes, m => m.Subject.StartsWith("Awarded"));
+        Assert.Contains(outcomes, m => m.Body.Contains("ranked 2 of 3"));
+        Assert.All(outcomes, m => Assert.DoesNotContain("R1 380 000", m.Body)); // no competitor's price in the losers' emails
     }
 
     [Fact]

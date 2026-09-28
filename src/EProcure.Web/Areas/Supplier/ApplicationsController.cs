@@ -96,8 +96,30 @@ public class ApplicationsController : Controller
             Timeline = history.Select(h => new MyApplicationDetailsViewModel.TimelineItem(
                 h.Note ?? SubmissionStatuses.Label(h.ToStatus),
                 h.ChangedByUserId == UserId ? "You" : h.OrganisationId is null ? h.FullName : s.Tender.Organisation.Name,
-                h.ChangedAtUtc)).ToList()
+                h.ChangedAtUtc)).ToList(),
+            ClosingDateUtc = s.Tender.ClosingDateUtc,
+            TenderOpen = s.Tender.Status == TenderStatus.Published && s.Tender.ClosingDateUtc > DateTime.UtcNow,
+            CanWithdraw = _applications.CheckCanWithdraw(s, DateTime.UtcNow) is null
         });
+    }
+
+    // POST /Supplier/Applications/Withdraw/12   Withdraw a submitted bid before the closing date (it stays on record).
+    [HttpPost]
+    public async Task<IActionResult> Withdraw(int id, string? reason, bool confirm, CancellationToken ct)
+    {
+        var submission = await _applications.LoadAsync(id, UserId, ct);
+        if (submission is null) return NotFound();
+        if (!confirm)
+        {
+            TempData["FlashError"] = "Tick the box to confirm that you want to withdraw this bid.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var result = await _applications.WithdrawAsync(submission, reason, UserId, ct);
+        TempData[result.Succeeded ? "Flash" : "FlashError"] = result.Succeeded
+            ? "Your bid has been withdrawn and will not be evaluated. You can reopen and resubmit it until the closing date."
+            : string.Join(" ", result.Errors.Select(e => e.Message));
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // GET /Supplier/Applications/Document/7   Download one of your OWN uploaded PDFs.
@@ -299,6 +321,7 @@ public class ApplicationsController : Controller
         if (submission is null) return NotFound();
         if (submission.Status is SubmissionStatus.Draft) return RedirectToAction(nameof(Step), new { id, n = 1 });
         if (submission.Status is SubmissionStatus.AwaitingPayment) return RedirectToAction(nameof(Pay), new { id });
+        if (submission.Status is SubmissionStatus.Withdrawn) return RedirectToAction(nameof(Details), new { id });
 
         return View(new ConfirmationViewModel
         {

@@ -21,6 +21,7 @@ public sealed class ApplicationServiceTests : IDisposable
     private readonly EProcureDbContext _context;
     private readonly InMemoryFileStorage _files = new();
     private readonly MockPaymentGateway _gateway = new();
+    private readonly MockEmailSender _mail = new();
     private readonly ApplicationService _service;
     private readonly CancellationToken _ct = CancellationToken.None;
 
@@ -28,7 +29,7 @@ public sealed class ApplicationServiceTests : IDisposable
     {
         _context = _db.Marketplace(); // suppliers are not organisation-scoped
         _service = new ApplicationService(_context, new AuditService(_context, new HttpContextAccessor()),
-            _files, _gateway, Options.Create(new UploadOptions()));
+            _files, _gateway, Options.Create(new UploadOptions()), Notifications.Into(_mail, _context));
     }
 
     public void Dispose()
@@ -373,6 +374,129 @@ public sealed class ApplicationServiceTests : IDisposable
 
         Assert.Contains("can no longer be changed", _service.CheckCanChange(submission, DateTime.UtcNow));
         Assert.False((await _service.RemoveDocumentAsync(submission, submission.Documents.First().Id, _ct)).Succeeded);
+    }
+
+    // ------------------------------------------------------------------ emails
+
+    [Fact]
+    public async Task Submitting_emails_the_bidder_a_confirmation_with_the_reference()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var submission = await ReadyToSubmit(_db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 0m), user);
+
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+
+        var email = Assert.Single(_mail.Sent).Message;
+        Assert.Equal($"{user}@example.test", email.To);
+        Assert.Contains(submission.ReferenceNumber!, email.Subject);
+        Assert.Equal($"/Supplier/Applications/Details/{submission.Id}", email.LinkUrl);
+    }
+
+    [Fact]
+    public async Task No_email_is_sent_while_the_fee_is_unpaid()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var submission = await ReadyToSubmit(_db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 500m), user);
+
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+
+        Assert.Empty(_mail.Sent);
+    }
+
+    // ------------------------------------------------------------------ withdrawal
+
+    [Fact]
+    public async Task A_submitted_bid_can_be_withdrawn_before_the_closing_date()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var submission = await ReadyToSubmit(_db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 0m), user);
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+
+        var result = await _service.WithdrawAsync(submission, "Pricing error; will resubmit", user, _ct);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(SubmissionStatus.Withdrawn, submission.Status);
+        Assert.Contains(submission.StatusHistory, h => h.Note == "Withdrawn by the bidder: Pricing error; will resubmit");
+        Assert.Contains(_mail.Sent, m => m.Message.Subject.StartsWith("Bid withdrawn"));
+        Assert.True(await _context.AuditEntries.AnyAsync(a => a.Action == "Submission.Withdrawn" && a.OrganisationId == TestDb.Rbidz));
+    }
+
+    [Fact]
+    public async Task A_draft_or_a_closed_tender_cannot_be_withdrawn()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var submission = await ReadyToSubmit(_db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 0m), user);
+
+        Assert.Contains("Only a submitted bid", _service.CheckCanWithdraw(submission, DateTime.UtcNow));
+
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+        submission.Tender.ClosingDateUtc = DateTime.UtcNow.AddMinutes(-1);
+
+        Assert.False((await _service.WithdrawAsync(submission, null, user, _ct)).Succeeded);
+        Assert.Equal(SubmissionStatus.Submitted, submission.Status);
+    }
+
+    [Fact]
+    public async Task A_withdrawn_bid_can_be_reopened_and_resubmitted_with_the_same_reference()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var tender = _db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 0m);
+        var submission = await ReadyToSubmit(tender, user);
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+        var reference = submission.ReferenceNumber;
+        await _service.WithdrawAsync(submission, null, user, _ct);
+
+        var reopened = await _service.StartAsync(tender, user, _ct);
+
+        Assert.Equal(StartOutcome.Existing, reopened.Outcome);
+        Assert.Equal(submission.Id, reopened.SubmissionId);
+        Assert.Equal(SubmissionStatus.Draft, submission.Status);
+        Assert.Null(submission.DeclaredAtUtc); // must declare again
+        Assert.Empty(_service.MissingItems(submission)); // answers and documents were kept
+
+        Assert.True((await _service.SubmitAsync(submission, declared: true, user, _ct)).Succeeded);
+        Assert.Equal(SubmissionStatus.Submitted, submission.Status);
+        Assert.Equal(reference, submission.ReferenceNumber);
+    }
+
+    [Fact]
+    public async Task A_resubmitted_paid_bid_is_not_charged_the_tender_fee_again()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var tender = _db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 500m);
+        var submission = await ReadyToSubmit(tender, user);
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+        await _service.StartPaymentAsync(submission, "card", "/return", _ct);
+        _gateway.Complete(submission.PaymentReference!, succeeded: true);
+        await _service.CompletePaymentAsync(submission, submission.PaymentReference!, user, _ct);
+        await _service.WithdrawAsync(submission, null, user, _ct);
+        await _service.StartAsync(tender, user, _ct);
+
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+
+        Assert.Equal(SubmissionStatus.Submitted, submission.Status); // straight to submitted, no second payment
+        Assert.Equal(PaymentStatus.Paid, submission.PaymentStatus);
+        Assert.Contains(submission.StatusHistory, h => h.Note == "Resubmitted (tender fee already paid)");
+    }
+
+    [Fact]
+    public async Task A_withdrawn_bid_cannot_be_reopened_after_the_closing_date()
+    {
+        var (user, _) = _db.AddSupplier(BbbeeLevel.Level1);
+        var tender = _db.AddTender(TestDb.Rbidz, TestDb.InDays(7), fee: 0m);
+        var submission = await ReadyToSubmit(tender, user);
+        await _service.SubmitAsync(submission, declared: true, user, _ct);
+        await _service.WithdrawAsync(submission, null, user, _ct);
+        await using (var arrange = _db.Marketplace())
+        {
+            (await arrange.Tenders.SingleAsync(t => t.Id == tender)).ClosingDateUtc = DateTime.UtcNow.AddMinutes(-1);
+            await arrange.SaveChangesAsync();
+        }
+
+        await using var fresh = _db.Marketplace();
+        var service = new ApplicationService(fresh, new AuditService(fresh, new HttpContextAccessor()), _files, _gateway,
+            Options.Create(new UploadOptions()), Notifications.Into(_mail, fresh));
+        Assert.Equal(StartOutcome.Closed, (await service.StartAsync(tender, user, _ct)).Outcome);
     }
 
     // ------------------------------------------------------------------ helpers

@@ -119,7 +119,15 @@
                 </div>
             </div>
 
-            @if (Model.ApplicationId is int applicationId)
+            @if (Model.ApplicationId is int withdrawnId && Model.ApplicationStatus == SubmissionStatus.Withdrawn)
+            {
+                <div class="ep-card">
+                    <h2 class="ep-card__title">You withdrew your bid</h2>
+                    <p class="ep-card__text">@(Model.IsOpen ? "It will not be evaluated unless you reopen and resubmit it before the closing date." : "It was not evaluated.")</p>
+                    <a class="ep-btn ep-btn--primary ep-btn--tall ep-mt-14" asp-controller="Applications" asp-action="Details" asp-route-id="@withdrawnId">View my application</a>
+                </div>
+            }
+            else if (Model.ApplicationId is int applicationId)
             {
                 var submitted = Model.ApplicationStatus is not (SubmissionStatus.Draft or SubmissionStatus.AwaitingPayment);
                 <div class="ep-card">

@@ -37,6 +37,8 @@ public interface IApplicationService
     Task<ServiceResult> SubmitAsync(Submission submission, bool declared, string userId, CancellationToken ct);
     Task<(ServiceResult Result, string? RedirectUrl)> StartPaymentAsync(Submission submission, string method, string returnUrl, CancellationToken ct);
     Task<ServiceResult> CompletePaymentAsync(Submission submission, string reference, string userId, CancellationToken ct);
+    string? CheckCanWithdraw(Submission submission, DateTime nowUtc);
+    Task<ServiceResult> WithdrawAsync(Submission submission, string? reason, string userId, CancellationToken ct);
 }
 
 public class ApplicationService : IApplicationService
@@ -46,10 +48,13 @@ public class ApplicationService : IApplicationService
     private readonly IFileStorage _files;
     private readonly IPaymentGateway _payments;
     private readonly UploadOptions _uploads;
+    private readonly INotificationService _notifications;
 
-    public ApplicationService(EProcureDbContext db, IAuditService audit, IFileStorage files, IPaymentGateway payments, IOptions<UploadOptions> uploads)
+    public ApplicationService(EProcureDbContext db, IAuditService audit, IFileStorage files, IPaymentGateway payments, IOptions<UploadOptions> uploads,
+        INotificationService notifications)
     {
         _db = db;
+        _notifications = notifications;
         _audit = audit;
         _files = files;
         _payments = payments;
@@ -73,8 +78,20 @@ public class ApplicationService : IApplicationService
             return new(StartOutcome.NotEligible, Reason: eligibility.Reason);
         }
 
-        var existing = await _db.Submissions.Where(s => s.TenderId == tenderId && s.CompanyId == company.Id).Select(s => s.Id).FirstOrDefaultAsync(ct);
-        if (existing != 0) return new(StartOutcome.Existing, existing);
+        var existing = await _db.Submissions.Include(s => s.StatusHistory)
+            .FirstOrDefaultAsync(s => s.TenderId == tenderId && s.CompanyId == company.Id, ct);
+        if (existing is { Status: SubmissionStatus.Withdrawn })
+        {
+            // Reopened after a withdrawal (the tender is still open, checked above): back to a draft that must be
+            // declared and submitted again. Documents and a paid tender fee are kept.
+            AddHistory(existing, existing.Status, SubmissionStatus.Draft, userId, "Reopened after withdrawal; submit again before the closing date");
+            existing.Status = SubmissionStatus.Draft;
+            existing.DeclaredAtUtc = null;
+            await _db.SaveChangesAsync(ct);
+            await _audit.LogAsync("Submission.Reopened", "Submission", existing.Id.ToString(), null, existing.ReferenceNumber);
+            return new(StartOutcome.Existing, existing.Id);
+        }
+        if (existing is not null) return new(StartOutcome.Existing, existing.Id);
 
         var submission = new Submission
         {
@@ -248,6 +265,11 @@ public class ApplicationService : IApplicationService
         {
             Finalise(submission, userId, "Submitted (no tender fee)");
         }
+        else if (submission.PaymentStatus == PaymentStatus.Paid)
+        {
+            // Resubmitting after a withdrawal: the tender fee was already paid and is not charged again.
+            Finalise(submission, userId, "Resubmitted (tender fee already paid)");
+        }
         else
         {
             AddHistory(submission, submission.Status, SubmissionStatus.AwaitingPayment, userId, "Declaration signed; waiting for the tender fee");
@@ -306,6 +328,36 @@ public class ApplicationService : IApplicationService
         return result.With(string.Empty, "The payment did not go through. Nothing was charged and your application was not submitted. You can try again.");
     }
 
+    /// <summary>NULL when the bidder may withdraw; otherwise why not.</summary>
+    public string? CheckCanWithdraw(Submission submission, DateTime nowUtc)
+    {
+        if (submission.Status != SubmissionStatus.Submitted)
+            return "Only a submitted bid can be withdrawn.";
+        if (submission.Tender.Status != TenderStatus.Published || submission.Tender.ClosingDateUtc <= nowUtc)
+            return $"The tender closed on {DisplayFormat.DateTime(submission.Tender.ClosingDateUtc)}; bids can no longer be withdrawn.";
+        return null;
+    }
+
+    /// <summary>
+    /// The bidder withdraws a submitted bid before the closing date. It is kept on record (never deleted) and is not
+    /// evaluated. It can be reopened and resubmitted until the closing date; a paid tender fee is not charged again.
+    /// </summary>
+    public async Task<ServiceResult> WithdrawAsync(Submission submission, string? reason, string userId, CancellationToken ct)
+    {
+        var result = new ServiceResult();
+        if (CheckCanWithdraw(submission, DateTime.UtcNow) is string blocked) return result.With(string.Empty, blocked);
+        var trimmed = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+        if (trimmed?.Length > 500) return result.With("Reason", "The reason must be 500 characters or fewer.");
+
+        AddHistory(submission, submission.Status, SubmissionStatus.Withdrawn, userId,
+            trimmed is null ? "Withdrawn by the bidder" : $"Withdrawn by the bidder: {trimmed}");
+        submission.Status = SubmissionStatus.Withdrawn;
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Submission.Withdrawn", "Submission", submission.Id.ToString(), submission.Tender.OrganisationId, submission.ReferenceNumber);
+        await _notifications.BidWithdrawnAsync(submission, ct);
+        return ServiceResult.Ok(submission.Id);
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private Task<Company?> CompanyOfAsync(string userId, CancellationToken ct) =>
@@ -317,13 +369,14 @@ public class ApplicationService : IApplicationService
         AddHistory(submission, submission.Status, SubmissionStatus.Submitted, userId, note);
         submission.Status = SubmissionStatus.Submitted;
         submission.SubmittedAtUtc = DateTime.UtcNow;
-        submission.ReferenceNumber = $"EP-{DateTime.UtcNow:yyyy}-{submission.Id:D6}";
+        submission.ReferenceNumber ??= $"EP-{DateTime.UtcNow:yyyy}-{submission.Id:D6}"; // a resubmission keeps its reference
     }
 
     private async Task AuditSubmittedIfDoneAsync(Submission submission)
     {
-        if (submission.Status == SubmissionStatus.Submitted)
-            await _audit.LogAsync("Submission.Submitted", "Submission", submission.Id.ToString(), submission.Tender.OrganisationId, submission.ReferenceNumber);
+        if (submission.Status != SubmissionStatus.Submitted) return;
+        await _audit.LogAsync("Submission.Submitted", "Submission", submission.Id.ToString(), submission.Tender.OrganisationId, submission.ReferenceNumber);
+        await _notifications.ApplicationSubmittedAsync(submission);
     }
 
     private static void AddHistory(Submission submission, SubmissionStatus? from, SubmissionStatus to, string userId, string note) =>

@@ -15,8 +15,33 @@
         <div class="ep-detail-org">@Model.OrganisationName · bidding as @Model.CompanyName@(Model.ReferenceNumber is null ? "" : " · " + Model.ReferenceNumber)</div>
     </div>
 
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">@flashError</div>
+    }
+
     @switch (Model.Status)
     {
+        case SubmissionStatus.Withdrawn:
+            <div class="ep-blocked">
+                <div class="ep-blocked__title">Withdrawn</div>
+                @if (Model.TenderOpen)
+                {
+                    <div class="ep-blocked__text">You withdrew this bid; it will not be evaluated. Until the closing date (@DisplayFormat.DateTime(Model.ClosingDateUtc)) you can reopen it, check your answers and documents, and submit it again@(Model.PaymentStatus == PaymentStatus.Paid ? " without paying the tender fee again" : "").</div>
+                    <form asp-action="Start" asp-route-id="@Model.TenderId" method="post">
+                        <button type="submit" class="ep-btn ep-btn--primary ep-mt-14">Reopen and resubmit</button>
+                    </form>
+                }
+                else
+                {
+                    <div class="ep-blocked__text">You withdrew this bid before the closing date. It was not evaluated and is kept on record.</div>
+                }
+            </div>
+            break;
         case SubmissionStatus.Draft:
             <div class="ep-blocked">
                 <div class="ep-blocked__title">Not submitted yet</div>
@@ -50,6 +75,24 @@
                 <h2 class="ep-card__title">With @Model.OrganisationName</h2>
                 <p class="ep-card__text">Your application and documents are with the organisation and locked. Bids stay sealed until the closing date; after that the evaluation committee opens them, and each step appears in the timeline below.</p>
             </div>
+            @if (Model.CanWithdraw)
+            {
+                <details class="ep-card ep-withdraw">
+                    <summary class="ep-card__title">Withdraw this bid</summary>
+                    <p class="ep-card__text">Until the closing date (@DisplayFormat.DateTime(Model.ClosingDateUtc)) you can withdraw your bid, for example to correct it. A withdrawn bid is not evaluated. You can reopen and resubmit it before the closing date@(Model.PaymentStatus == PaymentStatus.Paid ? "; the tender fee is not charged again, and it is not refunded if you do not resubmit" : "").</p>
+                    <form asp-action="Withdraw" asp-route-id="@Model.Id" method="post" class="ep-mt-14">
+                        <label class="ep-field">REASON (OPTIONAL, SHOWN IN YOUR TIMELINE)
+                            <textarea class="ep-input ep-input--area" name="reason" rows="2" maxlength="500"></textarea>
+                        </label>
+                        <label class="ep-check-card ep-mt-14">
+                            <input type="checkbox" name="confirm" value="true" />
+                            <span class="ep-check-card__box" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg></span>
+                            <span class="ep-check-card__text">I want to withdraw this bid. I understand it will not be evaluated unless I resubmit it before the closing date.</span>
+                        </label>
+                        <button type="submit" class="ep-btn ep-btn--danger-outline ep-mt-14">Withdraw bid</button>
+                    </form>
+                </details>
+            }
             break;
     }
 

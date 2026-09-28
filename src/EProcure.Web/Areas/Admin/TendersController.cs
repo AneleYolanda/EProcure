@@ -48,7 +48,7 @@ public class TendersController : Controller
 
         var rows = (await query
                 .OrderByDescending(t => t.CreatedAtUtc)
-                .Select(t => new { t.Id, t.ReferenceNumber, t.Title, t.Status, t.EstimatedValue, t.ClosingDateUtc, Applications = t.Submissions.Count() })
+                .Select(t => new { t.Id, t.ReferenceNumber, t.Title, t.Status, t.EstimatedValue, t.ClosingDateUtc, Applications = t.Submissions.Count(s => s.Status != SubmissionStatus.Withdrawn) })
                 .ToListAsync(ct))
             .Select(t => new TenderRegisterRow(t.Id, t.ReferenceNumber, t.Title, TenderStages.For(t.Status, t.ClosingDateUtc, now),
                 t.EstimatedValue, t.ClosingDateUtc, t.Applications))
@@ -242,7 +242,7 @@ public class TendersController : Controller
             CreatedAtUtc = tender.CreatedAtUtc,
             PublishedAtUtc = tender.PublishedAtUtc,
             CancellationReason = tender.CancellationReason,
-            Applications = await _db.Submissions.CountAsync(s => s.TenderId == tender.Id, ct),
+            Applications = await _db.Submissions.CountAsync(s => s.TenderId == tender.Id && s.Status != SubmissionStatus.Withdrawn, ct),
             Requirements = tender.Requirements.OrderBy(r => r.SortOrder).Select(r => r.Name).ToList(),
             CanManage = User.IsInRole(AppRoles.OrgAdmin),
             PublishChecks = _tenders.PublishChecks(tender, now),

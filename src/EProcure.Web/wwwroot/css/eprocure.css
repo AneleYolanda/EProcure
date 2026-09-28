@@ -824,3 +824,34 @@ a.ep-action:hover { background: #F7FAFC; }
   .ep-register__row--eval > :nth-child(5) { grid-area: count; display: block; color: var(--ep-muted); }
   .ep-register__row--eval > :nth-child(4), .ep-register__row--eval > :nth-child(6) { display: none; }
 }
+
+.ep-portal-form__links { margin-top: 16px; text-align: center; }
+
+/* Demo mailbox */
+.ep-mail { margin-top: 14px; }
+.ep-mail__body { margin: 10px 0 0; font-size: 13px; line-height: 1.65; color: var(--ep-ink); white-space: pre-line; }
+
+/* Roles and users */
+.ep-register__head--staff, .ep-register__row--staff { grid-template-columns: minmax(0, 1fr) 230px 100px 170px; }
+.ep-register__row--staff .ep-register__title { white-space: normal; }
+.ep-staff__role { display: flex; gap: 8px; align-items: center; margin: 0; }
+.ep-ainput--compact { height: 36px; padding: 0 10px; font-size: 12.5px; }
+.ep-abtn--compact { height: 36px; padding: 0 12px; font-size: 12.5px; }
+.ep-staff__actions { display: flex; gap: 14px; justify-content: flex-end; flex-wrap: wrap; }
+.ep-staff__actions form { margin: 0; }
+.ep-textbtn { cursor: pointer; }
+.ep-textbtn--danger { color: var(--ep-danger-text); }
+@media (max-width: 991.98px) {
+  .ep-register__row--staff { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "who status" "role role" "actions actions"; }
+  .ep-register__row--staff > :nth-child(1) { grid-area: who; }
+  .ep-register__row--staff > :nth-child(2) { grid-area: role; display: flex; }
+  .ep-register__row--staff > :nth-child(3) { grid-area: status; }
+  .ep-register__row--staff > :nth-child(4) { grid-area: actions; display: flex; justify-content: flex-start; }
+}
+
+/* Supplier: withdraw a bid (collapsed by default so it is never pressed by accident) */
+.ep-withdraw summary { cursor: pointer; list-style: none; color: var(--ep-danger-text); }
+.ep-withdraw summary::-webkit-details-marker { display: none; }
+.ep-withdraw summary::after { content: " ›"; }
+.ep-withdraw[open] summary::after { content: ""; }
+textarea.ep-input--area { height: auto; padding: 11px 13px; line-height: 1.5; resize: vertical; }

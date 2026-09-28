@@ -12,6 +12,11 @@
     <h1 class="ep-auth__title">Sign in</h1>
     <div class="ep-auth__sub">Use the email address registered to your profile.</div>
 
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash ep-mt-26" role="status">@flash</div>
+    }
+
     <form asp-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" class="ep-mt-26">
         <div asp-validation-summary="ModelOnly"></div>
         <div class="ep-fields ep-mt-14">
@@ -29,7 +34,7 @@
 
     <div class="ep-auth__links">
         <a class="ep-textbtn" asp-controller="Account" asp-action="Register">Register</a>
-        <span class="ep-textbtn ep-textbtn--muted">Forgot your password? Contact support</span>
+        <a class="ep-textbtn" asp-controller="Account" asp-action="ForgotPassword">Forgot your password?</a>
     </div>
 
     <div class="ep-auth__spacer"></div>

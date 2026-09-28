@@ -24,6 +24,12 @@ public class MyApplicationDetailsViewModel
     public IReadOnlyList<DocumentRow> Documents { get; set; } = Array.Empty<DocumentRow>();
     public IReadOnlyList<TimelineItem> Timeline { get; set; } = Array.Empty<TimelineItem>();
 
+    public DateTime ClosingDateUtc { get; set; }
+    /// <summary>Published and before the closing date (a withdrawn bid can then be reopened).</summary>
+    public bool TenderOpen { get; set; }
+    /// <summary>Submitted and the tender still open.</summary>
+    public bool CanWithdraw { get; set; }
+
     public record DocumentRow(int Id, string Requirement, string FileName, long SizeBytes, DateTime UploadedAtUtc);
     public record TimelineItem(string What, string Who, DateTime WhenUtc);
 }
