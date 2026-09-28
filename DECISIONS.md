@@ -710,3 +710,39 @@ reference; a tender fee already paid is not charged again (and is not refunded i
 "one application per company per tender" rule getting in the way. The evaluation reads bids through one filter
 (`Bids(tender)`), so a withdrawn bid can never reach the scoresheet (a test found a case where EF Core could have
 attached one within the same request).
+
+---
+
+## D50. Scheduled emails: a timer inside the app, each email sent exactly once
+
+**What:** `ReminderWorker` (a hosted background service) runs `ReminderService` every 15 minutes (appsettings
+`Reminders`). It emails a supplier whose application is still a draft or unpaid when the tender closes within 48 hours,
+and, when a tender closes, its SCM Officers ("closed with N bids", or "no bids" with a hint to re-advertise) and, if there
+are bids, its BEC members ("bids open for evaluation"). Tenders that closed more than 7 days ago are skipped. Before each
+email the job records a key (e.g. `tender-closed:tender:5`) in `SentNotifications`, whose unique index makes "send once" a
+database guarantee across restarts and servers. The job uses its own DbContext with `SystemTenantContext` (all
+organisations), independent of any signed-in user. In Development, the demo mailbox has "Run scheduled emails now" and
+shows the send-once log.
+
+**Why:** No extra scheduler to install on a laptop or a single server. Recording before sending errs on the side of
+never spamming; an email is a courtesy copy (D46), so a rare lost reminder is acceptable.
+
+**Found while testing:** a "tender closed" email was sent in one app session and appeared missing after a restart. The
+send-once log showed it had been sent: the demo mailbox keeps emails in memory only. A real provider does not have this
+limitation.
+
+**Later:** with several servers or a very large number of tenders, move the job to a dedicated worker or queue.
+
+---
+
+## D51. Optional four-eyes approval before a tender is published
+
+**What:** Per organisation (`Organisations.RequireTenderApproval`, switched on the Approval queue page; on for RBIDZ in
+the demo). When on, an SCM Officer submits a draft for approval; it is locked; a DIFFERENT SCM Officer approves (which
+publishes it, with the publish checks re-run) or sends it back with a note; the requester can withdraw the request.
+Direct publishing is refused. Emails tell the other SCM Officers that approval is needed and tell the requester the
+outcome; the dashboard shows "awaits your approval"; the tender history shows every step, and the published tender
+records who approved it.
+
+**Why:** A common SCM internal control: no single official can put a tender in front of the market alone. Optional, so a
+small organisation with one SCM Officer is not blocked.

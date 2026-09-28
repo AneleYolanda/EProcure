@@ -34,12 +34,13 @@ public class DevMailboxController : Controller
 
     /// <summary>Runs the scheduled emails now instead of waiting for the timer (Development only, for demos).</summary>
     [HttpPost("run-scheduled")]
-    public async Task<IActionResult> RunScheduled([FromServices] Services.ReminderService reminders, CancellationToken ct)
+    public async Task<IActionResult> RunScheduled([FromServices] Services.ReminderService reminders,
+        [FromServices] Microsoft.Extensions.Options.IOptions<Services.ReminderOptions> settings, CancellationToken ct)
     {
         if (!_environment.IsDevelopment() || _email is not MockEmailSender) return NotFound();
         var result = await reminders.RunAsync(DateTime.UtcNow, ct);
         TempData["Flash"] = $"Scheduled emails run: {result.ClosingReminders} closing reminder(s) and {result.ClosedNotices} tender-closed notice(s) sent. " +
-                            $"{result.ClosedTendersFound} tender(s) closed in the last days; {result.AlreadySent} of them were announced before. Each email is sent only once.";
+                            $"{result.ClosedTendersFound} tender(s) closed in the last {settings.Value.ClosedNoticeMaxAgeDays} days, of which {result.AlreadySent} had already been announced. Each email is sent only once.";
         return Redirect("/dev/mailbox");
     }
 }

@@ -672,3 +672,32 @@ feat: password reset, email notifications, staff management and bid withdrawal
   one row (cards on phones); invite form below the list.
 - Scoresheet formula list shows each label above its text.
 - Supplier tender page on a phone: the award notice sits directly under the title.
+
+---
+
+## Step 14: Closing-date reminders and the approval queue
+
+### What was built
+- `ReminderService` + `ReminderWorker` (every 15 minutes), `SentNotifications` table (send-once keys),
+  `SystemTenantContext`; demo mailbox button "Run scheduled emails now" and the send-once log (D50).
+- Four-eyes publication (D51): `RequireTenderApproval` per organisation; submit for approval, approve (publishes),
+  send back with a note, withdraw; Approval queue page with the on/off rule; dashboard "awaits your approval"; emails.
+- Demo: RBIDZ requires approval; new second SCM Officer `approver@rbidz.demo`.
+- Migration `AddApprovalsAndReminders` (+ SQL script). Tests: 17 new (154 in total).
+
+### Verified in the browser (Visual Studio run)
+- Approval (test tender TEST/APPROVAL/001): direct publish refused ("requires a second SCM Officer"); submitted →
+  "Awaiting approval", locked (edit refused), requester cannot approve; `approver@rbidz.demo` got "Approval needed", saw
+  the dashboard item and the queue; short send-back note refused; sent back → requester saw the note and got an email;
+  resubmitted; approved → "published … after approval by RBIDZ Senior SCM Officer"; requester got "Approved and
+  published"; history shows every step.
+- Reminder (test tender TEST/REMINDER/001 at MVLM, closing the next day): the test supplier's unfinished application
+  got "Not submitted yet … closes 29 Sep 2026, 20:00" with a "Finish your application" link; a second run sent nothing.
+- Tender closed: RBIDZ/2026/018 had been announced in an earlier app session (send-once log `tender-closed:tender:5`);
+  the next run found it and skipped it ("1 tender closed in the last 7 days, of which 1 had already been announced").
+- Both test tenders were cancelled afterwards with a note, so they are not shown to suppliers.
+
+### Commit message
+```
+feat: closing-date reminders and tender-closed notices; approval queue with second-officer approval
+```

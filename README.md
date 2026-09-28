@@ -36,6 +36,7 @@ The connection string is in `src/EProcure.Web/appsettings.Development.json` (Loc
 | Supplier, Umhlathi Civils, B-BBEE Level 1 | `supplier1@demo.co.za` | `/` |
 | Supplier, Khanya Office Supplies, B-BBEE Level 6 | `supplier2@demo.co.za` | `/` |
 | Supplier, Siyakha Business Solutions, B-BBEE Level 2 | `supplier3@demo.co.za` | `/` |
+| RBIDZ second SCM Officer (approves tenders before publication) | `approver@rbidz.demo` | `/admin/rbidz` |
 
 **Evaluation demo tender:** `RBIDZ/2026/011` (printing and document management) closed three days before the database
 was created and already has three bids, one from each demo supplier, so evaluation and award can be shown at once.
@@ -120,6 +121,15 @@ signed in at the same time.
     confirmation. It is Withdrawn and will not be evaluated. **Reopen and resubmit**: tick the declaration again; it is
     submitted with the same reference and no second tender fee.
 
+**I. Approval and reminders**
+28. As `admin@rbidz.demo`: create a draft and press **Submit for approval** (RBIDZ requires a second SCM Officer; direct
+    publishing is refused). Sign in as `approver@rbidz.demo`: the dashboard shows "awaits your approval" and the
+    **Approval queue** lists it. Open it: **Send back** with a note, or tick and **Approve and publish**. The rule can be
+    switched off on the Approval queue page.
+29. Start (do not finish) an application for a tender that closes within 48 hours. In the demo mailbox press **Run
+    scheduled emails now**: the supplier gets "Not submitted yet". When a tender closes, its SCM Officers and BEC members
+    are told. Each email is sent only once (see the send-once log).
+
 ---
 
 ## 3. Run the tests
@@ -129,9 +139,10 @@ dotnet test
 ```
 
 No database server needed: each test builds the real EF Core model (same query filters and unique indexes) on an
-in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 137 tests cover tenant isolation, the B-BBEE
+in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 154 tests cover tenant isolation, the B-BBEE
 hard stop, one application per company, closing dates, PDF-only uploads, declarations, payment verification, the
-PPPFA points arithmetic, sealed bids, the BEC and BAC workflow, bid withdrawal, staff management (with real
+PPPFA points arithmetic, sealed bids, the BEC and BAC workflow, bid withdrawal, publication approval, the scheduled
+emails, staff management (with real
 ASP.NET Core Identity), password and invitation links, and the emails.
 
 ---
@@ -156,6 +167,7 @@ ASP.NET Core Identity), password and invitation links, and the emails.
 | Accounts and people | Password reset with single-use expiring links; SCM Officers invite, re-role and deactivate their own staff; nobody can lock the organisation out. D47, D48 |
 | Email | Confirmations, outcomes, withdrawal, "BAC decision needed", invitations and password changes; an email is a copy, never the record. D46 |
 | Bid withdrawal | Before closing, with resubmission and no second fee; withdrawn bids are never evaluated. D49 |
+| Approval and reminders | Optional second-SCM-Officer approval before publishing; closing-date reminders and "tender closed" notices, each sent once. D50, D51 |
 
 ## 5. Mocked services and known limits
 
@@ -164,7 +176,7 @@ ASP.NET Core Identity), password and invitation links, and the emails.
   Moving to a real provider (e.g. SMSPortal, SendGrid, PayFast, Azure Blob) is a new class plus a setting
   under `ExternalServices`. The demo gateway keeps payments in memory, so an unpaid payment is forgotten when the
   app restarts (start the payment again).
-- Shown as "Soon" in the console: approval queue. Not built yet: closing-date reminder emails (need a scheduled job).
+- Scheduled emails run inside the web app every 15 minutes; with several servers, move them to a dedicated worker.
   Evaluation simplifications (one consolidated
   BEC evaluation per bid, no functionality stage, B-BBEE level as the only specific goal) are listed in DECISIONS D44.
 - Buttons and links meet WCAG AA contrast: a darker shade of each brand colour is used wherever text and the
