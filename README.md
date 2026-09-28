@@ -124,7 +124,8 @@ hard stop, one application per company, closing dates, PDF-only uploads, declara
   app restarts (start the payment again).
 - Out of MVP scope and shown as "Soon" in the console: approval queue, BEC scoring, BAC adjudication and awards,
   user management.
-- The design's white-on-light-blue buttons are below the WCAG AA contrast ratio (DECISIONS D25).
+- Buttons meet WCAG AA contrast (a darker shade of each brand colour, D42); small blue text links on white are
+  still below AA and can use the same darker shade later.
 
 ## Repository layout
 
