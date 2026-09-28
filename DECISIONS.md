@@ -430,3 +430,20 @@ both phones and office computers. Colours, type, cards and wording are unchanged
 **Detail:** The design's splash photo has "eProcure / Procurement, simplified." printed on its left side. On wide
 screens the photo is kept to the right-hand part of the panel and the left fades into navy, so the printed text
 never shows under our own wordmark.
+
+---
+
+## D31. Company profile: one company per supplier, no id in the URL
+
+**What:** `/Supplier/Company`, `/Create` and `/Edit` always work on the signed-in supplier's own company, found
+through their SupplierProfile. No action takes a company id.
+
+**Why:** With no id in the URL or the form there is nothing to tamper with, so "insecure direct object reference"
+attacks (changing `?id=5` to `?id=6`) are impossible by design. One company per supplier matches the MVP scope;
+the model (SupplierProfile to Company) already allows several people per company later.
+
+**Rules:** CIPC format `2019/123456/07`, CSD `MAAA` + 7 digits (stored upper-case), tax number / TCS PIN 10
+characters. Registration and CSD numbers are unique (pre-check with a friendly message, unique indexes as the
+guarantee). Once a company has applications its CIPC and CSD numbers are locked, so bids already made cannot
+change owner. The prototype's banking reference and company document vault are not collected: bank details are not
+needed to bid (POPIA: minimum necessary) and documents are uploaded per application (Step 6).

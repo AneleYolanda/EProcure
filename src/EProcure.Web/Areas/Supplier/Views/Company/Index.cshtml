@@ -1,0 +1,54 @@
+@* Design screen "sProfile": the company card. One company per supplier in the MVP
+   (the design's "+ Add another company" and document vault are out of scope). *@
+@model Company?
+@{
+    ViewData["Title"] = "Company";
+    ViewData["Tab"] = "profile";
+    ViewData["BackUrl"] = Url.Action("Index", "Profile");
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<div class="ep-screen__body">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+
+    @if (Model is null)
+    {
+        <div class="ep-card">
+            <h2 class="ep-card__title">Add your company</h2>
+            <p class="ep-card__text">Tenders are awarded to a registered company, not a person. Add the company you bid for: its CIPC registration, SARS tax number, CSD number and B-BBEE level. eProcure then shows which tenders you qualify for.</p>
+            <a class="ep-btn ep-btn--primary ep-mt-18" asp-action="Create">Add your company</a>
+        </div>
+    }
+    else
+    {
+        <section class="ep-card" aria-labelledby="company-name">
+            <div class="ep-company-card__top">
+                <div>
+                    <h2 class="ep-company-card__name" id="company-name">@Model.Name</h2>
+                    <div class="ep-company-card__meta">Reg @Model.RegistrationNumber · CSD @Model.CsdNumber</div>
+                </div>
+                <span class="ep-badge ep-badge--navy">@Model.EnterpriseSize.ToString().ToUpperInvariant()</span>
+            </div>
+            <div class="ep-tender-card__chips ep-mt-14">
+                <span class="ep-chip">@EligibilityRules.Describe(Model.BbbeeLevel)</span>
+                <span class="ep-chip">@Model.Sector</span>
+                <span class="ep-chip">Tax @Model.TaxPin</span>
+            </div>
+            <div class="ep-company-card__note">
+                Eligibility for every tender is checked against these details. Keep your B-BBEE level current: if your certificate changes, update it here before you apply.
+            </div>
+            <a class="ep-btn ep-btn--secondary ep-mt-14" asp-action="Edit">Edit company details</a>
+        </section>
+
+        <div class="ep-note">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3zM14 3v4h4" /></svg>
+            <span>Supporting documents (CIPC certificate, tax compliance, B-BBEE certificate) are uploaded as PDFs with each application, following that tender's checklist.</span>
+        </div>
+
+        <a class="ep-btn ep-btn--primary" asp-controller="Dashboard" asp-action="Index">View tenders you qualify for</a>
+    }
+</div>

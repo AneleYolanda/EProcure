@@ -8,6 +8,7 @@ using EProcure.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EProcure.Web.Controllers;
 
@@ -211,7 +212,12 @@ public class AccountController : Controller
             TempData.Remove(MockOtpSender.TempDataKey);
             await _audit.LogAsync("Account.PhoneVerified", "ApplicationUser", user.Id, null);
             await _signInManager.RefreshSignInAsync(user);
-            return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
+
+            // Design flow: registration (step 1 of 2) → company profile (step 2 of 2), unless they have one.
+            var hasCompany = await _db.SupplierProfiles.AnyAsync(p => p.UserId == user.Id && p.CompanyId != null);
+            return hasCompany
+                ? RedirectToAction("Index", "Dashboard", new { area = "Supplier" })
+                : RedirectToAction("Create", "Company", new { area = "Supplier", welcome = true });
         }
 
         ModelState.AddModelError(string.Empty, "That code is incorrect or has expired.");

@@ -50,6 +50,7 @@ builder.Services.AddScoped<IOtpSender, MockOtpSender>();
 builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
 builder.Services.AddScoped<ITenderService, TenderService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the

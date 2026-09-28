@@ -18,12 +18,13 @@
 
 <div class="ep-screen__body">
     <div class="ep-rows">
-        <div class="ep-row">
+        <a class="ep-row" asp-area="Supplier" asp-controller="Company" asp-action="Index">
             <span class="ep-row__text">
-                <span class="ep-row__label">Company<span class="ep-soon-pill">Soon</span></span>
-                <span class="ep-row__meta">@(Model.CompanyName is null ? "No company on this profile yet" : $"{Model.CompanyName} · {Model.CompanyMeta}")</span>
+                <span class="ep-row__label">Company</span>
+                <span class="ep-row__meta">@(Model.CompanyName is null ? "Not added yet · add the company you bid for" : $"{Model.CompanyName} · {Model.CompanyMeta}")</span>
             </span>
-        </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B9CBDA" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+        </a>
         <div class="ep-row">
             <span class="ep-row__text">
                 <span class="ep-row__label">Cellphone</span>

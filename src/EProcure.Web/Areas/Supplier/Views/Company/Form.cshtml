@@ -1,0 +1,96 @@
+@* Design screen "sAddCo" (Add a company), also used for Edit. The prototype's banking reference and
+   company-documents rows are left out: bank details are not needed for bidding (POPIA: collect the
+   minimum) and documents are uploaded per application. CSD number is added (the SBD checks need it). *@
+@model CompanyFormViewModel
+@{
+    var isEdit = ViewData["IsEdit"] as bool? == true;
+    var welcome = ViewData["Welcome"] as bool? == true;
+    var locked = ViewData["IdentityLocked"] as bool? == true;
+    ViewData["Title"] = isEdit ? "Edit company" : "Add your company";
+    ViewData["Tab"] = "profile";
+    ViewData["BackUrl"] = Url.Action("Index");
+    ViewData["TopBarMeta"] = welcome ? "Step 2 of 2" : null;
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<form method="post" asp-action="@(isEdit ? "Edit" : "Create")" asp-route-welcome="@(welcome ? "true" : null)" class="ep-screen__body" novalidate>
+    @if (welcome)
+    {
+        <p class="ep-card__text">Your number is verified. Now add the company you bid for; tenders will then show whether you qualify.</p>
+    }
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <label class="ep-field" asp-for="Name">REGISTERED COMPANY NAME
+        <input class="ep-input" asp-for="Name" placeholder="Company (Pty) Ltd" autocomplete="organization" />
+        <span asp-validation-for="Name"></span>
+    </label>
+
+    <div class="ep-field-row">
+        <label class="ep-field" asp-for="RegistrationNumber">CIPC REG NO.
+            <input class="ep-input" asp-for="RegistrationNumber" placeholder="2019/123456/07" readonly="@locked" />
+            <span asp-validation-for="RegistrationNumber"></span>
+        </label>
+        <label class="ep-field" asp-for="TaxPin">TAX NO. / TCS PIN
+            <input class="ep-input" asp-for="TaxPin" placeholder="4930000000" />
+            <span asp-validation-for="TaxPin"></span>
+        </label>
+    </div>
+
+    <label class="ep-field" asp-for="CsdNumber">CSD SUPPLIER NUMBER
+        <input class="ep-input" asp-for="CsdNumber" placeholder="MAAA0123456" readonly="@locked" />
+        <span asp-validation-for="CsdNumber"></span>
+    </label>
+    @if (locked)
+    {
+        <div class="ep-note">The CIPC and CSD numbers are locked because this company has applications.</div>
+    }
+
+    <div class="ep-field-row">
+        <label class="ep-field" asp-for="BbbeeLevel">B-BBEE LEVEL
+            <select class="ep-input" asp-for="BbbeeLevel">
+                <option value="">Choose</option>
+                @foreach (var level in Enum.GetValues<EProcure.Web.Domain.Enums.BbbeeLevel>())
+                {
+                    <option value="@level" selected="@(Model.BbbeeLevel == level)">@EligibilityRules.Describe(level).Replace("B-BBEE ", "")</option>
+                }
+            </select>
+            <span asp-validation-for="BbbeeLevel"></span>
+        </label>
+        <label class="ep-field" asp-for="EnterpriseSize">EME / QSE STATUS
+            <select class="ep-input" asp-for="EnterpriseSize">
+                <option value="">Choose</option>
+                <option value="EME" selected="@(Model.EnterpriseSize == EProcure.Web.Domain.Enums.EnterpriseSize.EME)">EME</option>
+                <option value="QSE" selected="@(Model.EnterpriseSize == EProcure.Web.Domain.Enums.EnterpriseSize.QSE)">QSE</option>
+                <option value="Generic" selected="@(Model.EnterpriseSize == EProcure.Web.Domain.Enums.EnterpriseSize.Generic)">Generic</option>
+            </select>
+            <span asp-validation-for="EnterpriseSize"></span>
+        </label>
+    </div>
+
+    <label class="ep-field" asp-for="Sector">INDUSTRY / SECTOR
+        <select class="ep-input" asp-for="Sector">
+            <option value="">Choose a sector</option>
+            @foreach (var sector in TenderCatalog.Categories)
+            {
+                <option value="@sector" selected="@(Model.Sector == sector)">@sector</option>
+            }
+        </select>
+        <span asp-validation-for="Sector"></span>
+    </label>
+
+    <div class="ep-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+        <span>Only details needed for tender eligibility are collected. Organisations see them only when you apply to one of their tenders.</span>
+    </div>
+
+    <button type="submit" class="ep-btn ep-btn--primary ep-mt-8">Save company</button>
+    @if (welcome)
+    {
+        <a class="ep-btn ep-btn--secondary" asp-controller="Dashboard" asp-action="Index">Skip for now</a>
+    }
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

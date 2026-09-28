@@ -18,7 +18,7 @@
         <span class="ep-grow"></span>
         @if (Model.CompanyName is not null)
         {
-            <a class="ep-company-tile" asp-area="Supplier" asp-controller="Profile" asp-action="Index" title="Bidding as @Model.CompanyName">
+            <a class="ep-company-tile" asp-area="Supplier" asp-controller="Company" asp-action="Index" title="Bidding as @Model.CompanyName">
                 <span class="ep-company-tile__initials">@DisplayFormat.Initials(Model.CompanyName)</span>
                 <span class="ep-visually-hidden">Bidding as @Model.CompanyName</span>
             </a>
@@ -52,7 +52,7 @@
 
 @if (Model.CompanyName is null)
 {
-    <div class="ep-info-strip">Add your company profile to see which tenders <strong>you qualify for</strong>. Company profiles arrive in the next step.</div>
+    <div class="ep-info-strip"><a asp-area="Supplier" asp-controller="Company" asp-action="Create">Add your company</a> to see which tenders <strong>you qualify for</strong>.</div>
 }
 
 <section class="ep-tender-list" aria-label="Tenders">

@@ -320,3 +320,36 @@ feat: org admins create, edit, publish and cancel tenders
 ```
 feat: supplier side as a responsive web app on tablets and computers
 ```
+
+---
+
+## Step 4: Supplier company profile (2026-09-28)
+
+### Added
+- `Services/CompanyService` (+ `ICompanyService`): company found through the user's own SupplierProfile; format
+  normalisation; unique registration and CSD numbers; identity locked once the company has applications;
+  audit `Company.Created` / `Company.Updated` (OrganisationId NULL: suppliers belong to no organisation).
+- `Areas/Supplier/CompanyController` + views (design screens "sProfile" and "sAddCo"): company card with EME/QSE
+  badge, B-BBEE, sector and tax chips; Add / Edit form; empty state. DECISIONS D31.
+- After phone verification a new supplier goes to "Add your company" ("Step 2 of 2", with "Skip for now").
+- Links: Profile row "Company", the feed's company tile and the "Add your company" banner.
+
+### Verified in the browser (against the Visual Studio run, 1200x760)
+- Test supplier without a company: empty state, then the form.
+- Bad tax PIN ("12345") and CSD ("ABC123"): server-side errors shown (browser checks switched off for the test).
+- Registration number already used by Supplier One's company: "This company is already registered on eProcure...".
+- Valid save: company card shows the details; CSD typed in lower case stored as `MAAA0384471`.
+- Feed: "checked against Thandeka Supply & Projects (Pty) Ltd"; Level 2 qualifies for the Level 4 tenders and is
+  "Not eligible" for a tender requiring Level 1.
+
+### Manual tests
+1. Register a new supplier and verify the phone: you land on "Add your company", Step 2 of 2.
+2. Enter `2019/12345/07` as CIPC: format error. Enter Supplier One's `2018/123456/07`: "already registered".
+3. Save a valid company: the card appears; the feed shows eligibility badges for your level.
+4. Edit the company and change the B-BBEE level to Level 8: tenders with a Level 4 minimum become "Not eligible".
+5. SQL: `SELECT Action, EntityId, OrganisationId FROM AuditLog WHERE EntityType='Company'` shows Company.Created.
+
+### Commit message
+```
+feat: supplier company profile with eligibility checks
+```

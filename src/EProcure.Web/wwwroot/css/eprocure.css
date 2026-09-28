@@ -107,6 +107,14 @@ button { cursor: pointer; }
 .ep-input { width: 100%; height: 48px; border: 1px solid var(--ep-input-border); border-radius: 10px; padding: 0 14px; font-size: 15px; color: var(--ep-ink); background: #fff; }
 .ep-input::placeholder { color: var(--ep-subtle); }
 .ep-input.input-validation-error { border-color: var(--ep-danger); }
+select.ep-input { padding: 0 10px; }
+.ep-input[readonly] { background: var(--ep-page); color: var(--ep-muted); }
+.ep-field-row { display: flex; gap: 12px; }
+.ep-field-row > .ep-field { flex: 1; min-width: 0; }
+.ep-company-card__top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.ep-company-card__name { margin: 0; font-size: 15px; font-weight: 600; color: var(--ep-ink); }
+.ep-company-card__meta { margin-top: 3px; font-size: 11.5px; color: var(--ep-muted); }
+.ep-company-card__note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ep-line-soft); font-size: 12px; line-height: 1.55; color: var(--ep-muted); }
 .field-validation-error { font-size: 12px; font-weight: 400; letter-spacing: 0; color: var(--ep-danger-text); }
 .field-validation-valid, .validation-summary-valid { display: none; }
 .validation-summary-errors { background: var(--ep-danger-bg); border: 1px solid var(--ep-danger-border); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; line-height: 1.5; color: var(--ep-danger-text); }
