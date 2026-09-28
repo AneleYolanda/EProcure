@@ -306,8 +306,9 @@ feat: org admins create, edit, publish and cancel tenders
 ### Verified in the browser (1200x760)
 - Sign in and Register: split screen, brand panel left, form right; no printed text from the photo showing.
 - Splash: full screen, branding left, buildings right.
-- **Not yet verified:** the tender feed and profile pages on a computer. LocalDB would not start on the laptop
-  ("SQL Server process failed to start", Windows error 575), so pages that read the database could not be opened.
+- After a laptop restart (LocalDB had stopped starting), verified against the Visual Studio run at 1200x760:
+  tender feed with top navigation, "Open tenders" heading and a 3-column card grid; profile page centred;
+  no horizontal scrolling; bottom tab bar hidden. At 402px the phone layout and tab bar are unchanged.
 
 ### Manual tests
 1. On a computer, open `/Account/Login`: split screen. Make the window narrow (phone width): the phone layout returns.
