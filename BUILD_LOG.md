@@ -634,3 +634,35 @@ feat: sealed bids, BEC evaluation with PPPFA points, and BAC award
   Long console titles now end with "…" instead of pushing the role badge off screen.
 - The award notice was at the very bottom of the supplier tender page on phones; it now sits under the title.
 - The formula list is stacked (label above text) instead of squeezed into a right-aligned column.
+
+---
+
+## Step 13: Password reset, email notifications, staff management, bid withdrawal
+
+### What was built
+- `IEmailSender` + `MockEmailSender` + Development-only demo mailbox (`/dev/mailbox`); `NotificationService`;
+  `LinkBuilder` (D46).
+- Forgot password / reset password / accept invitation pages; "Forgot your password?" on both sign-in pages (D47).
+- **Roles and users** (sidebar, SCM Officers only): invite, change role, deactivate/reactivate, resend invitation (D48).
+- Supplier **withdraw** (collapsed panel with confirmation) and **reopen and resubmit** (D49); withdrawn bids excluded
+  from evaluation and staff counts.
+- Tests: 24 new (137 in total), including real ASP.NET Core Identity on SQLite for staff and tokens.
+
+### Verified in the browser (Visual Studio run)
+- Forgot password for an existing and a made-up address: identical "Check your email" page; one email in the mailbox.
+  Reset link: mismatched passwords refused; new password saved; reusing the link → "not valid or has expired";
+  sign-in works; "Your eProcure password was changed" email.
+- Withdrawal (test supplier, RBIDZ/2026/015, EP-2026-000009): without the tick → refused; with tick and reason →
+  Withdrawn, timeline "Withdrawn by the bidder: Correcting the pricing schedule", email; "Reopen and resubmit" → step 1;
+  resubmitted → Submitted with the same reference EP-2026-000009; emails for each step.
+- Roles and users (RBIDZ SCM Officer): bad input → three messages; an existing supplier address → refused; invite →
+  email; invitation page "Welcome, Sipho Test"; password set; link reuse refused. Role changed and back; deactivated →
+  sign-in "Invalid email or password"; reactivated → sign-in works; as a BEC member the page is Access denied and the
+  sidebar has no link. MVLM: list shows only its own admin; deactivating or changing RBIDZ's evaluator → 404.
+- Fixed while testing: the staff list was squeezed next to the invite panel (names invisible); the list now uses the
+  full width with the invite form below it (shows after a restart).
+
+### Commit message
+```
+feat: password reset, email notifications, staff management and bid withdrawal
+```

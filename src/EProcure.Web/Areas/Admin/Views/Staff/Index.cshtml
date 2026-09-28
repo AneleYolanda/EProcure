@@ -19,9 +19,7 @@
         organisation always keeps at least one active SCM Officer. People are deactivated, never deleted, so their work stays on record.
     </div>
 
-    <div class="ep-detail">
-        <div class="ep-detail__main">
-            <section class="ep-register" aria-label="Staff">
+    <section class="ep-register" aria-label="Staff">
                 <div class="ep-register__head ep-register__head--staff" aria-hidden="true">
                     <div>Person</div><div>Role</div><div>Status</div><div></div>
                 </div>
@@ -72,13 +70,11 @@
                     </div>
                 }
             </section>
-        </div>
 
-        <aside class="ep-detail__side">
-            <section class="ep-side-card" aria-labelledby="invite-title">
-                <h3 class="ep-side-card__title" id="invite-title">Invite a person</h3>
-                <div class="ep-side-card__text">They get an email with a link to choose their own password. You never see or send passwords.</div>
-                <form asp-action="Invite" method="post" class="ep-mt-14">
+            <section class="ep-section ep-invite" aria-labelledby="invite-title">
+                <h3 class="ep-section__title" id="invite-title">Invite a person</h3>
+                <div class="ep-section__sub">They get an email with a link to choose their own password. You never see or send passwords.</div>
+                <form asp-action="Invite" method="post" class="ep-mt-14 ep-invite__form">
                     <div asp-validation-summary="ModelOnly"></div>
                     <label class="ep-afield">FULL NAME
                         <input class="ep-ainput" asp-for="Invite.FullName" maxlength="100" autocomplete="off" />
@@ -97,13 +93,11 @@
                         </div>
                         <span asp-validation-for="Invite.Role"></span>
                     </div>
-                    <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block ep-mt-14">Send invitation</button>
+                    <button type="submit" class="ep-abtn ep-abtn--primary ep-invite__send">Send invitation</button>
                 </form>
                 @if (Model.ShowDemoMailbox)
                 {
                     <div class="ep-side-card__text ep-mt-14">Demo mode: invitations appear in the <a href="/dev/mailbox" target="_blank" rel="noopener">demo mailbox</a>.</div>
                 }
             </section>
-        </aside>
-    </div>
 </div>

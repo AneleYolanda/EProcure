@@ -108,6 +108,18 @@ signed in at the same time.
     scoresheet or application URL: **Page not found**.
 24. Separation of duties: the evaluator cannot record an award or change tenders; the SCM Officer cannot evaluate.
 
+**H. Accounts, people and withdrawals**
+25. **Forgot your password?** on the sign-in page: enter `supplier2@demo.co.za`. The page says "Check your email" for any
+    address. Open the **demo mailbox** at `/dev/mailbox`, press **Choose a new password**, set one, sign in. Using the same
+    link again is refused.
+26. As `admin@rbidz.demo`: sidebar **Roles and users**. Invite a BEC member (any name, an address such as
+    `bec2@rbidz.test`); the invitation appears in the demo mailbox; open it in a private window and choose a password.
+    Change their role, **Deactivate** them (they can no longer sign in), **Reactivate** them. Your own row has no
+    buttons, and the organisation always keeps at least one active SCM Officer.
+27. As a supplier with a submitted bid on an open tender: open the application, **Withdraw this bid**, tick the
+    confirmation. It is Withdrawn and will not be evaluated. **Reopen and resubmit**: tick the declaration again; it is
+    submitted with the same reference and no second tender fee.
+
 ---
 
 ## 3. Run the tests
@@ -117,9 +129,10 @@ dotnet test
 ```
 
 No database server needed: each test builds the real EF Core model (same query filters and unique indexes) on an
-in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 113 tests cover tenant isolation, the B-BBEE
+in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 137 tests cover tenant isolation, the B-BBEE
 hard stop, one application per company, closing dates, PDF-only uploads, declarations, payment verification, the
-PPPFA points arithmetic, sealed bids, and the BEC and BAC workflow.
+PPPFA points arithmetic, sealed bids, the BEC and BAC workflow, bid withdrawal, staff management (with real
+ASP.NET Core Identity), password and invitation links, and the emails.
 
 ---
 
@@ -140,14 +153,19 @@ PPPFA points arithmetic, sealed bids, and the BEC and BAC workflow.
 | Sealed bids and evaluation | Bids sealed until closing; PPPFA 2022 price and preference points; BEC recommendation; BAC award; outcome and reasons to every bidder; public award notice. D43, D44 |
 | No secrets in code | Demo password in user-secrets; LocalDB uses Windows sign-in; external services chosen in `appsettings.json` |
 | Security headers | CSP (same-site only, no inline scripts), no framing, nosniff, strict referrer. D41 |
+| Accounts and people | Password reset with single-use expiring links; SCM Officers invite, re-role and deactivate their own staff; nobody can lock the organisation out. D47, D48 |
+| Email | Confirmations, outcomes, withdrawal, "BAC decision needed", invitations and password changes; an email is a copy, never the record. D46 |
+| Bid withdrawal | Before closing, with resubmission and no second fee; withdrawn bids are never evaluated. D49 |
 
 ## 5. Mocked services and known limits
 
-- **SMS (OTP)**, **payment gateway** and **file storage** are mocks behind `IOtpSender`, `IPaymentGateway` and
-  `IFileStorage`. Moving to a real provider (e.g. SMSPortal, PayFast, Azure Blob) is a new class plus a setting
+- **SMS (OTP)**, **email**, **payment gateway** and **file storage** are mocks behind `IOtpSender`, `IEmailSender`,
+  `IPaymentGateway` and `IFileStorage`. Emails can be read in the Development-only demo mailbox (`/dev/mailbox`).
+  Moving to a real provider (e.g. SMSPortal, SendGrid, PayFast, Azure Blob) is a new class plus a setting
   under `ExternalServices`. The demo gateway keeps payments in memory, so an unpaid payment is forgotten when the
   app restarts (start the payment again).
-- Shown as "Soon" in the console: approval queue and user management. Evaluation simplifications (one consolidated
+- Shown as "Soon" in the console: approval queue. Not built yet: closing-date reminder emails (need a scheduled job).
+  Evaluation simplifications (one consolidated
   BEC evaluation per bid, no functionality stage, B-BBEE level as the only specific goal) are listed in DECISIONS D44.
 - Buttons and links meet WCAG AA contrast: a darker shade of each brand colour is used wherever text and the
   brand colour meet (D42).

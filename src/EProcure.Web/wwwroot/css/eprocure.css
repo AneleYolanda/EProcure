@@ -855,3 +855,9 @@ a.ep-action:hover { background: #F7FAFC; }
 .ep-withdraw summary::after { content: " ›"; }
 .ep-withdraw[open] summary::after { content: ""; }
 textarea.ep-input--area { height: auto; padding: 11px 13px; line-height: 1.5; resize: vertical; }
+/* Invite form: fields side by side on computers, stacked on phones */
+.ep-invite__form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; gap: 14px; align-items: end; }
+.ep-invite__form > [asp-validation-summary], .ep-invite__form > .validation-summary-errors, .ep-invite__form > .validation-summary-valid { grid-column: 1 / -1; }
+.ep-invite__form .ep-afield { margin-top: 0; }
+.ep-invite__send { height: 44px; }
+@media (max-width: 991.98px) { .ep-invite__form { grid-template-columns: minmax(0, 1fr); } }

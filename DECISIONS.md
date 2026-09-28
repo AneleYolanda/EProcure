@@ -652,3 +652,61 @@ bidder's timeline.
 
 **Why:** One source of truth: a bid's status can never disagree with the recorded evaluation or award, and there is no
 way to mark a bid "Not awarded" without the reasons being on record.
+
+---
+
+## D46. Email: a swappable sender, a demo mailbox, and courtesy copies only
+
+**What:** `IEmailSender` is chosen in appsettings (`ExternalServices:Email`, "Mock" now). The mock keeps the latest 200
+messages in memory and shows them at `/dev/mailbox`, which exists only in Development with the mock sender (otherwise
+"not found"), so password-reset and invitation links can be followed on a laptop. `NotificationService` sends:
+application submitted, outcome (the same note as the bidder's timeline), bid withdrawn, "BAC decision needed" to the
+organisation's active SCM Officers, staff invitation, password reset link and "password changed".
+Links use `App:PublicBaseUrl` when configured (never a host name taken from the request in production).
+
+**Why:** The timeline and audit trail are the record; an email is a copy. So a failed email is logged and the action
+stands (a mail outage must not undo an award). POPIA minimum: emails say what happened and link to the page; no bid
+prices of other bidders, no committee notes, no staff names to bidders.
+
+**Not done:** closing-date reminders and "tender closed" alerts need a scheduled background job; left for later.
+
+---
+
+## D47. Password reset and staff invitations use Identity's signed, expiring tokens
+
+**What:** "Forgot your password?" always answers "check your email", whether or not the address has an account (no
+account discovery). Reset links work once (the password change updates the security stamp) and expire after 1 hour;
+invitation links use their own token provider (`InviteTokenProvider`) with a 3-day lifetime and a different purpose, so
+one can never be used as the other. Deactivated accounts get no reset email. The user is told by email when their
+password changes, and other sessions end (security stamp re-checked every minute instead of every 30).
+
+**Why:** Standard, well-reviewed ASP.NET Core Identity mechanisms rather than home-made tokens; no passwords are ever
+chosen or seen by an administrator.
+
+---
+
+## D48. Roles and users: SCM Officers manage their own organisation; staff are deactivated, never deleted
+
+**What:** SCM Officers invite people (name, work email, role SCM Officer or BEC member), change roles and deactivate or
+reactivate accounts. Deactivation = Identity lockout until the maximum date + a new security stamp (signed out within a
+minute). Guard rails in `StaffService`: own organisation only (the Users table has no tenant filter, so every query
+filters on the signed-in user's organisation explicitly; another organisation's user is "not found"), no changes to
+your own account, and always at least one active SCM Officer. An email that already has an account (a supplier or any
+organisation's staff) cannot be invited.
+
+**Why:** Organisations run their own workspace without platform support, and accountability survives staff changes:
+names stay on evaluations, awards and the audit trail.
+
+---
+
+## D49. Suppliers can withdraw a submitted bid before closing and resubmit it
+
+**What:** Before the closing date a bidder can withdraw a *submitted* bid (confirmation tick, optional reason). It is kept
+on record with status Withdrawn, not evaluated, and not counted as an application. Until the closing date it can be
+reopened (back to a draft that must be declared again; documents and answers kept) and resubmitted with the same
+reference; a tender fee already paid is not charged again (and is not refunded if the bid is not resubmitted).
+
+**Why:** Mirrors the paper practice of withdrawing and replacing a bid before the box closes, without the unique
+"one application per company per tender" rule getting in the way. The evaluation reads bids through one filter
+(`Bids(tender)`), so a withdrawn bid can never reach the scoresheet (a test found a case where EF Core could have
+attached one within the same request).
