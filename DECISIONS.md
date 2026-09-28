@@ -361,7 +361,7 @@ because enums are stored as text (D9), so SQL cannot compare levels.
 
 ---
 
-## D25. Accessibility risk in the design's colours (flagged, not changed)
+## D25. Accessibility risk in the design's colours (resolved by D42)
 
 **What:** White text on the design's blue `#1CA3EC` has a contrast ratio of about 2.9:1; white on MVLM's coral
 `#E4572E` is about 3.4:1. WCAG AA needs 4.5:1 for normal text (3:1 for large text).
@@ -573,3 +573,21 @@ it from loading or running scripts from elsewhere. Blocking framing stops clickj
 
 **Alternative:** A nonce-based CSP would also remove `'unsafe-inline'` for styles; not worth it for two small style
 blocks whose values are validated as `#RRGGBB` (BrandColours.Safe).
+
+---
+
+## D42. Filled buttons use a darker shade of the brand colour (resolves D25)
+
+**What:** A second colour token, `--ep-accent-strong`, is used wherever WHITE TEXT sits on the brand colour: primary
+buttons, the web nav's Register button, the portal sign-in button, selected filter chips, answer and radio pills, page
+numbers and step numbers. It is the same hue, darkened only as much as needed for 4.5:1 contrast with white (WCAG AA):
+eProcure blue `#1CA3EC` (2.8:1) becomes `#157CB3` (4.6:1); MVLM coral `#E4572E` (3.4:1) becomes `#CB4D29` (4.5:1).
+For organisations the shade is calculated on the server (`BrandColours.ReadableWithWhiteText`) from their stored
+colour, so a new organisation with any brand colour gets readable buttons automatically. Decorative uses (lines,
+progress bars, dots, focus rings, borders) keep the original bright colour.
+
+**Why:** Chosen by the product owner after D25 was flagged. Public-sector sites must be usable by people with low
+vision; a darker button keeps the design's look while making every button label readable.
+
+**Not changed:** blue text links on white (e.g. "Register" on the sign-in page) still use the bright blue, which is
+below 4.5:1 for small text. The same token can be applied to them later if wanted.

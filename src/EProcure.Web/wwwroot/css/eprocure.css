@@ -16,6 +16,9 @@
   --ep-accent: #1CA3EC;
   --ep-accent-hover: #1587C7;
   --ep-accent-soft: #7FD0F7;
+  /* Same hue, dark enough for WHITE text (WCAG AA 4.5:1): filled buttons and selected chips (DECISIONS D42). */
+  --ep-accent-strong: #157CB3;
+  --ep-accent-strong-hover: #12699A;
   --ep-ink: #1B2A4A;
   --ep-navy: #0F1B33;
   --ep-muted: #5A6B7B;
@@ -121,8 +124,8 @@ select.ep-input { padding: 0 10px; }
 .validation-summary-errors ul { margin: 0; padding-left: 18px; }
 
 .ep-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 10px; font-weight: 600; text-decoration: none; white-space: nowrap; }
-.ep-btn--primary { height: 50px; background: var(--ep-accent); color: #fff; font-size: 16px; box-shadow: var(--ep-shadow-cta); }
-.ep-btn--primary:hover { background: var(--ep-accent-hover); color: #fff; }
+.ep-btn--primary { height: 50px; background: var(--ep-accent-strong); color: #fff; font-size: 16px; box-shadow: var(--ep-shadow-cta); }
+.ep-btn--primary:hover { background: var(--ep-accent-strong-hover); color: #fff; }
 .ep-btn--tall { height: 52px; }
 .ep-btn--secondary { height: 48px; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-ink); font-size: 14px; }
 .ep-btn--secondary:hover { color: var(--ep-ink); background: var(--ep-page); }
@@ -174,7 +177,7 @@ select.ep-input { padding: 0 10px; }
 .ep-filter-chips::-webkit-scrollbar { display: none; }
 .ep-filter-chip { flex: none; font-size: 12px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-muted); text-decoration: none; white-space: nowrap; }
 .ep-filter-chip:hover { color: var(--ep-ink); }
-.ep-filter-chip--active, .ep-filter-chip--active:hover { background: var(--ep-accent); border-color: var(--ep-accent); color: #fff; }
+.ep-filter-chip--active, .ep-filter-chip--active:hover { background: var(--ep-accent-strong); border-color: var(--ep-accent-strong); color: #fff; }
 .ep-info-strip { margin: 6px 18px 2px; background: var(--ep-soft); border-radius: 10px; padding: 12px 14px; font-size: 11.5px; line-height: 1.5; color: var(--ep-muted); }
 .ep-info-strip strong { color: var(--ep-ink); font-weight: 600; }
 .ep-tender-list { padding: 10px 18px 30px; display: flex; flex-direction: column; gap: 12px; }
@@ -300,7 +303,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
 .ep-answers { margin-top: 11px; display: flex; gap: 7px; flex-wrap: wrap; }
 .ep-answer input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .ep-answer span { display: inline-block; font-size: 12.5px; font-weight: 600; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-muted); cursor: pointer; }
-.ep-answer input:checked + span { border-color: var(--ep-accent); background: var(--ep-accent); color: #fff; }
+.ep-answer input:checked + span { border-color: var(--ep-accent-strong); background: var(--ep-accent-strong); color: #fff; }
 .ep-answer input:focus-visible + span { outline: 2px solid var(--ep-accent); outline-offset: 2px; }
 .ep-q textarea.ep-input { margin-top: 11px; height: auto; padding: 11px 13px; font-size: 13.5px; line-height: 1.5; }
 .ep-q__warn { margin-top: 10px; font-size: 11.5px; line-height: 1.55; color: var(--ep-warning); background: var(--ep-warning-soft); border-radius: 8px; padding: 9px 11px; }
@@ -363,7 +366,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
    --org-primary / --org-accent are written by the layout from the organisation row
    (validated as #RRGGBB). Inside the console the org accent replaces the eProcure accent. */
 .ep-admin-body { background: #F4F7FA; color: var(--ep-ink); }
-.ep-console { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-hover: color-mix(in srgb, var(--ep-accent) 85%, #000); display: flex; min-height: 100vh; }
+.ep-console { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #157CB3); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); --ep-accent-hover: color-mix(in srgb, var(--ep-accent) 85%, #000); display: flex; min-height: 100vh; }
 .ep-sidebar { width: 246px; flex: none; background: var(--org-primary, #0F1B33); display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; height: 100vh; z-index: 50; }
 .ep-sidebar__brand { padding: 0 18px 18px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
 .ep-logo-circle { flex: none; border-radius: 99px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -447,12 +450,12 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
 .ep-pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .ep-pill { font-size: 12.5px; font-weight: 500; padding: 8px 13px; border-radius: 8px; white-space: nowrap; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-muted); text-decoration: none; }
 .ep-pill:hover { color: var(--ep-ink); }
-.ep-pill--active, .ep-pill--active:hover { border-color: var(--ep-accent); background: var(--ep-accent); color: #fff; }
+.ep-pill--active, .ep-pill--active:hover { border-color: var(--ep-accent-strong); background: var(--ep-accent-strong); color: #fff; }
 .ep-pill__n { margin-left: 4px; opacity: .75; }
 .ep-abtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600; text-decoration: none; white-space: nowrap; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-ink); }
 .ep-abtn:hover { color: var(--ep-ink); background: #F7FAFC; }
-.ep-abtn--primary { border: 0; background: var(--ep-accent); color: #fff; box-shadow: 0 5px 14px color-mix(in srgb, var(--ep-accent) 24%, transparent); }
-.ep-abtn--primary:hover { color: #fff; background: var(--ep-accent); filter: brightness(.94); }
+.ep-abtn--primary { border: 0; background: var(--ep-accent-strong); color: #fff; box-shadow: 0 5px 14px color-mix(in srgb, var(--ep-accent) 24%, transparent); }
+.ep-abtn--primary:hover { color: #fff; background: var(--ep-accent-strong-hover); }
 .ep-abtn--muted { color: var(--ep-muted); }
 .ep-abtn--danger { color: var(--ep-danger-text); border-color: var(--ep-danger-border); }
 .ep-abtn--danger:hover { color: var(--ep-danger-text); background: var(--ep-danger-bg); }
@@ -480,7 +483,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
 .ep-steps__list { margin-top: 14px; display: flex; flex-direction: column; gap: 2px; }
 .ep-step { width: 100%; display: flex; gap: 11px; align-items: center; border-radius: 8px; padding: 10px 11px; color: var(--ep-muted); text-decoration: none; font-size: 12.5px; font-weight: 500; }
 .ep-step:hover { background: var(--ep-soft); color: var(--ep-ink); }
-.ep-step__no { flex: none; width: 22px; height: 22px; border-radius: 99px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: var(--ep-accent); color: #fff; }
+.ep-step__no { flex: none; width: 22px; height: 22px; border-radius: 99px; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; background: var(--ep-accent-strong); color: #fff; }
 .ep-steps__note { margin-top: 16px; padding-top: 15px; border-top: 1px solid #EDF2F7; font-size: 11px; line-height: 1.6; color: var(--ep-subtle); }
 .ep-create__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 .ep-section { background: #fff; border: 1px solid #E1E9F0; border-radius: 10px; padding: 22px 24px; scroll-margin-top: 88px; }
@@ -508,7 +511,7 @@ fieldset.ep-criterion { margin: 0; min-inline-size: 0; }
 .ep-radio-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .ep-radio-pill input, .ep-option input, .ep-doc input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .ep-radio-pill span { display: inline-block; font-size: 12px; font-weight: 600; padding: 7px 11px; border-radius: 7px; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-muted); cursor: pointer; }
-.ep-radio-pill input:checked + span { border-color: var(--ep-accent); background: var(--ep-accent); color: #fff; }
+.ep-radio-pill input:checked + span { border-color: var(--ep-accent-strong); background: var(--ep-accent-strong); color: #fff; }
 .ep-radio-pill input:focus-visible + span, .ep-option input:focus-visible + .ep-option__card, .ep-doc input:focus-visible + .ep-doc__card { outline: 2px solid var(--ep-accent); outline-offset: 2px; }
 .ep-options { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .ep-option__card { display: block; height: 100%; text-align: left; background: #fff; border: 1.5px solid #E1E9F0; border-radius: 10px; padding: 16px; cursor: pointer; }
@@ -571,7 +574,7 @@ a.ep-action:hover { background: #F7FAFC; }
 .ep-chevron { flex: none; color: var(--ep-chevron); }
 
 /* ---------- 13. Admin splash and login ---------- */
-.ep-portal { --ep-accent: var(--org-accent, #1CA3EC); min-height: 100vh; display: flex; }
+.ep-portal { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #157CB3); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); min-height: 100vh; display: flex; }
 .ep-portal__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--ep-accent) 1px, transparent 1px), linear-gradient(90deg, var(--ep-accent) 1px, transparent 1px); }
 .ep-portal-splash { position: relative; flex: 1; background: var(--org-primary, #0F1B33); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 .ep-portal-splash .ep-portal__grid { opacity: .14; background-size: 64px 64px; }
@@ -616,8 +619,8 @@ a.ep-action:hover { background: #F7FAFC; }
 .ep-choice--selected .ep-choice__dot span { background: var(--ep-accent); }
 .ep-choice__label { display: block; font-size: 13px; font-weight: 600; color: var(--ep-ink); }
 .ep-choice__meta { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ep-muted); }
-.ep-portal-form__submit { width: 100%; margin-top: 22px; height: 48px; border: 0; border-radius: 9px; background: var(--ep-accent); color: #fff; font-size: 15px; font-weight: 600; box-shadow: 0 6px 16px color-mix(in srgb, var(--ep-accent) 26%, transparent); }
-.ep-portal-form__submit:hover { background: var(--ep-accent-hover, var(--ep-accent)); filter: brightness(.94); }
+.ep-portal-form__submit { width: 100%; margin-top: 22px; height: 48px; border: 0; border-radius: 9px; background: var(--ep-accent-strong); color: #fff; font-size: 15px; font-weight: 600; box-shadow: 0 6px 16px color-mix(in srgb, var(--ep-accent) 26%, transparent); }
+.ep-portal-form__submit:hover { background: var(--ep-accent-strong-hover); }
 .ep-portal-form__foot { margin-top: 20px; display: flex; gap: 9px; align-items: flex-start; font-size: 11px; line-height: 1.55; color: var(--ep-subtle); }
 .ep-portal-form__foot svg { flex: none; margin-top: 1px; }
 .ep-portal-form .validation-summary-errors { margin-top: 18px; }
@@ -698,7 +701,7 @@ a.ep-action:hover { background: #F7FAFC; }
   .ep-webnav__initials { width: 30px; height: 30px; border-radius: 8px; background: var(--ep-ink); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
   .ep-webnav__button { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border: 1px solid var(--ep-input-border); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--ep-ink); text-decoration: none; }
   .ep-webnav__button:hover { color: var(--ep-ink); background: var(--ep-page); }
-  .ep-webnav__button--primary, .ep-webnav__button--primary:hover { border-color: var(--ep-accent); background: var(--ep-accent); color: #fff; }
+  .ep-webnav__button--primary, .ep-webnav__button--primary:hover { border-color: var(--ep-accent-strong); background: var(--ep-accent-strong); color: #fff; }
 
   .ep-body--app .ep-app { max-width: 1200px; min-height: calc(100vh - 65px); padding: 0 32px 64px; background: transparent; box-shadow: none; }
   .ep-body--app .ep-screen { background: transparent; }

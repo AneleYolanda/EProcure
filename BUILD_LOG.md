@@ -524,3 +524,27 @@ test: automated tests for tenant isolation, eligibility, applications, uploads a
 ```
 docs: demo script and setup guide; feat: security headers and friendly error pages
 ```
+
+---
+
+## Step 10: Button contrast (WCAG AA)
+
+### What was built
+- `BrandColours.ReadableWithWhiteText` / `ContrastWithWhite` (WCAG 2 formula); the admin and portal layouts write
+  `--org-accent-strong` next to `--org-accent`.
+- `--ep-accent-strong` (#157CB3) in the stylesheet, used only where white text sits on the brand colour (DECISIONS D42).
+- 10 new tests (`Rules/BrandColoursTests`): exact shades for the two real brand colours, passing colours unchanged,
+  any colour (even yellow or white) ends up readable, invalid values cannot inject CSS. 82 of 82 pass.
+
+### Verified in the browser (Visual Studio run)
+- RBIDZ application page: "Save status" and other filled buttons are rgb(21, 124, 179) = #157CB3; the rest of the
+  design is unchanged. MVLM's darker coral appears after the app is restarted (layout change).
+
+### Manual tests
+1. Sign in at `/admin/mvlm`: the sign-in button and primary buttons are a slightly deeper coral, still clearly MVLM.
+2. As a supplier, the Apply / Continue buttons and selected chips are a slightly deeper blue; lines and dots stay bright.
+
+### Commit message
+```
+fix: readable white text on buttons (WCAG AA) with a darker shade of each brand colour
+```
