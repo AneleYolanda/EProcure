@@ -1,0 +1,14 @@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<section class="ep-card ep-center" data-ep-splash style="min-height:420px; background-image: url('/img/brand/splash.jpg'); background-size:cover; background-position:center; border-radius:12px;">
+    <div style="background:linear-gradient(rgba(15,27,51,0.45), rgba(15,27,51,0.45)); width:100%; padding:2rem;">
+        <div class="ep-wordmark"><span class="ep-e">e</span>Procure</div>
+        <h2 style="font-size:52px; color:#fff; margin-top:1rem;">Procurement, simplified.</h2>
+        <p class="text-muted" style="color:rgba(255,255,255,0.9)">Skip the admin. Find tenders that suit your business.</p>
+        <div class="mt-4">
+            <a class="ep-btn ep-btn-outline" data-ep-skip href="@Url.Action("Login", "Account")">Skip</a>
+            <a class="ep-btn ep-btn-primary ms-2" data-ep-continue href="@Url.Action("Login", "Account")">Continue</a>
+        </div>
+    </div>
+</section>

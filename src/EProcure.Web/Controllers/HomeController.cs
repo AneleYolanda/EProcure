@@ -21,6 +21,12 @@ public class HomeController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
+        // Show splash page for anonymous users
+        if (!(User?.Identity?.IsAuthenticated ?? false))
+        {
+            return View();
+        }
+
         var now = DateTime.UtcNow;
         var tenders = await _db.Tenders
             .AsNoTracking()
