@@ -1,0 +1,15 @@
+@* Bottom tab bar for suppliers *@
+<nav class="ep-tabbar" aria-label="Supplier navigation">
+    <a asp-area="" asp-controller="Home" asp-action="Index">
+        <svg width="22" height="22" aria-hidden="true"></svg>
+        <span>Tenders</span>
+    </a>
+    <a asp-area="Supplier" asp-controller="Dashboard" asp-action="Index">
+        <svg width="22" height="22" aria-hidden="true"></svg>
+        <span>Applications</span>
+    </a>
+    <a asp-area="" asp-controller="Account" asp-action="Manage">
+        <svg width="22" height="22" aria-hidden="true"></svg>
+        <span>Profile</span>
+    </a>
+</nav>

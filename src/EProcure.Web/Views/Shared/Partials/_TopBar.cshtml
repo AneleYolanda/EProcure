@@ -1,0 +1,9 @@
+@* Top bar with back chevron, title and optional right meta *@
+@model string
+<div class="ep-topbar">
+    <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-link p-0" href="javascript:history.back()" aria-label="Back">←</a>
+        <div class="title">@Model</div>
+    </div>
+    <div class="meta"></div>
+</div>

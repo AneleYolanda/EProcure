@@ -1,0 +1,15 @@
+@model dynamic
+<article class="ep-tender-card">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <div class="title">@Model.Title</div>
+            <div class="meta">@Model.OrganisationName • @Model.ClosingDate</div>
+        </div>
+        <div>
+            <span class="ep-badge @Model.StatusClass">@Model.Status</span>
+        </div>
+    </div>
+    <div class="mt-2">
+        <div class="ep-eyebrow">@Model.ShortDescription</div>
+    </div>
+</article>
