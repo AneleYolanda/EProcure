@@ -446,3 +446,41 @@ feat: tender page for suppliers and application wizard with PDF uploads and paym
 ```
 feat: application tracking for suppliers and application review for organisations
 ```
+
+---
+
+## Step 8: Automated tests
+
+### What was built
+- `tests/EProcure.Tests` (xUnit, .NET 8), added to the solution. 72 tests, about 3 seconds, no database server needed.
+- `Support/TestDb`: the real `EProcureDbContext` on in-memory SQLite, with helpers to add users, suppliers, tenders
+  and applications. `TestTenant` plays "staff of organisation X" or "marketplace (supplier)".
+- **Rules** (pure functions): B-BBEE eligibility (at/above/below minimum, no minimum, no company, non-compliant),
+  PDF validator (extension, content type, signature, empty, exactly 5 MB vs 5 MB + 1 byte), allowed status changes
+  (never "Awarded"), red flags.
+- **Tenant isolation**: own tenders only; another organisation's tender is not found even by id; drafts and unpaid
+  applications invisible; documents and history follow their application; audit trail per organisation; a staff user
+  with no organisation sees nothing; the marketplace sees every organisation.
+- **Application journey** (real `ApplicationService`): hard stop creates nothing and is audited; closed, draft and
+  cancelled tenders refused; applying again reopens the same application; the database rejects a duplicate;
+  another supplier cannot load the application; nothing changes after the closing date or after a B-BBEE downgrade;
+  renamed text file and Word file rejected and not stored; valid PDF stored with SHA-256; re-upload replaces;
+  a checklist item from another tender refused; declarations need details; missing document or unticked declaration
+  blocks submitting; free tender submits at once; paid tender hidden until the provider confirms payment; forged
+  reference, unconfirmed and failed payments leave it unsubmitted; submitted application locked.
+- **Tender service**: new tender gets the signed-in user's organisation; no organisation, no tender; another
+  organisation's tender cannot be published, edited or cancelled; reference unique per organisation (the same
+  reference is allowed in another organisation); closing date at least 1 hour away; at least one document;
+  expired draft cannot be published; published tender locked; cancelling keeps the record and the reason.
+
+### Bug found and fixed
+- First run: 71 passed, 1 failed. A staff user with no organisation could see audit entries that have no
+  organisation (EF treats NULL == NULL as true). Filter fixed (DECISIONS D40); 72 of 72 pass.
+
+### How to run
+- Command line: `dotnet test` in the repository folder. Visual Studio: Test > Run All Tests (Test Explorer).
+
+### Commit message
+```
+test: automated tests for tenant isolation, eligibility, applications, uploads and payments
+```

@@ -528,3 +528,29 @@ shortcuts that skip the adjudication step.
 Industrial Development Zone"); the supplier's own actions show "You". Staff names stay in the organisation's audit trail.
 
 **Why:** POPIA minimum disclosure, and it protects evaluators from being contacted or lobbied by bidders.
+
+---
+
+## D39. Automated tests run on SQLite in memory, against the real model
+
+**What:** `tests/EProcure.Tests` (xUnit) builds the production `EProcureDbContext` (same query filters, unique
+indexes and seeded organisations) on an in-memory SQLite database, one per test. Services are tested through their
+real code with small fakes only for the outside world (file storage in memory, the mock payment gateway).
+
+**Why:** The rules that matter most (tenant isolation, unique applications) live in the EF model and the database, so
+they must be tested against a relational database, not EF's InMemory provider, which ignores unique indexes and SQL
+null semantics. SQLite needs no installation, so `dotnet test` works offline on any laptop and in CI.
+
+**Alternative:** Testing against LocalDB is closer to production but needs SQL Server installed and is slower; kept for
+manual testing. Known gap: SQL Server-only behaviour (e.g. the exact wording of a unique-index error) is not covered.
+
+---
+
+## D40. Audit filter excludes entries without an organisation (bug found by the tests)
+
+**What:** The audit query filter is now `OrganisationId != null && OrganisationId == CurrentOrgId` for staff.
+
+**Why:** EF Core compares nullable values with C# rules, where NULL == NULL is true. A staff account whose organisation
+was missing would have seen every platform-level audit entry (supplier sign-ins, draft applications). No real account
+was affected (every staff account has an organisation), but the tenant wall must fail closed. The other filters compare
+non-nullable columns and were already safe; the "fails closed" test now covers all of them.

@@ -17,6 +17,17 @@ dotnet run --project src/EProcure.Web
 
 Requires Visual Studio 2026 (ASP.NET workload, includes LocalDB) and the .NET 8 ASP.NET Core Runtime.
 
+## Run the tests
+
+```
+dotnet test
+```
+
+No database server needed: each test builds the real EF Core model (same query filters and unique
+indexes) on an in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. The tests cover
+tenant isolation, the B-BBEE hard stop, one application per company, closing dates, PDF-only uploads,
+declarations and payment verification.
+
 ## Repository layout
 
 ```
@@ -24,6 +35,10 @@ src/EProcure.Web/
   Domain/          entities and enums (no framework logic)
   Data/            DbContext, entity configurations, seed data, migrations
   Tenancy/         ITenantContext: "which organisation is this request for?"
+tests/EProcure.Tests/
+  Rules/           pure rules: B-BBEE eligibility, PDF validator, allowed status changes
+  Data/            tenant isolation on a real (SQLite in-memory) database
+  Services/        tender and application journeys end to end
 docs/
   DATA_MODEL.md    schema, relationships, tenant isolation, POPIA register
   schema/          generated SQL of the migrations, for review

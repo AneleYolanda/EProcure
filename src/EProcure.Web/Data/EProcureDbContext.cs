@@ -91,8 +91,11 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
              && h.Submission.Status != SubmissionStatus.Draft
              && h.Submission.Status != SubmissionStatus.AwaitingPayment));
 
+        // AuditEntry.OrganisationId is nullable (platform events such as supplier sign-ins have none).
+        // EF compares nullables with C# rules, where NULL == NULL is true, so without the explicit
+        // "!= null" a staff user with no organisation would see every platform event (found by a Step 8 test).
         builder.Entity<AuditEntry>().HasQueryFilter(a =>
-            !IsOrgScoped || a.OrganisationId == CurrentOrgId);
+            !IsOrgScoped || (a.OrganisationId != null && a.OrganisationId == CurrentOrgId));
 
         SeedData.Apply(builder);
     }
