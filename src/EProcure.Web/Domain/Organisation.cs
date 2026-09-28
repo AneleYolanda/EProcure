@@ -29,6 +29,12 @@ public class Organisation
     public PreferencePointSystem DefaultPointSystem { get; set; } = PreferencePointSystem.EightyTwenty;
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// When true, a tender can only be published after a SECOND SCM Officer approves it (four-eyes control).
+    /// Set by the organisation's SCM Officers on the Approval queue page.
+    /// </summary>
+    public bool RequireTenderApproval { get; set; }
     public DateTime CreatedAtUtc { get; set; }
 
     // Navigation properties (one organisation -> many of each)

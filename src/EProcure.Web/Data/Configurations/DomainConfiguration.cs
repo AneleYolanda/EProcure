@@ -96,6 +96,26 @@ public class TenderConfiguration : IEntityTypeConfiguration<Tender>
             .WithMany()
             .HasForeignKey(t => t.EvaluationSubmittedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Publication approval (four-eyes).
+        b.Property(t => t.ApprovalReturnNote).HasMaxLength(1000);
+        b.HasOne(t => t.ApprovalRequestedByUser)
+            .WithMany()
+            .HasForeignKey(t => t.ApprovalRequestedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(t => t.ApprovedByUser)
+            .WithMany()
+            .HasForeignKey(t => t.ApprovedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class SentNotificationConfiguration : IEntityTypeConfiguration<SentNotification>
+{
+    public void Configure(EntityTypeBuilder<SentNotification> b)
+    {
+        b.Property(n => n.Key).HasMaxLength(200).IsRequired();
+        b.HasIndex(n => n.Key).IsUnique(); // "send once" is a database guarantee
     }
 }
 

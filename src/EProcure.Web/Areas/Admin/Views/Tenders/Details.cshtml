@@ -28,11 +28,18 @@
                             Created by @Model.CreatedBy · @DisplayFormat.DateTime(Model.CreatedAtUtc)
                             @if (Model.PublishedAtUtc is DateTime published)
                             {
-                                <text> · published @DisplayFormat.DateTime(published)</text>
+                                <text> · published @DisplayFormat.DateTime(published)@(Model.ApprovedBy is string approver ? $" after approval by {approver}" : "")</text>
                             }
                         </div>
                     </div>
-                    <span class="@TenderStages.BadgeCss(Model.Stage)">@TenderStages.Label(Model.Stage)</span>
+                    @if (Model.ApprovalPending)
+                    {
+                        <span class="ep-badge ep-badge--warning">Awaiting approval</span>
+                    }
+                    else
+                    {
+                        <span class="@TenderStages.BadgeCss(Model.Stage)">@TenderStages.Label(Model.Stage)</span>
+                    }
                 </div>
                 <div class="ep-facts">
                     <div class="ep-fact"><div class="ep-fact__k">Closing (SAST)</div><div class="ep-fact__v">@DisplayFormat.DateTime(Model.ClosingDateUtc)</div></div>
@@ -79,9 +86,29 @@
         <aside class="ep-detail__side">
             @if (isDraft && Model.CanManage)
             {
+                @if (Model.ApprovalReturnNote is string returned && !Model.ApprovalPending)
+                {
+                    <div class="ep-warning-note">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+                        <div><strong>Sent back by the approver:</strong> @returned</div>
+                    </div>
+                }
                 <section class="ep-side-card" aria-labelledby="publish-title">
-                    <h3 class="ep-side-card__title" id="publish-title">Publish to bidders</h3>
-                    <div class="ep-side-card__text">Publishing makes this tender visible to every supplier in the eProcure marketplace. After that it is locked so every bidder sees the same terms.</div>
+                    <h3 class="ep-side-card__title" id="publish-title">@(Model.ApprovalPending ? "Waiting for approval" : Model.RequiresApproval ? "Submit for approval" : "Publish to bidders")</h3>
+                    <div class="ep-side-card__text">
+                        @if (Model.ApprovalPending)
+                        {
+                            <text>@Model.ApprovalRequestedBy asked a second SCM Officer to approve this tender on @DisplayFormat.DateTime(Model.ApprovalRequestedAtUtc!.Value). The draft is locked so the approver sees exactly what will be published. Approving publishes it at once.</text>
+                        }
+                        else if (Model.RequiresApproval)
+                        {
+                            <text>Your organisation requires a second SCM Officer to approve a tender before it is published. Once approved it is visible to every supplier and locked so every bidder sees the same terms.</text>
+                        }
+                        else
+                        {
+                            <text>Publishing makes this tender visible to every supplier in the eProcure marketplace. After that it is locked so every bidder sees the same terms.</text>
+                        }
+                    </div>
                     <div class="ep-checks">
                         @foreach (var check in Model.PublishChecks)
                         {
@@ -96,14 +123,39 @@
                             </div>
                         }
                     </div>
-                    <form asp-action="Publish" asp-route-id="@Model.Id" method="post">
-                        <label class="ep-confirm">
-                            <input type="checkbox" name="confirm" value="true" @(Model.CanPublish ? "" : "disabled") />
-                            <span>I confirm the details are final and ready for bidders.</span>
-                        </label>
-                        <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block" @(Model.CanPublish ? "" : "disabled")>Publish tender</button>
-                    </form>
-                    <a class="ep-abtn ep-abtn--block" asp-action="Edit" asp-route-id="@Model.Id">Edit draft</a>
+                    @if (Model.ApprovalPending && Model.IsApprovalRequester)
+                    {
+                        <form asp-action="WithdrawApproval" asp-route-id="@Model.Id" method="post">
+                            <button type="submit" class="ep-abtn ep-abtn--block">Withdraw the request (to edit)</button>
+                        </form>
+                    }
+                    else if (Model.ApprovalPending)
+                    {
+                        <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                            <label class="ep-confirm">
+                                <input type="checkbox" name="confirm" value="true" @(Model.CanPublish ? "" : "disabled") />
+                                <span>I have checked the tender and approve it for publication.</span>
+                            </label>
+                            <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block" @(Model.CanPublish ? "" : "disabled")>Approve and publish</button>
+                        </form>
+                        <form asp-action="ReturnForChanges" asp-route-id="@Model.Id" method="post" class="ep-mt-14">
+                            <label class="ep-afield">OR SEND IT BACK WITH A NOTE
+                                <textarea class="ep-ainput" name="returnNote" rows="3" maxlength="1000" placeholder="What must change before it can be published?"></textarea>
+                            </label>
+                            <button type="submit" class="ep-abtn ep-abtn--block">Send back</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="@(Model.RequiresApproval ? "RequestApproval" : "Publish")" asp-route-id="@Model.Id" method="post">
+                            <label class="ep-confirm">
+                                <input type="checkbox" name="confirm" value="true" @(Model.CanPublish ? "" : "disabled") />
+                                <span>I confirm the details are final and ready for bidders.</span>
+                            </label>
+                            <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block" @(Model.CanPublish ? "" : "disabled")>@(Model.RequiresApproval ? "Submit for approval" : "Publish tender")</button>
+                        </form>
+                        <a class="ep-abtn ep-abtn--block" asp-action="Edit" asp-route-id="@Model.Id">Edit draft</a>
+                    }
                 </section>
             }
             else if (isDraft)

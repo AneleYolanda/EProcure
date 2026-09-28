@@ -1,0 +1,49 @@
+@* Approval queue: tenders waiting for a second SCM Officer, and the organisation's four-eyes rule. *@
+@model IReadOnlyList<ApprovalQueueRow>
+@{
+    ViewData["Title"] = "Approval queue";
+    ViewData["Nav"] = "approvals";
+    var me = ViewData["UserId"] as string;
+    var required = ViewData["RequiresApproval"] is true;
+}
+<div class="ep-stack">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+
+    <section class="ep-section ep-rule">
+        <div class="ep-grow">
+            <h3 class="ep-section__title">Second approval before publishing</h3>
+            <div class="ep-section__sub">
+                @(required
+                    ? "On: a tender is published only after a second SCM Officer checks and approves it. Nobody approves their own request."
+                    : "Off: any SCM Officer can publish a tender on their own. Switch this on so a second SCM Officer must approve every tender first (four-eyes control).")
+            </div>
+        </div>
+        <form asp-action="Rule" method="post">
+            <input type="hidden" name="required" value="@(required ? "false" : "true")" />
+            <button type="submit" class="ep-abtn@(required ? "" : " ep-abtn--primary")">@(required ? "Switch off" : "Switch on")</button>
+        </form>
+    </section>
+
+    <section class="ep-register" aria-label="Tenders waiting for approval">
+        <div class="ep-register__head ep-register__head--approvals" aria-hidden="true">
+            <div>Reference</div><div>Tender</div><div>Asked by</div><div>Waiting since</div><div></div>
+        </div>
+        @foreach (var row in Model)
+        {
+            <a class="ep-register__row ep-register__row--approvals" asp-controller="Tenders" asp-action="Details" asp-route-id="@row.TenderId">
+                <span class="ep-register__ref">@row.ReferenceNumber</span>
+                <span class="ep-register__title">@row.Title <span class="ep-score__sub">closes @DisplayFormat.DateTime(row.ClosingDateUtc)</span></span>
+                <span class="ep-register__cell">@(row.RequestedById == me ? "You" : row.RequestedBy)</span>
+                <span class="ep-register__cell ep-register__cell--muted">@DisplayFormat.DateTime(row.RequestedAtUtc)</span>
+                <span class="@(row.RequestedById == me ? "ep-badge" : "ep-badge ep-badge--warning")">@(row.RequestedById == me ? "Waiting for another officer" : "Review")</span>
+            </a>
+        }
+        @if (Model.Count == 0)
+        {
+            <div class="ep-register__empty">Nothing is waiting for approval.</div>
+        }
+    </section>
+</div>

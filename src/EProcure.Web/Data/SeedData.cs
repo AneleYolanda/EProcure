@@ -31,6 +31,7 @@ public static class SeedData
                 PrimaryColour = "#0F1B33",
                 AccentColour = "#1CA3EC",
                 DefaultPointSystem = PreferencePointSystem.NinetyTen,
+                RequireTenderApproval = true, // demo: publishing needs a second SCM Officer (MVLM does not)
                 IsActive = true,
                 CreatedAtUtc = SeededAt
             },

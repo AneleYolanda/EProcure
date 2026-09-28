@@ -55,7 +55,7 @@
             </div>
             @foreach (var item in Model.ActionItems)
             {
-                var toScoresheet = item.Tag is "Evaluate" or "BAC";
+                var toScoresheet = item.Tag is "Evaluate" or "BAC";  // "Approve" items open the tender page, where the approver decides
                 <a class="ep-action" asp-controller="@(toScoresheet ? "Evaluation" : "Tenders")" asp-action="@(toScoresheet ? "Tender" : "Details")" asp-route-id="@item.TenderId">
                     <span class="@ToneIcon(item.Tone)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="@IconPath(item.Icon)" /></svg>

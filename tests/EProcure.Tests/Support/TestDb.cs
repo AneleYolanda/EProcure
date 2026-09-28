@@ -39,6 +39,23 @@ public sealed class TestDb : IDisposable
 
     public EProcureDbContext Context(ITenantContext tenant) => new(_options, tenant);
 
+    /// <summary>For services that build their own DbContext (the scheduled-email job).</summary>
+    public DbContextOptions<EProcureDbContext> Options => _options;
+
+    // Role ids seeded by SeedData.
+    public const string OrgAdminRoleId = "8e445865-a24d-4543-a6c6-9443d048cdb9";
+    public const string EvaluatorRoleId = "b5c1a2d3-7f4e-4c1a-9d2b-3e6f7a8b9c0d";
+
+    /// <summary>An organisation staff member in a role (OrgAdminRoleId or EvaluatorRoleId). Returns the user id.</summary>
+    public string AddStaff(int organisationId, string roleId)
+    {
+        var id = AddUser(organisationId);
+        using var db = Marketplace();
+        db.UserRoles.Add(new Microsoft.AspNetCore.Identity.IdentityUserRole<string> { UserId = id, RoleId = roleId });
+        db.SaveChanges();
+        return id;
+    }
+
     /// <summary>A context with no organisation filter, for arranging test data.</summary>
     public EProcureDbContext Marketplace() => Context(TestTenant.Marketplace);
 

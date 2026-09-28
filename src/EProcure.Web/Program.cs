@@ -94,6 +94,15 @@ builder.Services.AddScoped<ILinkBuilder, LinkBuilder>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 
+// Scheduled emails (closing-date reminders, "tender closed"): a background timer inside the app. See ReminderService.
+builder.Services.Configure<ReminderOptions>(builder.Configuration.GetSection("Reminders"));
+builder.Services.AddScoped(sp => new ReminderService(
+    sp.GetRequiredService<DbContextOptions<EProcureDbContext>>(),
+    db => new NotificationService(db, sp.GetRequiredService<IEmailSender>(), sp.GetRequiredService<ILinkBuilder>(), sp.GetRequiredService<ILogger<NotificationService>>()),
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ReminderOptions>>(),
+    sp.GetRequiredService<ILogger<ReminderService>>()));
+builder.Services.AddHostedService<ReminderWorker>();
+
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the
 // paths for login and access denied to use our AccountController.

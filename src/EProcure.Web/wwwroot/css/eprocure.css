@@ -861,3 +861,18 @@ textarea.ep-input--area { height: auto; padding: 11px 13px; line-height: 1.5; re
 .ep-invite__form .ep-afield { margin-top: 0; }
 .ep-invite__send { height: 44px; }
 @media (max-width: 991.98px) { .ep-invite__form { grid-template-columns: minmax(0, 1fr); } }
+
+/* Approval queue */
+.ep-rule { display: flex; gap: 20px; align-items: center; }
+.ep-rule form { margin: 0; flex: none; }
+.ep-register__head--approvals, .ep-register__row--approvals { grid-template-columns: 150px minmax(0, 1fr) 170px 150px 190px; }
+.ep-register__row--approvals .ep-register__title { white-space: normal; }
+@media (max-width: 991.98px) {
+  .ep-rule { flex-direction: column; align-items: stretch; }
+  .ep-register__row--approvals { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "ref badge" "title title" "who who"; }
+  .ep-register__row--approvals > :nth-child(1) { grid-area: ref; }
+  .ep-register__row--approvals > :nth-child(2) { grid-area: title; }
+  .ep-register__row--approvals > :nth-child(3) { grid-area: who; display: block; color: var(--ep-muted); }
+  .ep-register__row--approvals > :nth-child(4) { display: none; }
+  .ep-register__row--approvals > :nth-child(5) { grid-area: badge; }
+}

@@ -28,4 +28,15 @@ public class DevMailboxController : Controller
         if (!_environment.IsDevelopment() || _email is not MockEmailSender mock) return NotFound();
         return View(mock.Sent);
     }
+
+    /// <summary>Runs the scheduled emails now instead of waiting for the timer (Development only, for demos).</summary>
+    [HttpPost("run-scheduled")]
+    public async Task<IActionResult> RunScheduled([FromServices] Services.ReminderService reminders, CancellationToken ct)
+    {
+        if (!_environment.IsDevelopment() || _email is not MockEmailSender) return NotFound();
+        var result = await reminders.RunAsync(DateTime.UtcNow, ct);
+        TempData["Flash"] = $"Scheduled emails run: {result.ClosingReminders} closing reminder(s) and {result.ClosedNotices} tender-closed notice(s) sent. " +
+                            "Each is sent only once.";
+        return Redirect("/dev/mailbox");
+    }
 }

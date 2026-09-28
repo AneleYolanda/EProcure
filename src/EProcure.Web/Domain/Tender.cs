@@ -70,6 +70,21 @@ public class Tender
     /// <summary>Why the BAC last sent the evaluation back to the BEC (shown to the BEC).</summary>
     public string? BacReturnNote { get; set; }
 
+    // ---- Publication approval (when the organisation requires a second SCM Officer) ----
+
+    /// <summary>Set while the draft waits for approval; the draft is locked against editing meanwhile.</summary>
+    public DateTime? ApprovalRequestedAtUtc { get; set; }
+    public string? ApprovalRequestedByUserId { get; set; }
+    public ApplicationUser? ApprovalRequestedByUser { get; set; }
+
+    /// <summary>Who approved (and thereby published) the tender.</summary>
+    public DateTime? ApprovedAtUtc { get; set; }
+    public string? ApprovedByUserId { get; set; }
+    public ApplicationUser? ApprovedByUser { get; set; }
+
+    /// <summary>Why the approver last sent the draft back (shown to the SCM Officers).</summary>
+    public string? ApprovalReturnNote { get; set; }
+
     /// <summary>The required-documents checklist.</summary>
     public ICollection<TenderRequirement> Requirements { get; set; } = new List<TenderRequirement>();
     public ICollection<Submission> Submissions { get; set; } = new List<Submission>();

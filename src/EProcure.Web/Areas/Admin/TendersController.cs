@@ -167,6 +167,54 @@ public class TendersController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // ---- Publication approval (four-eyes) ----
+
+    [HttpPost]
+    [Authorize(Policy = "OrgAdminOnly")]
+    public async Task<IActionResult> RequestApproval(int id, bool confirm, CancellationToken ct)
+    {
+        if (!confirm)
+        {
+            TempData["FlashError"] = "Tick the confirmation box to submit the tender for approval.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return Done(id, await _tenders.RequestApprovalAsync(id, UserId, ct),
+            "Submitted for approval. Another SCM Officer has been asked to approve it; the draft is locked meanwhile.");
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "OrgAdminOnly")]
+    public async Task<IActionResult> Approve(int id, bool confirm, CancellationToken ct)
+    {
+        if (!confirm)
+        {
+            TempData["FlashError"] = "Tick the confirmation box to approve and publish.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        return Done(id, await _tenders.ApproveAsync(id, UserId, ct),
+            "Approved and published. The tender is now visible to every supplier in the eProcure marketplace.");
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "OrgAdminOnly")]
+    public async Task<IActionResult> ReturnForChanges(int id, string? returnNote, CancellationToken ct) =>
+        Done(id, await _tenders.ReturnForChangesAsync(id, UserId, returnNote, ct),
+            "Sent back with your note. The requester can edit the draft and submit it again.");
+
+    [HttpPost]
+    [Authorize(Policy = "OrgAdminOnly")]
+    public async Task<IActionResult> WithdrawApproval(int id, CancellationToken ct) =>
+        Done(id, await _tenders.WithdrawApprovalRequestAsync(id, UserId, ct), "Approval request withdrawn. The draft can be edited again.");
+
+    private string UserId => _userManager.GetUserId(User)!;
+
+    private IActionResult Done(int id, ServiceResult result, string success)
+    {
+        if (result.NotFound) return NotFound();
+        TempData[result.Succeeded ? "Flash" : "FlashError"] = result.Succeeded ? success : string.Join(" ", result.Errors.Select(e => e.Message));
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     [Authorize(Policy = "OrgAdminOnly")]
     public async Task<IActionResult> Cancel(int id, CancellationToken ct)
     {
@@ -211,6 +259,8 @@ public class TendersController : Controller
         var tender = await _db.Tenders.AsNoTracking()
             .Include(t => t.Requirements)
             .Include(t => t.CreatedByUser)
+            .Include(t => t.ApprovalRequestedByUser)
+            .Include(t => t.ApprovedByUser)
             .SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return null;
 
@@ -246,6 +296,13 @@ public class TendersController : Controller
             Requirements = tender.Requirements.OrderBy(r => r.SortOrder).Select(r => r.Name).ToList(),
             CanManage = User.IsInRole(AppRoles.OrgAdmin),
             PublishChecks = _tenders.PublishChecks(tender, now),
+            RequiresApproval = await _tenders.RequiresApprovalAsync(ct),
+            ApprovalPending = tender.ApprovalRequestedAtUtc is not null,
+            ApprovalRequestedBy = tender.ApprovalRequestedByUser?.FullName,
+            ApprovalRequestedAtUtc = tender.ApprovalRequestedAtUtc,
+            IsApprovalRequester = tender.ApprovalRequestedByUserId == UserId,
+            ApprovalReturnNote = tender.ApprovalReturnNote,
+            ApprovedBy = tender.ApprovedByUser?.FullName,
             History = entries.Select(e => new TenderDetailsViewModel.HistoryItem(
                 Describe(e.Action, e.Details),
                 e.UserId != null && names.TryGetValue(e.UserId, out var n) ? n : e.UserEmail ?? "System",
@@ -259,6 +316,10 @@ public class TendersController : Controller
         "Tender.Updated" => "Draft edited",
         "Tender.Published" => "Published to the eProcure marketplace",
         "Tender.Cancelled" => $"Cancelled: {details}",
+        "Tender.ApprovalRequested" => "Submitted for approval by a second SCM Officer",
+        "Tender.Approved" => "Approved by a second SCM Officer",
+        "Tender.ApprovalReturned" => $"Sent back before publication: {details}",
+        "Tender.ApprovalWithdrawn" => "Approval request withdrawn",
         _ => action
     };
 }

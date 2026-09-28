@@ -24,11 +24,14 @@ public class DashboardController : Controller
 
     private readonly EProcureDbContext _db;
     private readonly ICurrentOrganisation _currentOrganisation;
+    private readonly Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> _userManager;
 
-    public DashboardController(EProcureDbContext db, ICurrentOrganisation currentOrganisation)
+    public DashboardController(EProcureDbContext db, ICurrentOrganisation currentOrganisation,
+        Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> userManager)
     {
         _db = db;
         _currentOrganisation = currentOrganisation;
+        _userManager = userManager;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -50,6 +53,8 @@ public class DashboardController : Controller
                 t.Status,
                 t.ClosingDateUtc,
                 t.EvaluationSubmittedAtUtc,
+                t.ApprovalRequestedAtUtc,
+                t.ApprovalRequestedByUserId,
                 Applications = t.Submissions.Count(s => s.Status != SubmissionStatus.Withdrawn) // paid, not withdrawn (the filter hides unpaid ones)
             })
             .ToListAsync(cancellationToken);
@@ -68,7 +73,11 @@ public class DashboardController : Controller
         var actions = new List<ActionItem>();
         if (isOrgAdmin)
         {
-            actions.AddRange(drafts.Select(t => new ActionItem(t.Id,
+            var me = _userManager.GetUserId(User);
+            // Four-eyes: a draft waiting for approval is an action for every OTHER SCM Officer.
+            actions.AddRange(drafts.Where(t => t.ApprovalRequestedAtUtc is not null && t.ApprovalRequestedByUserId != me).Select(t => new ActionItem(t.Id,
+                $"{t.ReferenceNumber} awaits your approval", $"{t.Title} · a second SCM Officer must approve it before publication", "Approve", "warning", "file")));
+            actions.AddRange(drafts.Where(t => t.ApprovalRequestedAtUtc is null).Select(t => new ActionItem(t.Id,
                 $"{t.ReferenceNumber} is still a draft", $"{t.Title} · not visible to suppliers", "Draft", "neutral", "file")));
             actions.AddRange(closingSoon.Select(t => new ActionItem(t.Id,
                 $"{t.ReferenceNumber} closes {DisplayFormat.DateTime(t.ClosingDateUtc)}",

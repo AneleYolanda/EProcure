@@ -30,6 +30,7 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
     public DbSet<SubmissionStatusHistory> SubmissionStatusHistory => Set<SubmissionStatusHistory>();
     public DbSet<AwardRecord> AwardRecords => Set<AwardRecord>();
     public DbSet<BidEvaluation> BidEvaluations => Set<BidEvaluation>();
+    public DbSet<SentNotification> SentNotifications => Set<SentNotification>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     // These two properties are read by the query filters below. Because they are members of

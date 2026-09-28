@@ -54,6 +54,8 @@ public class DemoDataSeeder
         // Fictitious demo numbers. They are marked as already verified so demo users skip the OTP step.
         var rbidzAdmin = await EnsureUserAsync(userManager, "admin@rbidz.demo", "RBIDZ Administrator", AppRoles.OrgAdmin, rbidz.Id, password, "+27820000001");
         await EnsureUserAsync(userManager, "evaluator@rbidz.demo", "RBIDZ Evaluator", AppRoles.Evaluator, rbidz.Id, password, "+27820000002");
+        // A second SCM Officer, so RBIDZ's "second approval before publishing" rule can be demonstrated.
+        await EnsureUserAsync(userManager, "approver@rbidz.demo", "RBIDZ Senior SCM Officer", AppRoles.OrgAdmin, rbidz.Id, password, "+27820000007");
         var mvlmAdmin = await EnsureUserAsync(userManager, "admin@mvlm.demo", "MVLM Administrator", AppRoles.OrgAdmin, mvlm.Id, password, "+27820000003");
 
         var supplier1 = await EnsureUserAsync(userManager, "supplier1@demo.co.za", "Supplier One", AppRoles.Supplier, null, password, "+27820000004");

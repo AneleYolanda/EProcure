@@ -17,10 +17,7 @@
     var activeNav = ViewData["Nav"] as string;
 
     // The design's full console menu. Items not built yet are shown greyed with "Soon" and are not links.
-    var soonItems = new (string Label, string Path)[]
-    {
-        ("Approval queue", "M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5")
-    };
+    var soonItems = Array.Empty<(string Label, string Path)>();
     var isScmOfficer = User.IsInRole(AppRoles.OrgAdmin);
 }
 <!DOCTYPE html>
@@ -75,6 +72,10 @@
                 </a>
                 @if (isScmOfficer)
                 {
+                    <a class="ep-nav-item@(activeNav == "approvals" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Approvals" asp-action="Index" aria-current="@(activeNav == "approvals" ? "page" : null)">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" /></svg>
+                        <span class="ep-nav-item__label">Approval queue</span>
+                    </a>
                     <a class="ep-nav-item@(activeNav == "staff" ? " ep-nav-item--active" : "")" asp-area="Admin" asp-controller="Staff" asp-action="Index" aria-current="@(activeNav == "staff" ? "page" : null)">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a3 3 0 100-6M21.5 20a5.5 5.5 0 00-4-5.3" /></svg>
                         <span class="ep-nav-item__label">Roles and users</span>

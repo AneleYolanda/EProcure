@@ -43,6 +43,15 @@ public class TenderDetailsViewModel
 
     /// <summary>Checks shown before publishing; publishing is only offered when all pass.</summary>
     public IReadOnlyList<PublishCheck> PublishChecks { get; set; } = Array.Empty<PublishCheck>();
+
+    // Publication approval (when the organisation requires a second SCM Officer).
+    public bool RequiresApproval { get; set; }
+    public bool ApprovalPending { get; set; }
+    public string? ApprovalRequestedBy { get; set; }
+    public DateTime? ApprovalRequestedAtUtc { get; set; }
+    public bool IsApprovalRequester { get; set; }
+    public string? ApprovalReturnNote { get; set; }
+    public string? ApprovedBy { get; set; }
     public bool CanPublish => Stage == TenderStage.Draft && PublishChecks.All(c => c.Passed);
 
     public IReadOnlyList<HistoryItem> History { get; set; } = Array.Empty<HistoryItem>();

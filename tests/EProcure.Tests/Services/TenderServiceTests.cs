@@ -13,13 +13,14 @@ public sealed class TenderServiceTests : IDisposable
 {
     private readonly TestDb _db = new();
     private readonly CancellationToken _ct = CancellationToken.None;
+    private readonly EProcure.Web.Services.External.MockEmailSender _mail = new();
 
     public void Dispose() => _db.Dispose();
 
     private TenderService ServiceFor(TestTenant tenant, out Web.Data.EProcureDbContext context)
     {
         context = _db.Context(tenant);
-        return new TenderService(context, tenant, new AuditService(context, new HttpContextAccessor()));
+        return new TenderService(context, tenant, new AuditService(context, new HttpContextAccessor()), Notifications.Into(_mail, context));
     }
 
     private static TenderFormViewModel Form(string reference = "RBIDZ/2026/100", double closesInDays = 14) => new()

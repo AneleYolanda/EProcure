@@ -28,7 +28,19 @@ public interface ITenderService
     Task<ServiceResult> PublishAsync(int id, CancellationToken ct);
     Task<ServiceResult> CancelAsync(int id, string reason, CancellationToken ct);
     IReadOnlyList<TenderDetailsViewModel.PublishCheck> PublishChecks(Tender tender, DateTime nowUtc);
+
+    // Publication approval (four-eyes), when the organisation requires it.
+    Task<bool> RequiresApprovalAsync(CancellationToken ct);
+    Task<ServiceResult> SetApprovalRuleAsync(bool required, CancellationToken ct);
+    Task<ServiceResult> RequestApprovalAsync(int id, string userId, CancellationToken ct);
+    Task<ServiceResult> ApproveAsync(int id, string userId, CancellationToken ct);
+    Task<ServiceResult> ReturnForChangesAsync(int id, string userId, string? note, CancellationToken ct);
+    Task<ServiceResult> WithdrawApprovalRequestAsync(int id, string userId, CancellationToken ct);
+    Task<IReadOnlyList<ApprovalQueueRow>> ApprovalQueueAsync(CancellationToken ct);
 }
+
+public record ApprovalQueueRow(int TenderId, string ReferenceNumber, string Title, string RequestedBy, string RequestedById,
+    DateTime RequestedAtUtc, DateTime ClosingDateUtc);
 
 /// <summary>
 /// All business rules for creating, editing, publishing and cancelling tenders.
@@ -45,12 +57,14 @@ public class TenderService : ITenderService
     private readonly EProcureDbContext _db;
     private readonly ITenantContext _tenant;
     private readonly IAuditService _audit;
+    private readonly INotificationService _notifications;
 
-    public TenderService(EProcureDbContext db, ITenantContext tenant, IAuditService audit)
+    public TenderService(EProcureDbContext db, ITenantContext tenant, IAuditService audit, INotificationService notifications)
     {
         _db = db;
         _tenant = tenant;
         _audit = audit;
+        _notifications = notifications;
     }
 
     public async Task<ServiceResult> CreateAsync(TenderFormViewModel form, string userId, CancellationToken ct)
@@ -87,6 +101,8 @@ public class TenderService : ITenderService
         var result = new ServiceResult();
         if (tender.Status != TenderStatus.Draft)
             return result.With(string.Empty, "Only draft tenders can be edited. A published tender is locked so every bidder sees the same terms.");
+        if (tender.ApprovalRequestedAtUtc is not null)
+            return result.With(string.Empty, "This draft is waiting for approval and is locked, so the approver sees exactly what will be published. Withdraw the request to edit it.");
 
         var requirements = Validate(form, result);
         if (await ReferenceTakenAsync(form.ReferenceNumber, excludeId: id, ct))
@@ -108,14 +124,22 @@ public class TenderService : ITenderService
         var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return ServiceResult.Missing();
 
+        if (await RequiresApprovalAsync(ct))
+            return new ServiceResult().With(string.Empty, "Your organisation requires a second SCM Officer to approve a tender before it is published. Submit it for approval.");
+        return await PublishCoreAsync(tender, ct);
+    }
+
+    /// <summary>The publication itself, with the checks re-run on the server (the page could be hours old).</summary>
+    private async Task<ServiceResult> PublishCoreAsync(Tender tender, CancellationToken ct)
+    {
         var result = new ServiceResult();
         if (tender.Status != TenderStatus.Draft)
             return result.With(string.Empty, "Only a draft tender can be published.");
-
-        // Re-check on the server at the moment of publishing (the page could be hours old).
-        foreach (var failed in PublishChecks(tender, DateTime.UtcNow).Where(c => !c.Passed))
-            result.With(string.Empty, failed.Meta);
-        if (!result.Succeeded) return result;
+        if (PublishProblems(tender) is { Count: > 0 } problems)
+        {
+            foreach (var problem in problems) result.With(string.Empty, problem);
+            return result;
+        }
 
         tender.Status = TenderStatus.Published;
         tender.PublishedAtUtc = DateTime.UtcNow;
@@ -123,6 +147,125 @@ public class TenderService : ITenderService
         await _audit.LogAsync("Tender.Published", "Tender", tender.Id.ToString(), tender.OrganisationId, tender.ReferenceNumber);
         return ServiceResult.Ok(tender.Id);
     }
+
+    private List<string> PublishProblems(Tender tender) =>
+        PublishChecks(tender, DateTime.UtcNow).Where(c => !c.Passed).Select(c => c.Meta).ToList();
+
+    // ------------------------------------------------------------------ publication approval (four-eyes)
+
+    public async Task<bool> RequiresApprovalAsync(CancellationToken ct) =>
+        _tenant.OrganisationId is int organisationId
+        && await _db.Organisations.Where(o => o.Id == organisationId).Select(o => o.RequireTenderApproval).SingleOrDefaultAsync(ct);
+
+    public async Task<ServiceResult> SetApprovalRuleAsync(bool required, CancellationToken ct)
+    {
+        if (!_tenant.IsOrganisationScoped || _tenant.OrganisationId is not int organisationId) return ServiceResult.Missing();
+        var organisation = await _db.Organisations.SingleAsync(o => o.Id == organisationId, ct);
+        if (organisation.RequireTenderApproval == required) return ServiceResult.Ok(organisationId);
+
+        organisation.RequireTenderApproval = required;
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Organisation.ApprovalRuleChanged", "Organisation", organisationId.ToString(), organisationId,
+            required ? "Publishing now needs a second SCM Officer's approval" : "SCM Officers may publish without a second approval");
+        return ServiceResult.Ok(organisationId);
+    }
+
+    public async Task<ServiceResult> RequestApprovalAsync(int id, string userId, CancellationToken ct)
+    {
+        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        if (tender is null) return ServiceResult.Missing();
+
+        var result = new ServiceResult();
+        if (!await RequiresApprovalAsync(ct)) return result.With(string.Empty, "Your organisation does not require approval. Publish the tender directly.");
+        if (tender.Status != TenderStatus.Draft) return result.With(string.Empty, "Only a draft tender can be submitted for approval.");
+        if (tender.ApprovalRequestedAtUtc is not null) return result.With(string.Empty, "This tender is already waiting for approval.");
+        if (PublishProblems(tender) is { Count: > 0 } problems)
+        {
+            foreach (var problem in problems) result.With(string.Empty, problem);
+            return result;
+        }
+
+        tender.ApprovalRequestedAtUtc = DateTime.UtcNow;
+        tender.ApprovalRequestedByUserId = userId;
+        tender.ApprovalReturnNote = null;
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Tender.ApprovalRequested", "Tender", tender.Id.ToString(), tender.OrganisationId, tender.ReferenceNumber);
+        await _notifications.ApprovalRequestedAsync(tender, userId, ct);
+        return ServiceResult.Ok(tender.Id);
+    }
+
+    /// <summary>A SECOND SCM Officer approves: the tender is published at once (the checks run again).</summary>
+    public async Task<ServiceResult> ApproveAsync(int id, string userId, CancellationToken ct)
+    {
+        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        if (tender is null) return ServiceResult.Missing();
+
+        var result = new ServiceResult();
+        if (tender.ApprovalRequestedAtUtc is null || tender.Status != TenderStatus.Draft)
+            return result.With(string.Empty, "This tender is not waiting for approval.");
+        if (tender.ApprovalRequestedByUserId == userId)
+            return result.With(string.Empty, "You asked for this approval, so another SCM Officer must give it.");
+
+        var requester = tender.ApprovalRequestedByUserId!;
+        tender.ApprovedAtUtc = DateTime.UtcNow;
+        tender.ApprovedByUserId = userId;
+        tender.ApprovalRequestedAtUtc = null;
+        tender.ApprovalRequestedByUserId = null;
+        var published = await PublishCoreAsync(tender, ct);
+        if (!published.Succeeded) return published; // nothing was saved: still waiting for approval
+
+        await _audit.LogAsync("Tender.Approved", "Tender", tender.Id.ToString(), tender.OrganisationId, tender.ReferenceNumber);
+        await _notifications.ApprovalDecidedAsync(tender, requester, approved: true, note: null, ct);
+        return ServiceResult.Ok(tender.Id);
+    }
+
+    public async Task<ServiceResult> ReturnForChangesAsync(int id, string userId, string? note, CancellationToken ct)
+    {
+        var tender = await _db.Tenders.SingleOrDefaultAsync(t => t.Id == id, ct);
+        if (tender is null) return ServiceResult.Missing();
+
+        var result = new ServiceResult();
+        if (tender.ApprovalRequestedAtUtc is null || tender.Status != TenderStatus.Draft)
+            return result.With(string.Empty, "This tender is not waiting for approval.");
+        if (tender.ApprovalRequestedByUserId == userId)
+            return result.With(string.Empty, "Withdraw your own request instead of sending it back.");
+        var trimmed = note?.Trim();
+        if (trimmed is null || trimmed.Length < 10 || trimmed.Length > 1000)
+            return result.With("ReturnNote", "Say what must change before the tender can be published (10 to 1000 characters).");
+
+        var requester = tender.ApprovalRequestedByUserId!;
+        tender.ApprovalRequestedAtUtc = null;
+        tender.ApprovalRequestedByUserId = null;
+        tender.ApprovalReturnNote = trimmed;
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Tender.ApprovalReturned", "Tender", tender.Id.ToString(), tender.OrganisationId, trimmed);
+        await _notifications.ApprovalDecidedAsync(tender, requester, approved: false, trimmed, ct);
+        return ServiceResult.Ok(tender.Id);
+    }
+
+    public async Task<ServiceResult> WithdrawApprovalRequestAsync(int id, string userId, CancellationToken ct)
+    {
+        var tender = await _db.Tenders.SingleOrDefaultAsync(t => t.Id == id, ct);
+        if (tender is null) return ServiceResult.Missing();
+
+        var result = new ServiceResult();
+        if (tender.ApprovalRequestedAtUtc is null) return result.With(string.Empty, "This tender is not waiting for approval.");
+        if (tender.ApprovalRequestedByUserId != userId) return result.With(string.Empty, "Only the SCM Officer who asked for approval can withdraw the request.");
+
+        tender.ApprovalRequestedAtUtc = null;
+        tender.ApprovalRequestedByUserId = null;
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Tender.ApprovalWithdrawn", "Tender", tender.Id.ToString(), tender.OrganisationId, tender.ReferenceNumber);
+        return ServiceResult.Ok(tender.Id);
+    }
+
+    public async Task<IReadOnlyList<ApprovalQueueRow>> ApprovalQueueAsync(CancellationToken ct) =>
+        await _db.Tenders.AsNoTracking()
+            .Where(t => t.Status == TenderStatus.Draft && t.ApprovalRequestedAtUtc != null)
+            .OrderBy(t => t.ApprovalRequestedAtUtc)
+            .Select(t => new ApprovalQueueRow(t.Id, t.ReferenceNumber, t.Title, t.ApprovalRequestedByUser!.FullName, t.ApprovalRequestedByUserId!,
+                t.ApprovalRequestedAtUtc!.Value, t.ClosingDateUtc))
+            .ToListAsync(ct);
 
     public async Task<ServiceResult> CancelAsync(int id, string reason, CancellationToken ct)
     {
@@ -135,6 +278,8 @@ public class TenderService : ITenderService
 
         // Nothing is deleted: the tender stays on record with its reason (records retention, DECISIONS D10).
         tender.Status = TenderStatus.Cancelled;
+        tender.ApprovalRequestedAtUtc = null; // a pending approval request ends with the draft
+        tender.ApprovalRequestedByUserId = null;
         tender.CancelledAtUtc = DateTime.UtcNow;
         tender.CancellationReason = reason.Trim();
         await _db.SaveChangesAsync(ct);

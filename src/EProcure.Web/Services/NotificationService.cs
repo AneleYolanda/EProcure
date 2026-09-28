@@ -25,6 +25,10 @@ public interface INotificationService
     Task StaffInvitedAsync(ApplicationUser user, string organisationName, string roleLabel, string link, CancellationToken ct = default);
     Task PasswordResetRequestedAsync(ApplicationUser user, string link, CancellationToken ct = default);
     Task PasswordChangedAsync(ApplicationUser user, CancellationToken ct = default);
+    Task ApprovalRequestedAsync(Tender tender, string requesterId, CancellationToken ct = default);
+    Task ApprovalDecidedAsync(Tender tender, string requesterId, bool approved, string? note, CancellationToken ct = default);
+    Task ClosingReminderAsync(Submission submission, CancellationToken ct = default);
+    Task TenderClosedAsync(Tender tender, int bids, CancellationToken ct = default);
 }
 
 public class NotificationService : INotificationService
@@ -75,13 +79,8 @@ public class NotificationService : INotificationService
 
     public async Task RecommendationSubmittedAsync(Tender tender, string recommendedCompany, CancellationToken ct = default)
     {
-        // SCM Officers of the tender's organisation who can sign in (deactivated accounts are skipped).
-        var admins = await (from u in _db.Users
-                            join ur in _db.UserRoles on u.Id equals ur.UserId
-                            join r in _db.Roles on ur.RoleId equals r.Id
-                            where r.Name == AppRoles.OrgAdmin && u.OrganisationId == tender.OrganisationId && u.Email != null
-                            select u).ToListAsync(ct);
-        foreach (var admin in admins.Where(StaffAccounts.IsActive))
+        // SCM Officers of the tender's organisation (deactivated accounts are skipped).
+        foreach (var admin in await ActiveStaffAsync(tender.OrganisationId, AppRoles.OrgAdmin, ct))
         {
             await SendAsync(new EmailMessage(admin.Email!, $"BAC decision needed: {tender.ReferenceNumber}",
                 $"Hello {admin.FullName},\n\nThe Bid Evaluation Committee has submitted its scoresheet for {tender.ReferenceNumber} " +
@@ -111,7 +110,76 @@ public class NotificationService : INotificationService
             "straight away and tell your organisation's SCM Officer or eProcure support.",
             "Sign in", _links.Absolute("/Account/Login")), ct);
 
+    public async Task ApprovalRequestedAsync(Tender tender, string requesterId, CancellationToken ct = default)
+    {
+        var (_, requester) = await RecipientAsync(requesterId, ct);
+        foreach (var approver in (await ActiveStaffAsync(tender.OrganisationId, AppRoles.OrgAdmin, ct)).Where(u => u.Id != requesterId))
+        {
+            await SendAsync(new EmailMessage(approver.Email!, $"Approval needed: {tender.ReferenceNumber}",
+                $"Hello {approver.FullName},\n\n{requester} asks a second SCM Officer to approve {tender.ReferenceNumber} \"{tender.Title}\" " +
+                $"for publication (closing {DisplayFormat.DateTime(tender.ClosingDateUtc)}). Check the details, then approve it or send it back " +
+                "with a note.",
+                "Review the tender", _links.Absolute($"/Admin/Tenders/Details/{tender.Id}")), ct);
+        }
+    }
+
+    public async Task ApprovalDecidedAsync(Tender tender, string requesterId, bool approved, string? note, CancellationToken ct = default)
+    {
+        var (to, name) = await RecipientAsync(requesterId, ct);
+        await SendAsync(new EmailMessage(to, $"{(approved ? "Approved and published" : "Sent back")}: {tender.ReferenceNumber}",
+            approved
+                ? $"Hello {name},\n\n{tender.ReferenceNumber} \"{tender.Title}\" was approved by a second SCM Officer and is now published to suppliers."
+                : $"Hello {name},\n\n{tender.ReferenceNumber} \"{tender.Title}\" was sent back before publication:\n\n{note}\n\nEdit the draft and submit it for approval again.",
+            "Open the tender", _links.Absolute($"/Admin/Tenders/Details/{tender.Id}")), ct);
+    }
+
+    public async Task ClosingReminderAsync(Submission s, CancellationToken ct = default)
+    {
+        var (to, name) = await RecipientAsync(s.SubmittedByUserId, ct);
+        var unpaid = s.Status == Domain.Enums.SubmissionStatus.AwaitingPayment;
+        await SendAsync(new EmailMessage(to, $"Not submitted yet: {s.Tender.ReferenceNumber} closes {DisplayFormat.DateTime(s.Tender.ClosingDateUtc)}",
+            $"Hello {name},\n\nYour application for {s.Tender.ReferenceNumber} \"{s.Tender.Title}\" has not been submitted yet" +
+            (unpaid ? ": the tender fee has not been paid." : ".") +
+            $" The tender closes on {DisplayFormat.DateTime(s.Tender.ClosingDateUtc)} (South African time). After that no application can be " +
+            "submitted, paid for or changed, and an unsubmitted application is never seen by the organisation.",
+            unpaid ? "Pay the tender fee" : "Finish your application",
+            _links.Absolute(unpaid ? $"/Supplier/Applications/Pay/{s.Id}" : $"/Supplier/Applications/Step/{s.Id}?n=1")), ct);
+    }
+
+    public async Task TenderClosedAsync(Tender tender, int bids, CancellationToken ct = default)
+    {
+        var bidText = bids == 0 ? "no bids" : bids == 1 ? "1 bid" : $"{bids} bids";
+        foreach (var officer in await ActiveStaffAsync(tender.OrganisationId, AppRoles.OrgAdmin, ct))
+        {
+            await SendAsync(new EmailMessage(officer.Email!, $"Closed with {bidText}: {tender.ReferenceNumber}",
+                $"Hello {officer.FullName},\n\n{tender.ReferenceNumber} \"{tender.Title}\" closed on {DisplayFormat.DateTime(tender.ClosingDateUtc)} " +
+                $"with {bidText}. " + (bids == 0
+                    ? "There is nothing to evaluate; the tender can be cancelled and re-advertised."
+                    : "The bids are now open for the Bid Evaluation Committee."),
+                "Open the tender", _links.Absolute($"/Admin/Tenders/Details/{tender.Id}")), ct);
+        }
+        if (bids == 0) return;
+        foreach (var member in await ActiveStaffAsync(tender.OrganisationId, AppRoles.Evaluator, ct))
+        {
+            await SendAsync(new EmailMessage(member.Email!, $"Bids open for evaluation: {tender.ReferenceNumber}",
+                $"Hello {member.FullName},\n\n{tender.ReferenceNumber} \"{tender.Title}\" has closed with {bidText}. The bids are unsealed and " +
+                "ready for the Bid Evaluation Committee.",
+                "Open the scoresheet", _links.Absolute($"/Admin/Evaluation/Tender/{tender.Id}")), ct);
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
+
+    /// <summary>An organisation's staff in a role whose accounts are not deactivated.</summary>
+    private async Task<List<ApplicationUser>> ActiveStaffAsync(int organisationId, string role, CancellationToken ct)
+    {
+        var people = await (from u in _db.Users
+                            join ur in _db.UserRoles on u.Id equals ur.UserId
+                            join r in _db.Roles on ur.RoleId equals r.Id
+                            where r.Name == role && u.OrganisationId == organisationId && u.Email != null
+                            select u).ToListAsync(ct);
+        return people.Where(StaffAccounts.IsActive).ToList();
+    }
 
     private async Task SendAsync(EmailMessage message, CancellationToken ct)
     {
