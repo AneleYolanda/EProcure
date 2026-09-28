@@ -1,0 +1,83 @@
+:root {
+  /* Core design tokens from docs/design/DESIGN_SPEC.md */
+  --ep-accent: #1CA3EC;
+  --ep-accent-hover: #1587C7;
+  --ep-accent-soft: #7FD0F7;
+
+  --ep-ink: #1B2A4A;
+  --ep-navy: #0F1B33;
+  --ep-muted: #5A6B7B;
+  --ep-subtle: #8C9CAB;
+  --ep-input-border: #D6E2EC;
+  --ep-line: #E4ECF3;
+  --ep-line-soft: #F0F5F9;
+  --ep-chip: #F2F6FA;
+  --ep-soft: #EEF4F9;
+  --ep-page: #F7FAFC;
+  --ep-desk: #EEF4F9;
+
+  --ep-radius-sm: 6px;
+  --ep-radius-md: 10px;
+  --ep-radius-lg: 12px;
+
+  --ep-shadow-1: 0 1px 2px rgba(27,42,74,.04);
+  --ep-shadow-cta: 0 6px 16px rgba(28,163,236,.28);
+
+  --ep-font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* Animations used by the prototypes */
+@keyframes epFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes epSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Base typographic rules */
+html { font-family: var(--ep-font-sans); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+body { background: var(--ep-page); color: var(--ep-ink); }
+
+/* Wordmark */
+.ep-wordmark { font-weight: 700; font-size: 34px; letter-spacing: -0.03em; color: var(--ep-ink); }
+.ep-wordmark .ep-e { color: var(--ep-accent); }
+
+/* Buttons */
+.ep-btn { display:inline-flex; align-items:center; justify-content:center; border-radius: var(--ep-radius-md); padding: 0 .9rem; height: 50px; font-weight:600; font-size:16px; }
+.ep-btn-primary { background: var(--ep-accent); color: #fff; box-shadow: var(--ep-shadow-cta); border: none; }
+.ep-btn-primary:hover { background: var(--ep-accent-hover); }
+.ep-btn-outline { background: transparent; border: 1px solid var(--ep-input-border); color: var(--ep-ink); }
+
+/* Cards */
+.ep-card { background: #fff; border-radius: var(--ep-radius-lg); box-shadow: var(--ep-shadow-1); border: 1px solid var(--ep-line); padding: 1rem; }
+.ep-card .ep-eyebrow { color: var(--ep-muted); font-size:10px; letter-spacing: .07em; text-transform:uppercase; font-weight:600; }
+
+/* Inputs */
+.ep-input { height:48px; border-radius: var(--ep-radius-md); border:1px solid var(--ep-input-border); padding: .5rem .75rem; background: #fff; }
+.ep-label { display:block; font-weight:500; font-size:12px; color:var(--ep-muted); text-transform:uppercase; letter-spacing:.02em; margin-bottom:.35rem; }
+
+/* Top bar used across pages */
+.ep-topbar { display:flex; align-items:center; justify-content:space-between; padding: .75rem 1rem; background: transparent; }
+.ep-topbar .title { font-size:18px; font-weight:600; }
+
+/* Tab bar - mobile bottom navigation */
+.ep-tabbar { position:fixed; left:0; right:0; bottom:0; background: rgba(255,255,255,0.95); border-top:1px solid var(--ep-line); display:flex; justify-content:space-around; padding:.5rem 0; backdrop-filter: blur(10px); }
+.ep-tabbar a { color: var(--ep-muted); font-size:11px; text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:.25rem; }
+
+/* Tender card shorthand */
+.ep-tender-card { display:block; border-radius: var(--ep-radius-lg); border:1px solid var(--ep-line); padding: .85rem; background:#fff; }
+.ep-tender-card .title { font-weight:600; font-size:14px; }
+.ep-tender-card .meta { font-size:12px; color:var(--ep-muted); }
+
+/* Status badges */
+.ep-badge { display:inline-block; padding:.25rem .5rem; border-radius:8px; background:var(--ep-chip); color:var(--ep-ink); font-size:11px; font-weight:600; }
+.ep-badge.info { background: #E3F1FB; color: var(--ep-accent); }
+.ep-badge.success { background: #E6F4EF; color: #0F7B5A; }
+.ep-badge.warning { background:#FDF8EF; color:#7A5314; }
+.ep-badge.danger { background:#FCEDEE; color:#D8483F; }
+
+/* Small utilities */
+.ep-center { display:flex; align-items:center; justify-content:center; }
+.ep-hidden { display:none !important; }

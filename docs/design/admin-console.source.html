@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="d6902041-2dbe-47bb-878f-08fb659f70fd"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic-ext.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-greek.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-vietnamese.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin-ext.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic-ext.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-greek.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-vietnamese.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin-ext.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic-ext.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-greek.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-vietnamese.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin-ext.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic-ext.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-cyrillic.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-greek.woff2") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("removed-subset-ibm-plex-sans-vietnamese.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin-ext.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../../src/EProcure.Web/wwwroot/fonts/ibm-plex-sans-latin.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0;background:#E7EDF3;font-family:"IBM Plex Sans",system-ui,sans-serif;color:#1B2A4A}
+a{color:#1CA3EC}a:hover{color:#1587c7}
+*{box-sizing:border-box}
+input,button,select,textarea{font-family:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid #1CA3EC;outline-offset:2px}
+@keyframes epFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes epSpin{to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#C6D4E0;border-radius:99px;border:3px solid transparent;background-clip:content-box}
+</style>
+</helmet>
+
+<div style="padding:32px 32px 64px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;width:max-content">
+
+<div style="width:1440px;flex:none;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+<div style="font-size:19px;font-weight:600;letter-spacing:-.3px;white-space:nowrap">eProcure — administration console</div>
+<div style="font-size:12.5px;color:#5A6B7B">Configured for Richards Bay Industrial Development Zone · 1440 × 900 desktop</div>
+</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<sc-for list="{{ jumpList }}" as="j" hint-placeholder-count="10">
+<button sc-camel-on-click="{{ j.go }}" style="display:flex;gap:7px;align-items:baseline;white-space:nowrap;background:{{ j.bg }};border:1px solid {{ j.border }};border-radius:7px;padding:7px 11px;cursor:pointer">
+<span style="font-size:10px;font-weight:600;color:#8C9CAB">{{ j.no }}</span>
+<span style="font-size:12px;font-weight:500;color:{{ j.color }}">{{ j.label }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="width:1440px;flex:none;height:900px;background:#F4F7FA;border:1px solid #D3DFE9;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(27,42,74,.14);display:flex;flex-direction:column;position:relative">
+
+<div style="flex:none;height:34px;background:#E9EFF5;border-bottom:1px solid #DCE6EE;display:flex;align-items:center;gap:8px;padding:0 13px">
+<span style="width:10px;height:10px;border-radius:99px;background:#D8483F"></span>
+<span style="width:10px;height:10px;border-radius:99px;background:#E3B341"></span>
+<span style="width:10px;height:10px;border-radius:99px;background:#5EB07A"></span>
+<div style="flex:1;display:flex;justify-content:center">
+<div style="font-size:11.5px;color:#5A6B7B;background:#fff;border:1px solid #DCE6EE;border-radius:6px;padding:3px 14px;white-space:nowrap">admin.eprocure.co.za / rbidz</div>
+</div>
+<div style="width:56px"></div>
+</div>
+
+<sc-if value="{{ sSplash }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;background:#0F1B33;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;position:relative">
+<div style="position:absolute;inset:0;opacity:.14;background-image:linear-gradient(#1CA3EC 1px,transparent 1px),linear-gradient(90deg,#1CA3EC 1px,transparent 1px);background-size:64px 64px"></div>
+<div style="position:relative;display:flex;flex-direction:column;align-items:center">
+<div style="width:132px;height:132px;border-radius:99px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 0 14px rgba(28,163,236,.1);animation:epFade .7s ease both">
+<img src="../../src/EProcure.Web/wwwroot/img/orgs/rbidz-logo.png" alt="RBIDZ" style="width:98px;height:auto">
+</div>
+<div style="margin-top:32px;font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.62);animation:epFade .7s ease .35s both">Richards Bay Industrial Development Zone</div>
+<div style="margin-top:14px;font-size:34px;font-weight:600;letter-spacing:-.6px;animation:epFade .7s ease .55s both"><span style="color:#1CA3EC">e</span><span style="color:#fff">Procure</span><span style="color:rgba(255,255,255,.5);font-weight:400"> administration</span></div>
+<div style="margin-top:44px;width:150px;height:2px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden">
+<div style="height:2px;width:64px;background:#1CA3EC;animation:epFade .5s ease .9s both"></div>
+</div>
+<div style="margin-top:18px;font-size:12px;color:rgba(255,255,255,.42);animation:epFade .5s ease 1.1s both">Loading your procurement workspace</div>
+</div>
+<button sc-camel-on-click="{{ toLogin }}" style="position:absolute;bottom:34px;background:none;border:0;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer">Continue to sign in</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ sLogin }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex">
+<div style="flex:1;background:#0F1B33;position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:56px 56px">
+<div style="position:absolute;inset:0;opacity:.12;background-image:linear-gradient(#1CA3EC 1px,transparent 1px),linear-gradient(90deg,#1CA3EC 1px,transparent 1px);background-size:56px 56px"></div>
+<div style="position:relative;display:flex;align-items:center;gap:16px">
+<span style="width:60px;height:60px;border-radius:99px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><img src="../../src/EProcure.Web/wwwroot/img/orgs/rbidz-logo.png" alt="RBIDZ" style="width:44px;height:auto"></span>
+<span>
+<span style="display:block;font-size:14.5px;font-weight:600;color:#fff">Richards Bay IDZ</span>
+<span style="display:block;margin-top:2px;font-size:11.5px;color:rgba(255,255,255,.5)">Special Economic Zone · Schedule 3D public entity</span>
+</span>
+</div>
+<div style="position:relative;max-width:440px">
+<div style="font-size:34px;font-weight:600;line-height:1.25;letter-spacing:-.6px;color:#fff;text-wrap:pretty">Every tender, every score, every award — on one auditable record.</div>
+<div style="margin-top:18px;font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)">eProcure enforces the procurement policy you configure: committee separation, sealed bids until closing, and an append-only audit trail for the Auditor-General.</div>
+</div>
+<div style="position:relative;display:flex;gap:28px">
+<sc-for list="{{ loginStats }}" as="s" hint-placeholder-count="3">
+<div>
+<div style="font-size:24px;font-weight:600;color:#fff">{{ s.v }}</div>
+<div style="margin-top:3px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.42)">{{ s.k }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="width:470px;flex:none;background:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 60px">
+<div style="font-size:22px;font-weight:600;letter-spacing:-.3px">Sign in to the console</div>
+<div style="margin-top:7px;font-size:13px;line-height:1.6;color:#5A6B7B">Your role determines what you can see and do. Roles cannot be self-assigned.</div>
+<div style="margin-top:28px;display:flex;flex-direction:column;gap:15px">
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;letter-spacing:.03em;color:#5A6B7B">WORK EMAIL
+<input value="{{ adminEmail }}" sc-camel-on-change="{{ setAdminEmail }}" style="height:46px;border:1px solid #D6E2EC;border-radius:9px;padding:0 13px;font-size:14px;color:#1B2A4A"></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;letter-spacing:.03em;color:#5A6B7B">PASSWORD
+<input type="password" value="{{ adminPwd }}" sc-camel-on-change="{{ setAdminPwd }}" style="height:46px;border:1px solid #D6E2EC;border-radius:9px;padding:0 13px;font-size:14px;color:#1B2A4A"></label>
+</div>
+<div style="margin-top:22px;font-size:11.5px;font-weight:500;letter-spacing:.03em;color:#5A6B7B">SIGN IN AS (DEMO)</div>
+<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4">
+<button sc-camel-on-click="{{ r.pick }}" style="text-align:left;display:flex;align-items:center;gap:11px;background:#fff;border:1.5px solid {{ r.border }};border-radius:9px;padding:12px 13px;cursor:pointer">
+<span style="flex:none;width:17px;height:17px;border-radius:99px;border:1.5px solid {{ r.dotBorder }};display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:99px;background:{{ r.dotFill }}"></span></span>
+<span style="flex:1">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A">{{ r.label }}</span>
+<span style="display:block;margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ r.meta }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<button sc-camel-on-click="{{ doAdminLogin }}" style="margin-top:22px;height:48px;border:0;border-radius:9px;background:#1CA3EC;color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(28,163,236,.26)">Sign in</button>
+<div style="margin-top:20px;display:flex;gap:9px;align-items:flex-start;font-size:11px;line-height:1.55;color:#8C9CAB">
+<svg width="14" height="14" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.5" style="flex:none;margin-top:1px"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+<span>Two-factor authentication is enforced for all SCM and committee roles. Sessions expire after 15 minutes idle.</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ inApp }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;min-height:0">
+
+<div style="width:246px;flex:none;background:#0F1B33;display:flex;flex-direction:column;padding:20px 0">
+<div style="padding:0 18px 18px;display:flex;align-items:center;gap:11px;border-bottom:1px solid rgba(255,255,255,.08)">
+<span style="width:38px;height:38px;border-radius:99px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><img src="../../src/EProcure.Web/wwwroot/img/orgs/rbidz-logo.png" alt="RBIDZ" style="width:27px;height:auto"></span>
+<span>
+<span style="display:block;font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap">RBIDZ</span>
+<span style="display:block;margin-top:1px;font-size:10.5px;color:rgba(255,255,255,.45);white-space:nowrap">Special Economic Zone</span>
+</span>
+</div>
+<div style="padding:16px 12px 0;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="7">
+<button sc-camel-on-click="{{ n.go }}" style="width:100%;text-align:left;display:flex;align-items:center;gap:11px;background:{{ n.bg }};border:0;border-radius:8px;padding:10px 12px;cursor:pointer;color:{{ n.color }}">
+<svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex:none"><path d="{{ n.path }}"></path></svg>
+<span style="flex:1;font-size:13px;font-weight:500">{{ n.label }}</span>
+<sc-if value="{{ n.hasCount }}" hint-placeholder-val="{{ false }}">
+<span style="flex:none;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:99px;background:{{ n.countBg }};color:{{ n.countColor }}">{{ n.count }}</span>
+</sc-if>
+</button>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<div style="padding:16px 18px 0;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:11px">
+<span style="width:34px;height:34px;border-radius:9px;background:rgba(28,163,236,.2);color:#7FD0F7;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ role.initials }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:12.5px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ role.person }}</span>
+<span style="display:block;margin-top:1px;font-size:10.5px;color:rgba(255,255,255,.45)">{{ role.label }}</span>
+</span>
+<button sc-camel-on-click="{{ toLogin }}" style="background:none;border:0;padding:3px;cursor:pointer;display:flex;flex:none"><svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.6"><path d="M15 12H4m0 0l4-4m-4 4l4 4"></path><path d="M11 4h7a2 2 0 012 2v12a2 2 0 01-2 2h-7"></path></svg></button>
+</div>
+</div>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="flex:none;height:64px;background:#fff;border-bottom:1px solid #E1E9F0;display:flex;align-items:center;gap:18px;padding:0 26px">
+<div style="font-size:16px;font-weight:600;letter-spacing:-.2px;white-space:nowrap">{{ pageTitle }}</div>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:9px;background:#F4F7FA;border:1px solid #E1E9F0;border-radius:8px;height:38px;padding:0 12px;width:280px">
+<svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5L21 21"></path></svg>
+<input placeholder="Search tenders, bidders, references" style="flex:1;border:0;background:none;font-size:12.5px;height:36px;color:#1B2A4A">
+</div>
+<button sc-camel-on-click="{{ goAudit }}" style="display:flex;align-items:center;gap:8px;height:38px;padding:0 13px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;font-size:12.5px;font-weight:600;color:#1B2A4A;cursor:pointer;white-space:nowrap;flex:none">
+<svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="#5A6B7B" stroke-width="1.6" style="flex:none"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>
+Audit trail
+</button>
+<div style="display:flex;align-items:center;gap:8px;padding-left:4px">
+<span style="font-size:10.5px;font-weight:600;letter-spacing:.05em;padding:5px 9px;border-radius:6px;background:#EEF4F9;color:#1B2A4A;white-space:nowrap">{{ role.badge }}</span>
+</div>
+</div>
+
+<div style="flex:1;min-height:0;overflow-y:auto;padding:24px 26px 40px">
+
+<sc-if value="{{ sDash }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:18px 20px">
+<div style="font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">{{ k.label }}</div>
+<div style="margin-top:10px;font-size:30px;font-weight:600;letter-spacing:-.8px;color:#1B2A4A">{{ k.value }}</div>
+<div style="margin-top:6px;font-size:11.5px;color:{{ k.noteColor }}">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px;align-items:start">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="padding:17px 20px;border-bottom:1px solid #EDF2F7;display:flex;align-items:center;gap:12px">
+<div>
+<div style="font-size:14px;font-weight:600">Needs your action</div>
+<div style="margin-top:3px;font-size:11.5px;color:#5A6B7B">Items where the process is waiting on {{ role.label }}</div>
+</div>
+<div style="flex:1"></div>
+<button sc-camel-on-click="{{ goTenders }}" style="background:none;border:0;font-size:12.5px;font-weight:600;color:#1CA3EC;cursor:pointer">All tenders</button>
+</div>
+<sc-for list="{{ actionItems }}" as="a" hint-placeholder-count="4">
+<button sc-camel-on-click="{{ a.go }}" style="width:100%;text-align:left;display:flex;align-items:center;gap:16px;background:#fff;border:0;border-bottom:1px solid #EDF2F7;padding:16px 20px;cursor:pointer">
+<span style="flex:none;width:34px;height:34px;border-radius:8px;background:{{ a.iconBg }};display:flex;align-items:center;justify-content:center">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="{{ a.iconColor }}" stroke-width="1.7"><path d="{{ a.iconPath }}"></path></svg>
+</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:13.5px;font-weight:600;color:#1B2A4A">{{ a.title }}</span>
+<span style="display:block;margin-top:3px;font-size:11.5px;color:#5A6B7B">{{ a.meta }}</span>
+</span>
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 9px;border-radius:6px;background:{{ a.tagBg }};color:{{ a.tagColor }}">{{ a.tag }}</span>
+<svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="#B9CBDA" stroke-width="1.8" style="flex:none"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:18px 20px">
+<div style="font-size:14px;font-weight:600">Pipeline by stage</div>
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:13px">
+<sc-for list="{{ pipeline }}" as="p" hint-placeholder-count="5">
+<div>
+<div style="display:flex;justify-content:space-between;font-size:12px">
+<span style="color:#5A6B7B;white-space:nowrap">{{ p.label }}</span>
+<span style="font-weight:600;color:#1B2A4A">{{ p.n }}</span>
+</div>
+<div style="margin-top:6px;height:6px;border-radius:99px;background:#EEF4F9;overflow:hidden">
+<div style="height:6px;border-radius:99px;background:{{ p.color }};width:{{ p.pct }}"></div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:#0F1B33;border-radius:10px;padding:18px 20px">
+<div style="font-size:13.5px;font-weight:600;color:#fff">Compliance watch</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ compliance }}" as="c" hint-placeholder-count="3">
+<div style="display:flex;gap:11px;align-items:flex-start">
+<span style="flex:none;width:7px;height:7px;border-radius:99px;background:{{ c.dot }};margin-top:5px"></span>
+<span>
+<span style="display:block;font-size:12.5px;font-weight:600;color:#fff">{{ c.label }}</span>
+<span style="display:block;margin-top:2px;font-size:11px;line-height:1.5;color:rgba(255,255,255,.55)">{{ c.meta }}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sTenders }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<div style="display:flex;gap:6px">
+<sc-for list="{{ tenderFilters }}" as="f" hint-placeholder-count="5">
+<button sc-camel-on-click="{{ f.pick }}" style="font-size:12.5px;font-weight:500;padding:8px 13px;border-radius:8px;cursor:pointer;white-space:nowrap;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.color }}">{{ f.label }}</button>
+</sc-for>
+</div>
+<div style="flex:1"></div>
+<button sc-camel-on-click="{{ goCreate }}" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 5px 14px rgba(28,163,236,.24)">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>
+Create tender
+</button>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr) 130px 120px 130px 128px 28px;gap:16px;padding:13px 20px;background:#F7FAFC;border-bottom:1px solid #E1E9F0;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">
+<div>REFERENCE</div><div>TITLE</div><div>STAGE</div><div>EST. VALUE</div><div>CLOSING</div><div>APPLICATIONS</div><div></div>
+</div>
+<sc-for list="{{ tenderRows }}" as="t" hint-placeholder-count="6">
+<button sc-camel-on-click="{{ t.go }}" style="width:100%;text-align:left;display:grid;grid-template-columns:150px minmax(0,1fr) 130px 120px 130px 128px 28px;gap:16px;align-items:center;padding:15px 20px;background:#fff;border:0;border-bottom:1px solid #EDF2F7;cursor:pointer">
+<span style="font-size:11.5px;font-weight:600;letter-spacing:.03em;color:#5A6B7B">{{ t.ref }}</span>
+<span style="font-size:13px;font-weight:500;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.title }}</span>
+<span style="justify-self:start;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 9px;border-radius:6px;background:{{ t.stageBg }};color:{{ t.stageColor }}">{{ t.stage }}</span>
+<span style="font-size:12.5px;color:#1B2A4A">{{ t.value }}</span>
+<span style="font-size:12.5px;color:#5A6B7B">{{ t.closing }}</span>
+<span style="font-size:12.5px;font-weight:600;color:#1B2A4A">{{ t.apps }}</span>
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#B9CBDA" stroke-width="1.8"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sCreate }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:22px;align-items:start">
+<div style="width:232px;flex:none;background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:18px">
+<div style="font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">NEW TENDER</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ createSteps }}" as="s" hint-placeholder-count="5">
+<button sc-camel-on-click="{{ s.go }}" style="width:100%;text-align:left;display:flex;gap:11px;align-items:center;background:{{ s.bg }};border:0;border-radius:8px;padding:10px 11px;cursor:pointer">
+<span style="flex:none;width:22px;height:22px;border-radius:99px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;background:{{ s.numBg }};color:{{ s.numColor }}">{{ s.no }}</span>
+<span style="font-size:12.5px;font-weight:500;color:{{ s.color }}">{{ s.label }}</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding-top:15px;border-top:1px solid #EDF2F7;font-size:11px;line-height:1.6;color:#8C9CAB">Saved as a draft. Nothing is visible to bidders until the Accounting Officer approves and you publish.</div>
+</div>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{ cStep1 }}" hint-placeholder-val="{{ true }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:15px;font-weight:600">Tender details</div>
+<div style="margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">TENDER REFERENCE
+<input value="{{ draft.ref }}" sc-camel-on-change="{{ setDraftRef }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">PROCUREMENT TYPE
+<sc-raw-select style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 11px;font-size:13.5px;color:#1B2A4A;background:#fff"><option>Goods</option><option>Services</option><option selected="selected">Construction works</option></sc-raw-select></label>
+<label style="grid-column:span 2;display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">TITLE
+<input value="{{ draft.title }}" sc-camel-on-change="{{ setDraftTitle }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+<label style="grid-column:span 2;display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">SCOPE OF WORK
+<textarea value="{{ draft.scope }}" sc-camel-on-change="{{ setDraftScope }}" rows="4" style="border:1px solid #D6E2EC;border-radius:8px;padding:11px 13px;font-size:13.5px;line-height:1.6;color:#1B2A4A;resize:vertical"></textarea></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">ESTIMATED CONTRACT VALUE
+<input value="{{ draft.value }}" sc-camel-on-change="{{ setDraftValue }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">TENDER FEE
+<input value="{{ draft.fee }}" sc-camel-on-change="{{ setDraftFee }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">ADVERTISE FROM
+<input value="{{ draft.open }}" sc-camel-on-change="{{ setDraftOpen }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+<label style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;font-weight:500;color:#5A6B7B">CLOSING DATE AND TIME
+<input value="{{ draft.close }}" sc-camel-on-change="{{ setDraftClose }}" style="height:44px;border:1px solid #D6E2EC;border-radius:8px;padding:0 13px;font-size:13.5px;color:#1B2A4A"></label>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ cStep2 }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:15px;font-weight:600">Pre-qualification criteria</div>
+<div style="margin-top:5px;font-size:12.5px;line-height:1.6;color:#5A6B7B">These become hard gates in the app. A bidder who fails any one of them cannot start or pay for an application — the block is shown to them with the reason.</div>
+<div style="margin-top:20px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ criteriaRows }}" as="c" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:14px;border:1px solid {{ c.border }};background:{{ c.bg }};border-radius:9px;padding:14px 16px">
+<button sc-camel-on-click="{{ c.toggle }}" style="flex:none;width:36px;height:20px;border-radius:99px;border:0;padding:2px;cursor:pointer;background:{{ c.switchBg }};display:flex;justify-content:{{ c.switchJustify }}">
+<span style="width:16px;height:16px;border-radius:99px;background:#fff"></span>
+</button>
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A">{{ c.label }}</span>
+<span style="display:block;margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ c.meta }}</span>
+</span>
+<sc-if value="{{ c.hasValue }}" hint-placeholder-val="{{ false }}">
+<span style="flex:none;display:flex;gap:6px">
+<sc-for list="{{ c.values }}" as="v" hint-placeholder-count="3">
+<button sc-camel-on-click="{{ v.pick }}" style="font-size:12px;font-weight:600;padding:7px 11px;border-radius:7px;cursor:pointer;border:1px solid {{ v.border }};background:{{ v.bg }};color:{{ v.color }}">{{ v.label }}</button>
+</sc-for>
+</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ cStep3 }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:15px;font-weight:600">Evaluation method</div>
+<div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<sc-for list="{{ methodOptions }}" as="m" hint-placeholder-count="2">
+<button sc-camel-on-click="{{ m.pick }}" style="text-align:left;background:#fff;border:1.5px solid {{ m.border }};border-radius:10px;padding:16px;cursor:pointer">
+<span style="display:block;font-size:13.5px;font-weight:600;color:#1B2A4A">{{ m.label }}</span>
+<span style="display:block;margin-top:5px;font-size:11.5px;line-height:1.6;color:#5A6B7B">{{ m.meta }}</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:22px;padding-top:20px;border-top:1px solid #EDF2F7">
+<div style="display:flex;align-items:center;gap:12px">
+<div>
+<div style="font-size:13.5px;font-weight:600">Functionality criteria</div>
+<div style="margin-top:3px;font-size:11.5px;color:#5A6B7B">Weights must total 100. Minimum qualifying score {{ draft.funcMin }}%.</div>
+</div>
+<div style="flex:1"></div>
+<div style="font-size:12.5px;font-weight:600;color:{{ weightColor }}">Total {{ weightTotal }} / 100</div>
+</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ funcRows }}" as="f" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:14px;border:1px solid #E1E9F0;border-radius:9px;padding:12px 15px">
+<span style="flex:1;font-size:13px;color:#1B2A4A">{{ f.label }}</span>
+<span style="flex:none;width:150px;height:5px;border-radius:99px;background:#EEF4F9;overflow:hidden"><span style="display:block;height:5px;border-radius:99px;background:#1CA3EC;width:{{ f.pct }}"></span></span>
+<span style="flex:none;width:44px;text-align:right;font-size:13px;font-weight:600;color:#1B2A4A">{{ f.weight }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ cStep4 }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:15px;font-weight:600">Required documents and forms</div>
+<div style="margin-top:5px;font-size:12.5px;color:#5A6B7B">The bidder's checklist is generated from this list. Documents already on a bidder's profile attach automatically.</div>
+<div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+<sc-for list="{{ docRows }}" as="d" hint-placeholder-count="8">
+<button sc-camel-on-click="{{ d.toggle }}" style="text-align:left;display:flex;align-items:center;gap:11px;background:#fff;border:1px solid {{ d.border }};border-radius:9px;padding:13px 14px;cursor:pointer">
+<span style="flex:none;width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;background:{{ d.boxBg }};border:1.5px solid {{ d.boxBorder }}">
+<svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"></path></svg>
+</span>
+<span style="flex:1;font-size:12.5px;font-weight:500;color:#1B2A4A">{{ d.label }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ cStep5 }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:15px;font-weight:600">Review and send for approval</div>
+<div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 30px">
+<sc-for list="{{ reviewRows }}" as="r" hint-placeholder-count="8">
+<div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #EDF2F7;font-size:12.5px">
+<span style="color:#5A6B7B;flex:none;white-space:nowrap">{{ r.k }}</span>
+<span style="font-weight:600;color:#1B2A4A;text-align:right">{{ r.v }}</span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:20px;border:1px solid #F0DFC0;background:#FDF8EF;border-radius:9px;padding:15px 16px;display:flex;gap:11px;align-items:flex-start">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" style="flex:none;margin-top:1px"><path d="M12 3l9 16H3l9-16z"></path><path d="M12 9v5"></path><path d="M12 16.5v.5"></path></svg>
+<div style="font-size:12px;line-height:1.6;color:#7A5314">Once sent, the tender is locked for editing. The Accounting Officer must approve before it can be published. Any change after approval restarts the approval step and is recorded in the audit trail.</div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;gap:10px;align-items:center">
+<button sc-camel-on-click="{{ createBack }}" style="height:44px;padding:0 18px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;font-size:13.5px;font-weight:600;color:#1B2A4A;cursor:pointer">Back</button>
+<div style="flex:1"></div>
+<button sc-camel-on-click="{{ goTenders }}" style="height:44px;padding:0 18px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;font-size:13.5px;font-weight:600;color:#5A6B7B;cursor:pointer">Save draft</button>
+<button sc-camel-on-click="{{ createNext }}" style="height:44px;padding:0 22px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 5px 14px rgba(28,163,236,.24)">{{ createNextLabel }}</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sApproval }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:22px;align-items:start">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="display:flex;align-items:flex-start;gap:16px">
+<div style="flex:1">
+<div style="font-size:11.5px;font-weight:600;letter-spacing:.05em;color:#5A6B7B">{{ draft.ref }}</div>
+<div style="margin-top:8px;font-size:21px;font-weight:600;letter-spacing:-.3px;line-height:1.3;text-wrap:pretty">{{ draft.title }}</div>
+<div style="margin-top:8px;font-size:12.5px;color:#5A6B7B">Submitted for approval by Sipho Mkhize, SCM Officer · 16 Sep 2026, 08:42</div>
+</div>
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:6px 10px;border-radius:6px;background:#FDF2DC;color:#7A5314">Awaiting approval</span>
+</div>
+<div style="margin-top:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid #E1E9F0;border-radius:9px;overflow:hidden">
+<sc-for list="{{ approvalFacts }}" as="f" hint-placeholder-count="4">
+<div style="padding:14px 16px;border-right:1px solid #EDF2F7">
+<div style="font-size:10px;letter-spacing:.07em;color:#8C9CAB">{{ f.k }}</div>
+<div style="margin-top:4px;font-size:13.5px;font-weight:600;color:#1B2A4A">{{ f.v }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:14px;font-weight:600">Pre-approval checks</div>
+<div style="margin-top:5px;font-size:12px;color:#5A6B7B">Run by the system against the procurement policy configured for RBIDZ.</div>
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ approvalChecks }}" as="c" hint-placeholder-count="5">
+<div style="display:flex;gap:12px;align-items:flex-start;background:{{ c.bg }};border-radius:8px;padding:12px 14px">
+<span style="flex:none;width:19px;height:19px;border-radius:99px;background:{{ c.dot }};display:flex;align-items:center;justify-content:center;margin-top:1px">
+<svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="{{ c.path }}"></path></svg>
+</span>
+<span style="flex:1">
+<span style="display:block;font-size:12.5px;font-weight:600;color:#1B2A4A">{{ c.label }}</span>
+<span style="display:block;margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ c.meta }}</span>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="width:320px;flex:none;display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{ isAO }}" hint-placeholder-val="{{ true }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Accounting Officer decision</div>
+<div style="margin-top:5px;font-size:11.5px;line-height:1.6;color:#5A6B7B">Your decision and comment are written to the audit trail under your name.</div>
+<label style="margin-top:15px;display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:500;letter-spacing:.03em;color:#5A6B7B">COMMENT
+<textarea rows="4" placeholder="Optional for approval, required to send back" style="border:1px solid #D6E2EC;border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;resize:vertical"></textarea></label>
+<button sc-camel-on-click="{{ approveTender }}" style="margin-top:14px;width:100%;height:46px;border:0;border-radius:8px;background:#0F7B5A;color:#fff;font-size:14px;font-weight:600;cursor:pointer">Approve for publication</button>
+<button sc-camel-on-click="{{ noop }}" style="margin-top:9px;width:100%;height:44px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;color:#1B2A4A;font-size:13.5px;font-weight:600;cursor:pointer">Send back for changes</button>
+</div>
+</sc-if>
+<sc-if value="{{ notAO }}" hint-placeholder-val="{{ false }}">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="display:flex;gap:11px;align-items:flex-start">
+<svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" style="flex:none;margin-top:1px"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+<div>
+<div style="font-size:13.5px;font-weight:600;color:#1B2A4A">You are not the approver for this tender</div>
+<div style="margin-top:6px;font-size:11.5px;line-height:1.65;color:#5A6B7B">{{ notAOnote }}</div>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ approved }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid #CFE8DE;background:#F2FAF7;border-radius:10px;padding:18px 20px">
+<div style="font-size:13.5px;font-weight:600;color:#0B5F45">Approved — ready to publish</div>
+<div style="margin-top:6px;font-size:12px;line-height:1.6;color:#0B5F45">Approved by Dr N. Zulu, Accounting Officer. The SCM Officer can now publish it to the bidder app.</div>
+<button sc-camel-on-click="{{ goPublish }}" style="margin-top:13px;width:100%;height:44px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">Go to publish</button>
+</div>
+</sc-if>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Approval history</div>
+<div style="margin-top:14px;display:flex;flex-direction:column">
+<sc-for list="{{ approvalHistory }}" as="h" hint-placeholder-count="3">
+<div style="display:flex;gap:12px">
+<div style="flex:none;display:flex;flex-direction:column;align-items:center"><span style="width:8px;height:8px;border-radius:99px;background:#1CA3EC;margin-top:4px"></span><span style="flex:1;width:1px;background:#E4ECF3"></span></div>
+<div style="flex:1;padding-bottom:15px">
+<div style="font-size:12.5px;font-weight:600;color:#1B2A4A">{{ h.what }}</div>
+<div style="margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ h.who }} · {{ h.when }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sPublish }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:880px;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:24px">
+<div style="display:flex;align-items:center;gap:14px">
+<span style="flex:none;width:38px;height:38px;border-radius:99px;background:#E6F4EF;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" sc-camel-view-box="0 0 24 24" fill="none" stroke="#0F7B5A" stroke-width="2.2"><path d="M5 13l4 4L19 7"></path></svg></span>
+<div>
+<div style="font-size:16px;font-weight:600">Approved by the Accounting Officer</div>
+<div style="margin-top:3px;font-size:12.5px;color:#5A6B7B">{{ draft.ref }} · approved 16 Sep 2026, 09:15 by Dr N. Zulu</div>
+</div>
+</div>
+<div style="margin-top:22px;font-size:14px;font-weight:600">Publication settings</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{ publishSettings }}" as="p" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:14px;border:1px solid #E1E9F0;border-radius:9px;padding:14px 16px">
+<button sc-camel-on-click="{{ p.toggle }}" style="flex:none;width:36px;height:20px;border-radius:99px;border:0;padding:2px;cursor:pointer;background:{{ p.switchBg }};display:flex;justify-content:{{ p.switchJustify }}">
+<span style="width:16px;height:16px;border-radius:99px;background:#fff"></span>
+</button>
+<span style="flex:1">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A">{{ p.label }}</span>
+<span style="display:block;margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ p.meta }}</span>
+</span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:20px;background:#EEF4F9;border-radius:9px;padding:15px 16px;font-size:12px;line-height:1.65;color:#5A6B7B">On publication the tender appears in the bidder app immediately and in the For You feed of every supplier whose industry matches. Bids stay sealed — no one in RBIDZ, including you, can open a submission before {{ draft.close }}.</div>
+<button sc-camel-on-click="{{ publishTender }}" style="margin-top:20px;height:48px;padding:0 24px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(28,163,236,.26)">Publish to the bidder app</button>
+</div>
+<sc-if value="{{ published }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid #CFE8DE;background:#F2FAF7;border-radius:10px;padding:20px 22px;display:flex;align-items:center;gap:16px">
+<div style="flex:1">
+<div style="font-size:14.5px;font-weight:600;color:#0B5F45">Published — live in the bidder app</div>
+<div style="margin-top:5px;font-size:12.5px;color:#0B5F45">Notified 47 matching suppliers. Closing {{ draft.close }}.</div>
+</div>
+<button sc-camel-on-click="{{ goApps }}" style="flex:none;height:44px;padding:0 18px;border:0;border-radius:8px;background:#0F7B5A;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">View incoming applications</button>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ sApps }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<sc-for list="{{ appStats }}" as="k" hint-placeholder-count="4">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:16px 18px">
+<div style="font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">{{ k.label }}</div>
+<div style="margin-top:8px;font-size:26px;font-weight:600;letter-spacing:-.6px">{{ k.value }}</div>
+<div style="margin-top:4px;font-size:11.5px;color:#5A6B7B">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="padding:16px 20px;border-bottom:1px solid #E1E9F0;display:flex;align-items:center;gap:14px">
+<div>
+<div style="font-size:14px;font-weight:600">RBIDZ/ICT/031/26 — bids received</div>
+<div style="margin-top:3px;font-size:11.5px;color:#5A6B7B">Sealed until 06 Oct 2026, 12:00. Prices are hidden from everyone, including SCM, until opening.</div>
+</div>
+<div style="flex:1"></div>
+<span style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:6px;background:#EEF4F9;color:#1B2A4A">
+<svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="none" stroke="#1B2A4A" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+Bids sealed
+</span>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 110px 130px 130px 120px;gap:16px;padding:12px 20px;background:#F7FAFC;border-bottom:1px solid #E1E9F0;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">
+<div>BIDDER</div><div>CSD NUMBER</div><div>B-BBEE</div><div>ELIGIBILITY</div><div>FEE</div><div>SUBMITTED</div>
+</div>
+<sc-for list="{{ bidRows }}" as="b" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 110px 130px 130px 120px;gap:16px;align-items:center;padding:15px 20px;border-bottom:1px solid #EDF2F7">
+<span style="min-width:0">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.name }}</span>
+<span style="display:block;margin-top:2px;font-size:11px;color:#8C9CAB">{{ b.size }}</span>
+</span>
+<span style="font-size:12px;color:#5A6B7B">{{ b.csd }}</span>
+<span style="font-size:12.5px;color:#1B2A4A">Level {{ b.bbbee }}</span>
+<span style="justify-self:start;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 9px;border-radius:6px;background:{{ b.eligBg }};color:{{ b.eligColor }}">{{ b.elig }}</span>
+<span style="font-size:10.5px;font-weight:600;white-space:nowrap;color:{{ b.feeColor }}">{{ b.fee }}</span>
+<span style="font-size:12px;color:#5A6B7B">{{ b.when }}</span>
+</div>
+</sc-for>
+<div style="padding:16px 20px;display:flex;align-items:center;gap:14px">
+<div style="font-size:12px;line-height:1.6;color:#5A6B7B">Two applications were blocked at the eligibility gate and never reached submission. The reasons are logged for the audit trail.</div>
+<div style="flex:1"></div>
+<button sc-camel-on-click="{{ goBec }}" style="flex:none;height:42px;padding:0 18px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">Open bids and start BEC scoring</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sBec }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:22px;align-items:start">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px 24px">
+<div style="display:flex;align-items:flex-start;gap:16px">
+<div style="flex:1">
+<div style="font-size:11.5px;font-weight:600;letter-spacing:.05em;color:#5A6B7B">RBIDZ/ICT/031/26 · BID EVALUATION COMMITTEE</div>
+<div style="margin-top:7px;font-size:19px;font-weight:600;letter-spacing:-.2px">Score {{ becBidder.name }} on functionality</div>
+<div style="margin-top:6px;font-size:12.5px;color:#5A6B7B">You are scoring as {{ role.person }}. Other members' scores are hidden from you until every member has submitted.</div>
+</div>
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:6px 10px;border-radius:6px;background:#E3F1FB;color:#1163A0">Bidder {{ becIndexLabel }}</span>
+</div>
+</div>
+
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="display:flex;align-items:center;gap:14px">
+<div style="font-size:14px;font-weight:600">Functionality criteria</div>
+<div style="flex:1"></div>
+<div style="font-size:12.5px;color:#5A6B7B">Minimum to qualify <span style="font-weight:600;color:#1B2A4A">65%</span></div>
+</div>
+<div style="margin-top:18px;display:flex;flex-direction:column;gap:16px">
+<sc-for list="{{ becCriteria }}" as="c" hint-placeholder-count="4">
+<div style="border:1px solid #E1E9F0;border-radius:9px;padding:16px 18px">
+<div style="display:flex;align-items:flex-start;gap:16px">
+<div style="flex:1">
+<div style="font-size:13.5px;font-weight:600;color:#1B2A4A">{{ c.label }}</div>
+<div style="margin-top:3px;font-size:11.5px;color:#5A6B7B">{{ c.meta }}</div>
+</div>
+<div style="flex:none;text-align:right">
+<div style="font-size:10px;letter-spacing:.07em;color:#8C9CAB">WEIGHT</div>
+<div style="margin-top:2px;font-size:13.5px;font-weight:600">{{ c.weight }}</div>
+</div>
+</div>
+<div style="margin-top:14px;display:flex;gap:7px">
+<sc-for list="{{ c.scores }}" as="s" hint-placeholder-count="5">
+<button sc-camel-on-click="{{ s.pick }}" style="flex:1;padding:11px 0;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;border:1px solid {{ s.border }};background:{{ s.bg }};color:{{ s.color }}">{{ s.label }}</button>
+</sc-for>
+</div>
+<div style="margin-top:10px;display:flex;justify-content:space-between;font-size:11px;color:#8C9CAB">
+<span>1 — Poor</span><span>5 — Excellent</span>
+</div>
+</div>
+</sc-for>
+</div>
+<label style="margin-top:18px;display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:500;letter-spacing:.03em;color:#5A6B7B">MOTIVATION (REQUIRED)
+<textarea rows="3" placeholder="Record the evidence in the bid that supports your scores" style="border:1px solid #D6E2EC;border-radius:8px;padding:11px 13px;font-size:12.5px;line-height:1.6;resize:vertical"></textarea></label>
+<div style="margin-top:18px;display:flex;align-items:center;gap:12px">
+<div style="font-size:12px;line-height:1.6;color:#5A6B7B;max-width:420px">Submitted scores cannot be edited. A change requires a minuted committee resolution, which is recorded in the audit trail.</div>
+<div style="flex:1"></div>
+<button sc-camel-on-click="{{ becNext }}" style="flex:none;height:44px;padding:0 20px;border:0;border-radius:8px;background:#1CA3EC;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">{{ becNextLabel }}</button>
+</div>
+</div>
+</div>
+
+<div style="width:330px;flex:none;display:flex;flex-direction:column;gap:16px">
+<div style="background:#0F1B33;border-radius:10px;padding:20px">
+<div style="font-size:10.5px;letter-spacing:.07em;color:rgba(255,255,255,.5)">YOUR WEIGHTED SCORE</div>
+<div style="margin-top:8px;display:flex;align-items:baseline;gap:8px">
+<div style="font-size:42px;font-weight:600;letter-spacing:-1.4px;color:#fff">{{ becScore }}</div>
+<div style="font-size:15px;color:rgba(255,255,255,.5)">/ 100</div>
+</div>
+<div style="margin-top:12px;height:5px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:5px;border-radius:99px;background:{{ becBarColor }};width:{{ becPct }}"></div></div>
+<div style="margin-top:12px;font-size:11.5px;line-height:1.6;color:{{ becVerdictColor }}">{{ becVerdict }}</div>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Committee progress</div>
+<div style="margin-top:4px;font-size:11.5px;color:#5A6B7B">Scores stay sealed until all five members submit.</div>
+<div style="margin-top:15px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ becMembers }}" as="m" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:11px">
+<span style="flex:none;width:28px;height:28px;border-radius:8px;background:#EEF4F9;color:#1B2A4A;font-size:10.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ m.initials }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:12.5px;font-weight:500;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.name }}</span>
+<span style="display:block;font-size:11px;color:#8C9CAB">{{ m.role }}</span>
+</span>
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:4px 8px;border-radius:6px;background:{{ m.bg }};color:{{ m.color }}">{{ m.status }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Declared interests</div>
+<div style="margin-top:12px;display:flex;gap:11px;align-items:flex-start">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" style="flex:none;margin-top:1px"><path d="M12 3l9 16H3l9-16z"></path><path d="M12 9v5"></path><path d="M12 16.5v.5"></path></svg>
+<div style="font-size:11.5px;line-height:1.6;color:#5A6B7B">One member declared a prior working relationship with Coastal Network Systems and has been recused from scoring that bidder. The recusal is minuted.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sBac }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:22px;align-items:start">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="padding:18px 22px;border-bottom:1px solid #E1E9F0">
+<div style="font-size:11.5px;font-weight:600;letter-spacing:.05em;color:#5A6B7B">RBIDZ/ICT/031/26 · BID ADJUDICATION COMMITTEE</div>
+<div style="margin-top:7px;font-size:19px;font-weight:600;letter-spacing:-.2px">BEC recommendation and final scores</div>
+<div style="margin-top:6px;font-size:12.5px;color:#5A6B7B">Averaged functionality across five members, then 80/20 price and preference on the bids that met the 65% minimum.</div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 100px 100px 110px;gap:14px;padding:12px 22px;background:#F7FAFC;border-bottom:1px solid #E1E9F0;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">
+<div>BIDDER</div><div>BID PRICE</div><div>FUNCTIONALITY</div><div>PRICE /80</div><div>PREF /20</div><div>TOTAL</div>
+</div>
+<sc-for list="{{ bacRows }}" as="r" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 100px 100px 110px;gap:14px;align-items:center;padding:15px 22px;border-bottom:1px solid #EDF2F7;background:{{ r.rowBg }}">
+<span style="min-width:0">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }}</span>
+<span style="display:block;margin-top:2px;font-size:11px;color:#8C9CAB">Level {{ r.bbbee }} · {{ r.size }}</span>
+</span>
+<span style="font-size:12.5px;color:#1B2A4A">{{ r.price }}</span>
+<span style="font-size:12.5px;font-weight:600;color:{{ r.funcColor }}">{{ r.func }}</span>
+<span style="font-size:12.5px;color:#5A6B7B">{{ r.priceScore }}</span>
+<span style="font-size:12.5px;color:#5A6B7B">{{ r.prefScore }}</span>
+<span style="font-size:14px;font-weight:600;color:{{ r.totalColor }}">{{ r.total }}</span>
+</div>
+</sc-for>
+<div style="padding:16px 22px;background:#F7FAFC;font-size:12px;line-height:1.6;color:#5A6B7B">Two bids scored below the 65% functionality minimum and were not taken through to price and preference. Their scoresheets remain on record.</div>
+</div>
+
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:22px 24px">
+<div style="font-size:14px;font-weight:600">Committee vote</div>
+<div style="margin-top:4px;font-size:12px;color:#5A6B7B">{{ voteIntro }}</div>
+<sc-if value="{{ notBAC }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:13px;display:flex;gap:11px;align-items:flex-start;background:#F7FAFC;border:1px solid #E1E9F0;border-radius:9px;padding:13px 15px">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" style="flex:none;margin-top:1px"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+<div style="font-size:11.5px;line-height:1.65;color:#5A6B7B">{{ notBACnote }}</div>
+</div>
+</sc-if>
+<div style="margin-top:16px;display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ bacVotes }}" as="v" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:13px;border:1px solid #E1E9F0;border-radius:9px;padding:13px 16px">
+<span style="flex:none;width:30px;height:30px;border-radius:8px;background:#EEF4F9;font-size:11px;font-weight:600;color:#1B2A4A;display:flex;align-items:center;justify-content:center">{{ v.initials }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A">{{ v.name }}</span>
+<span style="display:block;margin-top:1px;font-size:11px;color:#8C9CAB">{{ v.role }}</span>
+</span>
+<sc-if value="{{ v.readOnly }}" hint-placeholder-val="{{ false }}">
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 10px;border-radius:6px;background:#F2F6FA;color:#8C9CAB">Vote outstanding</span>
+</sc-if>
+<sc-if value="{{ v.isYou }}" hint-placeholder-val="{{ false }}">
+<span style="flex:none;display:flex;gap:7px">
+<button sc-camel-on-click="{{ v.voteFor }}" style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:7px;cursor:pointer;border:1px solid {{ v.forBorder }};background:{{ v.forBg }};color:{{ v.forColor }}">In favour</button>
+<button sc-camel-on-click="{{ v.voteAgainst }}" style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:7px;cursor:pointer;border:1px solid {{ v.againstBorder }};background:{{ v.againstBg }};color:{{ v.againstColor }}">Against</button>
+<button sc-camel-on-click="{{ v.voteAbstain }}" style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:7px;cursor:pointer;border:1px solid {{ v.abstainBorder }};background:{{ v.abstainBg }};color:{{ v.abstainColor }}">Abstain</button>
+</span>
+</sc-if>
+<sc-if value="{{ v.isOther }}" hint-placeholder-val="{{ true }}">
+<span style="flex:none;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 10px;border-radius:6px;background:{{ v.bg }};color:{{ v.color }}">{{ v.status }}</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="width:320px;flex:none;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">BEC RECOMMENDS</div>
+<div style="margin-top:9px;font-size:17px;font-weight:600;line-height:1.35;color:#1B2A4A;text-wrap:pretty">Coastal Network Systems (Pty) Ltd</div>
+<div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ recFacts }}" as="f" hint-placeholder-count="4">
+<div style="display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding-bottom:8px;border-bottom:1px solid #F0F5F9">
+<span style="color:#5A6B7B;flex:none;white-space:nowrap">{{ f.k }}</span><span style="font-weight:600;color:#1B2A4A;text-align:right;white-space:nowrap">{{ f.v }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Vote tally</div>
+<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ tally }}" as="t" hint-placeholder-count="3">
+<div>
+<div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="color:#5A6B7B;white-space:nowrap">{{ t.label }}</span><span style="font-weight:600;color:#1B2A4A">{{ t.n }}</span></div>
+<div style="margin-top:6px;height:6px;border-radius:99px;background:#EEF4F9;overflow:hidden"><div style="height:6px;border-radius:99px;background:{{ t.color }};width:{{ t.pct }}"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:15px;padding-top:14px;border-top:1px solid #EDF2F7;font-size:11.5px;line-height:1.6;color:#5A6B7B">{{ quorumNote }}</div>
+<button sc-camel-on-click="{{ goAward }}" style="margin-top:14px;width:100%;height:46px;border:0;border-radius:8px;background:{{ awardBtnBg }};color:#fff;font-size:14px;font-weight:600;cursor:pointer">Send to Accounting Officer</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAward }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:22px;align-items:start">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:24px">
+<div style="font-size:11.5px;font-weight:600;letter-spacing:.05em;color:#5A6B7B">RBIDZ/ICT/031/26 · AWARD DECISION</div>
+<div style="margin-top:9px;font-size:22px;font-weight:600;letter-spacing:-.3px;line-height:1.3">Award the contract to Coastal Network Systems (Pty) Ltd</div>
+<div style="margin-top:8px;font-size:13px;line-height:1.65;color:#5A6B7B">Recommended by the BAC on 16 Sep 2026 with four votes in favour and one abstention. As Accounting Officer, the award is yours to make and is final once recorded.</div>
+<div style="margin-top:22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid #E1E9F0;border-radius:9px;overflow:hidden">
+<sc-for list="{{ awardFacts }}" as="f" hint-placeholder-count="3">
+<div style="padding:16px 18px;border-right:1px solid #EDF2F7">
+<div style="font-size:10px;letter-spacing:.07em;color:#8C9CAB">{{ f.k }}</div>
+<div style="margin-top:5px;font-size:15px;font-weight:600;color:#1B2A4A">{{ f.v }}</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:22px;font-size:14px;font-weight:600">Before you award</div>
+<div style="margin-top:12px;display:flex;flex-direction:column;gap:9px">
+<sc-for list="{{ awardChecks }}" as="c" hint-placeholder-count="4">
+<div style="display:flex;gap:12px;align-items:flex-start;background:{{ c.bg }};border-radius:8px;padding:12px 14px">
+<span style="flex:none;width:19px;height:19px;border-radius:99px;background:{{ c.dot }};display:flex;align-items:center;justify-content:center;margin-top:1px"><svg width="11" height="11" sc-camel-view-box="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"></path></svg></span>
+<span style="flex:1"><span style="display:block;font-size:12.5px;font-weight:600;color:#1B2A4A">{{ c.label }}</span><span style="display:block;margin-top:2px;font-size:11.5px;color:#5A6B7B">{{ c.meta }}</span></span>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ awarded }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:22px;border:1px solid #CFE8DE;background:#F2FAF7;border-radius:10px;padding:20px 22px">
+<div style="font-size:15px;font-weight:600;color:#0B5F45">Award recorded and notifications sent</div>
+<div style="margin-top:7px;font-size:12.5px;line-height:1.65;color:#0B5F45">Coastal Network Systems has been notified of the award. The four unsuccessful bidders have been notified of the outcome and may request a debrief. The award is published on the RBIDZ tender register and written to the audit trail.</div>
+<button sc-camel-on-click="{{ goAudit }}" style="margin-top:14px;height:42px;padding:0 18px;border:0;border-radius:8px;background:#0F7B5A;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">View the audit trail</button>
+</div>
+</sc-if>
+<sc-if value="{{ notAO }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:22px;display:flex;gap:11px;align-items:flex-start;background:#F7FAFC;border:1px solid #E1E9F0;border-radius:9px;padding:15px 16px">
+<svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" style="flex:none;margin-top:1px"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+<div style="font-size:11.5px;line-height:1.65;color:#5A6B7B">The award is the Accounting Officer's decision alone. You are signed in as {{ role.label }}, so this record is read-only for you.</div>
+</div>
+</sc-if>
+<sc-if value="{{ canAward }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:22px;display:flex;gap:11px;align-items:center">
+<button sc-camel-on-click="{{ doAward }}" style="height:50px;padding:0 26px;border:0;border-radius:8px;background:#0F7B5A;color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 6px 16px rgba(15,123,90,.24)">Record the award</button>
+<button sc-camel-on-click="{{ noop }}" style="height:50px;padding:0 20px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;color:#1B2A4A;font-size:14px;font-weight:600;cursor:pointer">Refer back to the BAC</button>
+<button sc-camel-on-click="{{ noop }}" style="height:50px;padding:0 20px;border:1px solid #E8CFCC;border-radius:8px;background:#fff;color:#B3453B;font-size:14px;font-weight:600;cursor:pointer">Cancel the tender</button>
+</div>
+</sc-if>
+</div>
+</div>
+<div style="width:320px;flex:none;display:flex;flex-direction:column;gap:16px">
+<div style="background:#0F1B33;border-radius:10px;padding:20px">
+<div style="font-size:10.5px;letter-spacing:.07em;color:rgba(255,255,255,.5)">CONTRACT VALUE</div>
+<div style="margin-top:8px;font-size:30px;font-weight:600;letter-spacing:-1px;color:#fff">R8 240 000</div>
+<div style="margin-top:8px;font-size:11.5px;line-height:1.6;color:rgba(255,255,255,.55)">4.2% below the estimate of R8 600 000. Within the Accounting Officer's delegated authority.</div>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px">
+<div style="font-size:14px;font-weight:600">Bidders to be notified</div>
+<div style="margin-top:13px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ notifyList }}" as="n" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:11px">
+<span style="flex:none;width:7px;height:7px;border-radius:99px;background:{{ n.dot }}"></span>
+<span style="flex:1;min-width:0;font-size:12.5px;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ n.name }}</span>
+<span style="flex:none;font-size:11px;font-weight:600;white-space:nowrap;color:{{ n.color }}">{{ n.outcome }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sAudit }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px 24px;display:flex;align-items:center;gap:18px">
+<div style="flex:1">
+<div style="font-size:15px;font-weight:600">RBIDZ/ICT/031/26 — full audit trail</div>
+<div style="margin-top:4px;font-size:12.5px;line-height:1.6;color:#5A6B7B">Append-only. Every action carries the person, their role, the timestamp and the IP. Nothing in this record can be edited or deleted by any user, including a system administrator.</div>
+</div>
+<button sc-camel-on-click="{{ noop }}" style="flex:none;display:flex;align-items:center;gap:8px;height:42px;padding:0 16px;border:1px solid #D6E2EC;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#1B2A4A;cursor:pointer">
+<svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="#5A6B7B" stroke-width="1.7"><path d="M12 4v11m0 0l-4-4m4 4l4-4"></path><path d="M5 19h14"></path></svg>
+Export for the Auditor-General
+</button>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:168px minmax(0,1fr) 190px 150px 118px;gap:16px;padding:12px 22px;background:#F7FAFC;border-bottom:1px solid #E1E9F0;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">
+<div>TIMESTAMP</div><div>ACTION</div><div>PERSON</div><div>ROLE</div><div>IP ADDRESS</div>
+</div>
+<sc-for list="{{ auditRows }}" as="r" hint-placeholder-count="10">
+<div style="display:grid;grid-template-columns:168px minmax(0,1fr) 190px 150px 118px;gap:16px;align-items:center;padding:13px 22px;border-bottom:1px solid #EDF2F7">
+<span style="font-size:11.5px;color:#5A6B7B;white-space:nowrap">{{ r.when }}</span>
+<span style="font-size:12.5px;color:#1B2A4A">{{ r.what }}</span>
+<span style="font-size:12px;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.who }}</span>
+<span style="font-size:11.5px;color:#5A6B7B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.role }}</span>
+<span style="font-size:11.5px;color:#8C9CAB">{{ r.ip }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sUsers }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;padding:20px 24px">
+<div style="font-size:15px;font-weight:600">Roles and committee separation</div>
+<div style="margin-top:4px;font-size:12.5px;line-height:1.6;color:#5A6B7B">A person cannot sit on both the BEC and the BAC for the same tender, and no one can create a tender and then award it. eProcure blocks the combination rather than relying on policy.</div>
+</div>
+<div style="background:#fff;border:1px solid #E1E9F0;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 130px 110px;gap:16px;padding:12px 22px;background:#F7FAFC;border-bottom:1px solid #E1E9F0;font-size:10.5px;font-weight:600;letter-spacing:.07em;color:#8C9CAB">
+<div>PERSON</div><div>ROLE</div><div>BEC</div><div>BAC</div><div>STATUS</div>
+</div>
+<sc-for list="{{ userRows }}" as="u" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 200px 130px 130px 110px;gap:16px;align-items:center;padding:14px 22px;border-bottom:1px solid #EDF2F7">
+<span style="min-width:0;display:flex;align-items:center;gap:11px">
+<span style="flex:none;width:30px;height:30px;border-radius:8px;background:#EEF4F9;font-size:11px;font-weight:600;color:#1B2A4A;display:flex;align-items:center;justify-content:center">{{ u.initials }}</span>
+<span style="min-width:0">
+<span style="display:block;font-size:13px;font-weight:600;color:#1B2A4A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.name }}</span>
+<span style="display:block;font-size:11px;color:#8C9CAB;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.email }}</span>
+</span>
+</span>
+<span style="font-size:12.5px;color:#1B2A4A">{{ u.role }}</span>
+<span style="font-size:12px;color:{{ u.becColor }}">{{ u.bec }}</span>
+<span style="font-size:12px;color:{{ u.bacColor }}">{{ u.bac }}</span>
+<span style="justify-self:start;font-size:10.5px;font-weight:600;white-space:nowrap;padding:5px 9px;border-radius:6px;background:#E6F4EF;color:#0B5F45">Active</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+<div style="width:1440px;flex:none;font-size:11.5px;line-height:1.65;color:#5A6B7B">The console follows the bidder app's palette so the two read as one product. Sign in as any of the four roles — the sidebar, the dashboard action list and what you are allowed to decide change with the role.</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{}">
+const BLUE='#1CA3EC', NAVY='#1B2A4A', GREY='#5A6B7B', GREEN='#0F7B5A';
+
+const ROLES = {
+  scm:{ key:'scm', label:'SCM Officer', person:'Sipho Mkhize', initials:'SM', badge:'SCM Officer', meta:'Creates and publishes tenders, manages the register' },
+  ao:{ key:'ao', label:'Accounting Officer', person:'Dr N. Zulu', initials:'NZ', badge:'Accounting Officer', meta:'Approves tenders for publication and makes the award' },
+  bec:{ key:'bec', label:'BEC member', person:'Lerato Dube', initials:'LD', badge:'BEC member', meta:'Scores functionality on bids allocated to you' },
+  bac:{ key:'bac', label:'BAC member', person:'Ayanda Khumalo', initials:'AK', badge:'BAC member', meta:'Adjudicates the BEC recommendation and votes' }
+};
+
+const ICONS = {
+  grid:'M4 4h7v7H4V4zM13 4h7v7h-7V4zM4 13h7v7H4v-7zM13 13h7v7h-7v-7z',
+  file:'M7 3h7l4 4v14H7V3zM14 3v4h4',
+  inbox:'M4 13h4l2 3h4l2-3h4M4 13l3-8h10l3 8v7H4v-7z',
+  score:'M4 20V9M10 20V4M16 20v-8M22 20H2',
+  gavel:'M6 18h9M9 4l7 7-3 3-7-7 3-3zM14 12l5 5',
+  clock:'M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM12 7.5V12l3 2',
+  users:'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a3 3 0 100-6M21.5 20a5.5 5.5 0 00-4-5.3'
+};
+
+const TENDERS = [
+  { ref:'RBIDZ/ICT/031/26', title:'Supply and installation of network infrastructure', stage:'Evaluation', value:'R8 600 000', closing:'Closed 06 Oct', apps:'5 bids', screen:'apps' },
+  { ref:'RBIDZ/INF/074/26', title:'Road resurfacing and stormwater works, Phase 1F', stage:'Advertised', value:'R24 000 000', closing:'13 Oct 2026', apps:'2 bids', screen:'tenders' },
+  { ref:'RBIDZ/CON/088/26', title:'Construction of the Phase 2 bulk services reservoir', stage:'Awaiting approval', value:'R41 500 000', closing:'Not advertised', apps:'—', screen:'approval' },
+  { ref:'RBIDZ/SCM/012/26', title:'Supply of office consumables for 24 months', stage:'Awarded', value:'R2 380 000', closing:'Closed 21 Aug', apps:'7 bids', screen:'audit' },
+  { ref:'RBIDZ/SEC/008/26', title:'Security services for the zone administration precinct', stage:'Awarded', value:'R14 900 000', closing:'Closed 12 Jul', apps:'6 bids', screen:'audit' },
+  { ref:'RBIDZ/PRO/103/26', title:'Panel of professional engineering service providers', stage:'Draft', value:'R6 000 000', closing:'Not advertised', apps:'—', screen:'create' }
+];
+
+const STAGE = {
+  Draft:{ bg:'#F2F6FA', color:'#5A6B7B' },
+  'Awaiting approval':{ bg:'#FDF2DC', color:'#7A5314' },
+  Advertised:{ bg:'#E3F1FB', color:'#1163A0' },
+  Evaluation:{ bg:'#EEF4F9', color:'#1B2A4A' },
+  Awarded:{ bg:'#E6F4EF', color:'#0B5F45' }
+};
+
+const BIDDERS = [
+  { name:'Coastal Network Systems (Pty) Ltd', size:'QSE', csd:'MAAA0117743', bbbee:2, elig:'Passed 4 of 4', fee:'R500 verified', when:'02 Oct, 09:14',
+    price:'R8 240 000', func:78, priceScore:'76.4', prefScore:'16', total:'92.4' },
+  { name:'Zululand Fibre Works CC', size:'EME', csd:'MAAA0298115', bbbee:1, elig:'Passed 4 of 4', fee:'R500 verified', when:'03 Oct, 14:02',
+    price:'R8 910 000', func:71, priceScore:'70.7', prefScore:'20', total:'90.7' },
+  { name:'Thandeka Supply & Projects (Pty) Ltd', size:'QSE', csd:'MAAA0384471', bbbee:2, elig:'Passed 4 of 4', fee:'R500 verified', when:'02 Oct, 16:41',
+    price:'R9 480 000', func:69, priceScore:'66.4', prefScore:'16', total:'82.4' },
+  { name:'Empangeni Integrated Tech', size:'Generic', csd:'MAAA0402887', bbbee:4, elig:'Passed 4 of 4', fee:'R500 verified', when:'05 Oct, 11:27',
+    price:'R8 760 000', func:62, priceScore:'—', prefScore:'—', total:'Below min' },
+  { name:'Umhlathuze Data Solutions', size:'EME', csd:'MAAA0356209', bbbee:1, elig:'Passed 4 of 4', fee:'R500 verified', when:'05 Oct, 15:58',
+    price:'R10 120 000', func:58, priceScore:'—', prefScore:'—', total:'Below min' }
+];
+
+const BEC_MEMBERS = [
+  { name:'Lerato Dube', initials:'LD', role:'Chair, BEC', done:true },
+  { name:'Mandla Ngcobo', initials:'MN', role:'Technical, ICT', done:true },
+  { name:'Priya Naidoo', initials:'PN', role:'SCM representative', done:true },
+  { name:'Johan Steyn', initials:'JS', role:'End-user department', done:false },
+  { name:'Nomsa Mbatha', initials:'NM', role:'Technical, ICT', done:false }
+];
+
+const BAC_MEMBERS = [
+  { name:'Ayanda Khumalo', initials:'AK', role:'Chair, BAC', vote:'you' },
+  { name:'Dr T. Mahlangu', initials:'TM', role:'Chief Financial Officer', vote:'In favour' },
+  { name:'Refilwe Sithole', initials:'RS', role:'Legal services', vote:'In favour' },
+  { name:'Bheki Cele', initials:'BC', role:'Corporate services', vote:'In favour' },
+  { name:'Fatima Patel', initials:'FP', role:'Internal audit observer', vote:'Abstained' }
+];
+
+const AUDIT = [
+  { when:'16 Sep 2026, 09:15', what:'Tender approved for publication', who:'Dr N. Zulu', role:'Accounting Officer', ip:'196.21.44.8' },
+  { when:'16 Sep 2026, 08:42', what:'Tender submitted for approval', who:'Sipho Mkhize', role:'SCM Officer', ip:'196.21.44.2' },
+  { when:'06 Oct 2026, 12:00', what:'Bids sealed and locked at closing', who:'System', role:'Automated', ip:'—' },
+  { when:'06 Oct 2026, 12:04', what:'Bids opened in the presence of the BEC', who:'Lerato Dube', role:'Chair, BEC', ip:'196.21.44.19' },
+  { when:'08 Oct 2026, 10:22', what:'Functionality score submitted for Coastal Network Systems', who:'Mandla Ngcobo', role:'BEC member', ip:'196.21.44.23' },
+  { when:'08 Oct 2026, 11:05', what:'Recusal recorded — prior relationship with a bidder', who:'Johan Steyn', role:'BEC member', ip:'196.21.44.31' },
+  { when:'09 Oct 2026, 14:40', what:'Two bids marked below the functionality minimum', who:'System', role:'Automated', ip:'—' },
+  { when:'12 Oct 2026, 09:30', what:'BEC recommendation finalised and sent to the BAC', who:'Lerato Dube', role:'Chair, BEC', ip:'196.21.44.19' },
+  { when:'14 Oct 2026, 11:12', what:'Vote recorded: in favour', who:'Dr T. Mahlangu', role:'BAC member', ip:'196.21.44.6' },
+  { when:'14 Oct 2026, 11:20', what:'Abstention recorded with reason', who:'Fatima Patel', role:'Internal audit observer', ip:'196.21.44.44' },
+  { when:'15 Oct 2026, 08:05', what:'Award recorded and bidders notified', who:'Dr N. Zulu', role:'Accounting Officer', ip:'196.21.44.8' }
+];
+
+const USERS = [
+  { name:'Sipho Mkhize', email:'s.mkhize@rbidz.co.za', initials:'SM', role:'SCM Officer', bec:'—', bac:'—' },
+  { name:'Dr N. Zulu', email:'n.zulu@rbidz.co.za', initials:'NZ', role:'Accounting Officer', bec:'Blocked', bac:'Blocked' },
+  { name:'Lerato Dube', email:'l.dube@rbidz.co.za', initials:'LD', role:'BEC member', bec:'Chair', bac:'—' },
+  { name:'Mandla Ngcobo', email:'m.ngcobo@rbidz.co.za', initials:'MN', role:'BEC member', bec:'Member', bac:'—' },
+  { name:'Ayanda Khumalo', email:'a.khumalo@rbidz.co.za', initials:'AK', role:'BAC member', bec:'—', bac:'Chair' },
+  { name:'Dr T. Mahlangu', email:'t.mahlangu@rbidz.co.za', initials:'TM', role:'BAC member', bec:'—', bac:'Member' }
+];
+
+const FUNC_CRITERIA = [
+  { label:'Relevant experience on comparable networks', meta:'Three reference sites of similar scale in the last five years', weight:30 },
+  { label:'Methodology and implementation plan', meta:'Sequencing, cutover approach and risk mitigation', weight:30 },
+  { label:'Key personnel and certification', meta:'Certified network engineers assigned to the project', weight:25 },
+  { label:'Capacity and local presence', meta:'Ability to service the zone within the response times', weight:15 }
+];
+
+class Component extends DCLogic {
+  state = {
+    screen:'splash', role:'scm', cStep:1, filter:'All',
+    adminEmail:'s.mkhize@rbidz.co.za', adminPwd:'demo1234',
+    draft:{ ref:'RBIDZ/CON/088/26', title:'Construction of the Phase 2 bulk services reservoir', scope:'Design and construction of a 12 Ml reinforced concrete reservoir, associated bulk pipework, valve chamber and access road within Phase 2 of the zone, including a 12-month defects liability period.', value:'R41 500 000', fee:'R500.00', open:'20 Sep 2026', close:'24 Oct 2026, 12:00', funcMin:70 },
+    criteria:{ csd:true, sars:true, cipc:true, bbbee:true, cidb:true, eme:false },
+    bbbeeLevel:'Level 4', cidbGrade:'7CE',
+    method:'80/20',
+    docs:{ 'Signed bidding document':true, 'CSD registration summary':true, 'SARS tax compliance PIN':true, 'B-BBEE certificate or affidavit':true, 'CIDB registration certificate':true, 'SBD 4 — Declaration of interest':true, 'SBD 8 — Past supply chain practices':true, 'SBD 9 — Independent bid determination':true, 'Letter of intent from a financial institution':false, 'Health and safety plan':false },
+    publish:{ app:true, register:true, email:true, gazette:false },
+    approved:false, published:false, awarded:false,
+    becIdx:0, becScores:{}, myVote:null
+  };
+
+  componentDidMount() {
+    this.t = setTimeout(() => { if (this.state.screen === 'splash') this.setState({ screen:'login' }); }, 3000);
+  }
+  componentWillUnmount() { clearTimeout(this.t); }
+
+  go = (screen, extra) => { clearTimeout(this.t); this.setState(Object.assign({ screen }, extra || {})); };
+  chip(active) { return active ? { bg:BLUE, border:BLUE, color:'#fff' } : { bg:'#fff', border:'#D6E2EC', color:GREY }; }
+  sw(on) { return { switchBg:on ? BLUE : '#C6D4E0', switchJustify:on ? 'flex-end' : 'flex-start' }; }
+
+  becTotal() {
+    const s = this.state.becScores;
+    let total = 0;
+    FUNC_CRITERIA.forEach((c, i) => { total += ((s[i] || 0) / 5) * c.weight; });
+    return Math.round(total);
+  }
+
+  renderVals() {
+    const st = this.state, screen = st.screen, role = ROLES[st.role];
+    const inApp = ['splash','login'].indexOf(screen) < 0;
+
+    const titles = { dash:'Dashboard', tenders:'Tender register', create:'Create tender', approval:'Approval queue', publish:'Publish tender', apps:'Incoming applications', bec:'BEC scoring', bac:'BAC adjudication', award:'Award decision', audit:'Audit trail', users:'Roles and users' };
+
+    const nav = [
+      { key:'dash', label:'Dashboard', path:ICONS.grid },
+      { key:'tenders', label:'Tender register', path:ICONS.file },
+      { key:'approval', label:'Approval queue', path:ICONS.gavel, count:'1' },
+      { key:'apps', label:'Applications', path:ICONS.inbox, count:'5' },
+      { key:'bec', label:'BEC scoring', path:ICONS.score, count:'2' },
+      { key:'bac', label:'BAC adjudication', path:ICONS.gavel },
+      { key:'audit', label:'Audit trail', path:ICONS.clock },
+      { key:'users', label:'Roles and users', path:ICONS.users }
+    ];
+
+    const filters = ['All','Draft','Awaiting approval','Advertised','Evaluation','Awarded'];
+    let rows = TENDERS.slice();
+    if (st.filter !== 'All') rows = rows.filter(t => t.stage === st.filter);
+
+    const criteriaDefs = [
+      { key:'csd', label:'Registered on the Central Supplier Database', meta:'Mandatory for every organ of state' },
+      { key:'sars', label:'Valid SARS tax compliance status', meta:'Verified against the tax compliance PIN' },
+      { key:'cipc', label:'Valid CIPC company registration', meta:'Active and not deregistered' },
+      { key:'bbbee', label:'Minimum B-BBEE status level', meta:'Bidders at a weaker level are blocked', values:['Level 1','Level 2','Level 4'], valueKey:'bbbeeLevel' },
+      { key:'cidb', label:'Minimum CIDB grading', meta:'Construction works only', values:['5CE','6CE','7CE'], valueKey:'cidbGrade' },
+      { key:'eme', label:'Reserved for EME suppliers only', meta:'Set-aside — excludes QSE and generic bidders' }
+    ];
+
+    const becBidder = BIDDERS[st.becIdx];
+    const becScore = this.becTotal();
+    const votesFor = 3 + (st.myVote === 'for' ? 1 : 0);
+    const votesAgainst = st.myVote === 'against' ? 1 : 0;
+    const abstain = 1 + (st.myVote === 'abstain' ? 1 : 0);
+    const voted = st.myVote !== null;
+
+    const jump = [
+      ['01','Splash','splash'],['02','Sign in','login'],['03','Dashboard','dash'],['04','Tender register','tenders'],
+      ['05','Create tender','create'],['06','Approval','approval'],['07','Publish','publish'],
+      ['08','Applications','apps'],['09','BEC scoring','bec'],['10','BAC vote','bac'],['11','Award','award'],
+      ['12','Audit trail','audit'],['13','Roles','users']
+    ];
+
+    return {
+      sSplash:screen === 'splash', sLogin:screen === 'login', inApp,
+      sDash:screen === 'dash', sTenders:screen === 'tenders', sCreate:screen === 'create',
+      sApproval:screen === 'approval', sPublish:screen === 'publish', sApps:screen === 'apps',
+      sBec:screen === 'bec', sBac:screen === 'bac', sAward:screen === 'award',
+      sAudit:screen === 'audit', sUsers:screen === 'users',
+      pageTitle:titles[screen] || 'Dashboard',
+
+      toLogin:() => this.go('login'), doAdminLogin:() => this.go('dash'),
+      goTenders:() => this.go('tenders'), goCreate:() => this.go('create', { cStep:1 }),
+      goPublish:() => this.go('publish'), goApps:() => this.go('apps'), goBec:() => this.go('bec'),
+      goAward:() => this.go('award'), goAudit:() => this.go('audit'), noop:() => {},
+
+      adminEmail:st.adminEmail, adminPwd:st.adminPwd,
+      setAdminEmail:e => this.setState({ adminEmail:e.target.value }),
+      setAdminPwd:e => this.setState({ adminPwd:e.target.value }),
+      loginStats:[{ k:'Open tenders', v:'14' }, { k:'Registered suppliers', v:'1 284' }, { k:'Awarded this year', v:'R318m' }],
+      roleOptions:Object.keys(ROLES).map(k => ({
+        label:ROLES[k].label, meta:ROLES[k].meta,
+        border:st.role === k ? BLUE : '#E1E9F0', dotBorder:st.role === k ? BLUE : '#B9CBDA',
+        dotFill:st.role === k ? BLUE : 'transparent',
+        pick:() => this.setState({ role:k, adminEmail:ROLES[k].person.toLowerCase().replace(/^dr /,'').replace(/[. ]+/g,'.') + '@rbidz.co.za' })
+      })),
+
+      role:{ label:role.label, person:role.person, initials:role.initials, badge:role.badge },
+      navItems:nav.map(n => ({
+        label:n.label, path:n.path,
+        bg:screen === n.key ? 'rgba(28,163,236,.16)' : 'transparent',
+        color:screen === n.key ? '#fff' : 'rgba(255,255,255,.62)',
+        hasCount:!!n.count, count:n.count,
+        countBg:screen === n.key ? '#1CA3EC' : 'rgba(255,255,255,.12)',
+        countColor:screen === n.key ? '#fff' : 'rgba(255,255,255,.7)',
+        go:() => this.go(n.key)
+      })),
+
+      kpis:[
+        { label:'OPEN TENDERS', value:'14', note:'3 close within 7 days', noteColor:'#7A5314' },
+        { label:'BIDS AWAITING EVALUATION', value:'23', note:'Across 4 tenders', noteColor:GREY },
+        { label:'AWARDED YEAR TO DATE', value:'R318m', note:'41 contracts', noteColor:GREY },
+        { label:'AVERAGE DAYS TO AWARD', value:'38', note:'Down from 61 last year', noteColor:'#0B5F45' }
+      ],
+      actionItems:[
+        { owner:'scm', title:'RBIDZ/PRO/103/26 draft is incomplete', meta:'Panel of professional engineering providers · no closing date set', tag:'Finish', tagBg:'#F2F6FA', tagColor:GREY, iconBg:'#F2F6FA', iconColor:GREY, iconPath:ICONS.file, go:() => this.go('create', { cStep:1 }) },
+        { owner:'scm', title:'RBIDZ/CON/088/26 is with the Accounting Officer', meta:'Bulk services reservoir · R41 500 000 · submitted 2 days ago', tag:'Awaiting', tagBg:'#FDF2DC', tagColor:'#7A5314', iconBg:'#FDF2DC', iconColor:'#B4791C', iconPath:ICONS.clock, go:() => this.go('approval') },
+        { owner:'scm', title:'5 bids on RBIDZ/ICT/031/26 ready to open', meta:'Closed 06 Oct · BEC scoring not started', tag:'Open bids', tagBg:'#E3F1FB', tagColor:'#1163A0', iconBg:'#E3F1FB', iconColor:'#1163A0', iconPath:ICONS.inbox, go:() => this.go('apps') },
+        { owner:'ao', title:'RBIDZ/CON/088/26 waiting on your approval', meta:'Bulk services reservoir · R41 500 000 · submitted 2 days ago', tag:'Approve', tagBg:'#FDF2DC', tagColor:'#7A5314', iconBg:'#FDF2DC', iconColor:'#B4791C', iconPath:ICONS.gavel, go:() => this.go('approval') },
+        { owner:'ao', title:'RBIDZ/ICT/031/26 award decision is yours to make', meta:'BAC recommended Coastal Network Systems · 4 in favour, 1 abstention', tag:'Award', tagBg:'#E6F4EF', tagColor:'#0B5F45', iconBg:'#E6F4EF', iconColor:GREEN, iconPath:ICONS.gavel, go:() => this.go('award') },
+        { owner:'bec', title:'Your functionality scores are outstanding on 2 bids', meta:'RBIDZ/ICT/031/26 · committee waiting on 2 of 5 members', tag:'Score', tagBg:'#EEF4F9', tagColor:NAVY, iconBg:'#EEF4F9', iconColor:NAVY, iconPath:ICONS.score, go:() => this.go('bec') },
+        { owner:'bec', title:'Bids opened and allocated to you', meta:'RBIDZ/ICT/031/26 · 5 bids, one recusal recorded', tag:'Review', tagBg:'#E3F1FB', tagColor:'#1163A0', iconBg:'#E3F1FB', iconColor:'#1163A0', iconPath:ICONS.inbox, go:() => this.go('apps') },
+        { owner:'bac', title:'BAC recommendation ready for adjudication', meta:'RBIDZ/ICT/031/26 · quorum reached, your vote outstanding', tag:'Vote', tagBg:'#EEF4F9', tagColor:NAVY, iconBg:'#EEF4F9', iconColor:NAVY, iconPath:ICONS.gavel, go:() => this.go('bac') },
+        { owner:'bac', title:'Scoresheets available for RBIDZ/ICT/031/26', meta:'Averaged functionality across five BEC members', tag:'Open', tagBg:'#F2F6FA', tagColor:GREY, iconBg:'#F2F6FA', iconColor:GREY, iconPath:ICONS.score, go:() => this.go('bac') }
+      ].filter(a => a.owner === st.role),
+      pipeline:[
+        { label:'Draft', n:4, pct:'22%', color:'#B9CBDA' },
+        { label:'Awaiting approval', n:1, pct:'8%', color:'#E3B341' },
+        { label:'Advertised', n:9, pct:'55%', color:BLUE },
+        { label:'Under evaluation', n:4, pct:'25%', color:NAVY },
+        { label:'Awarded', n:41, pct:'100%', color:GREEN }
+      ],
+      compliance:[
+        { label:'All committees have a quorum', meta:'BEC 5 of 5, BAC 5 of 5 appointed and declared', dot:'#5EB07A' },
+        { label:'1 recusal recorded this month', meta:'Prior relationship declared on RBIDZ/ICT/031/26', dot:'#E3B341' },
+        { label:'No bid opened before closing', meta:'Verified across all 14 open tenders', dot:'#5EB07A' }
+      ],
+
+      tenderFilters:filters.map(f => Object.assign({ label:f, pick:() => this.setState({ filter:f }) }, this.chip(st.filter === f))),
+      tenderRows:rows.map(t => ({
+        ref:t.ref, title:t.title, stage:t.stage, value:t.value, closing:t.closing, apps:t.apps,
+        stageBg:STAGE[t.stage].bg, stageColor:STAGE[t.stage].color,
+        go:() => this.go(t.screen, t.screen === 'create' ? { cStep:1 } : {})
+      })),
+
+      draft:st.draft,
+      setDraftRef:e => this.setDraft('ref', e.target.value),
+      setDraftTitle:e => this.setDraft('title', e.target.value),
+      setDraftScope:e => this.setDraft('scope', e.target.value),
+      setDraftValue:e => this.setDraft('value', e.target.value),
+      setDraftFee:e => this.setDraft('fee', e.target.value),
+      setDraftOpen:e => this.setDraft('open', e.target.value),
+      setDraftClose:e => this.setDraft('close', e.target.value),
+      cStep1:st.cStep === 1, cStep2:st.cStep === 2, cStep3:st.cStep === 3, cStep4:st.cStep === 4, cStep5:st.cStep === 5,
+      createSteps:['Tender details','Pre-qualification','Evaluation method','Documents','Review'].map((l, i) => ({
+        no:i + 1, label:l,
+        bg:st.cStep === i + 1 ? '#EEF4F9' : 'transparent',
+        numBg:st.cStep >= i + 1 ? BLUE : '#EEF4F9', numColor:st.cStep >= i + 1 ? '#fff' : '#8C9CAB',
+        color:st.cStep === i + 1 ? NAVY : GREY,
+        go:() => this.setState({ cStep:i + 1 })
+      })),
+      createNext:() => { if (st.cStep === 5) this.go('approval'); else this.setState({ cStep:st.cStep + 1 }); },
+      createBack:() => { if (st.cStep === 1) this.go('tenders'); else this.setState({ cStep:st.cStep - 1 }); },
+      createNextLabel:st.cStep === 5 ? 'Send for approval' : 'Continue',
+
+      criteriaRows:criteriaDefs.map(c => {
+        const on = st.criteria[c.key];
+        return Object.assign({
+          label:c.label, meta:c.meta,
+          border:on ? '#CDE3F3' : '#E1E9F0', bg:on ? '#F7FBFE' : '#fff',
+          hasValue:!!c.values && on,
+          values:(c.values || []).map(v => Object.assign({ label:v, pick:() => this.setState({ [c.valueKey]:v }) }, this.chip(st[c.valueKey] === v))),
+          toggle:() => this.setState(s => ({ criteria:Object.assign({}, s.criteria, { [c.key]:!on }) }))
+        }, this.sw(on));
+      }),
+
+      methodOptions:[
+        { key:'80/20', label:'80/20 price and preference', meta:'Contracts up to R50 million. 80 points for price, 20 for B-BBEE preference.' },
+        { key:'90/10', label:'90/10 price and preference', meta:'Contracts above R50 million. 90 points for price, 10 for preference.' }
+      ].map(m => ({ label:m.label, meta:m.meta, border:st.method === m.key ? BLUE : '#E1E9F0', pick:() => this.setState({ method:m.key }) })),
+      funcRows:FUNC_CRITERIA.map(f => ({ label:f.label, weight:f.weight, pct:f.weight + '%' })),
+      weightTotal:FUNC_CRITERIA.reduce((a, b) => a + b.weight, 0),
+      weightColor:GREEN,
+
+      docRows:Object.keys(st.docs).map(k => {
+        const on = st.docs[k];
+        return {
+          label:k, border:on ? '#CDE3F3' : '#E1E9F0',
+          boxBg:on ? BLUE : '#fff', boxBorder:on ? BLUE : '#B9CBDA',
+          toggle:() => this.setState(s => ({ docs:Object.assign({}, s.docs, { [k]:!on }) }))
+        };
+      }),
+      reviewRows:[
+        { k:'Reference', v:st.draft.ref }, { k:'Procurement type', v:'Construction works' },
+        { k:'Estimated value', v:st.draft.value }, { k:'Tender fee', v:st.draft.fee },
+        { k:'Advertise from', v:st.draft.open }, { k:'Closing', v:st.draft.close },
+        { k:'Evaluation method', v:st.method + ' · functionality min ' + st.draft.funcMin + '%' },
+        { k:'Pre-qualification gates', v:Object.keys(st.criteria).filter(k => st.criteria[k]).length + ' active' },
+        { k:'Required documents', v:Object.keys(st.docs).filter(k => st.docs[k]).length + ' items' },
+        { k:'Approver', v:'Dr N. Zulu, Accounting Officer' }
+      ],
+
+      approvalFacts:[
+        { k:'ESTIMATED VALUE', v:st.draft.value }, { k:'EVALUATION', v:st.method },
+        { k:'CLOSING', v:st.draft.close }, { k:'GATES', v:Object.keys(st.criteria).filter(k => st.criteria[k]).length + ' criteria' }
+      ],
+      approvalChecks:[
+        { label:'Budget confirmed and item coded', meta:'CFO sign-off attached · vote 4021/2026', ok:true },
+        { label:'Specification signed off by the end-user department', meta:'Infrastructure Development · 12 Sep 2026', ok:true },
+        { label:'Evaluation method matches the threshold', meta:'80/20 is correct for a contract under R50 million', ok:true },
+        { label:'BEC and BAC appointed with no overlap', meta:'5 and 5 members, no person on both committees', ok:true },
+        { label:'Advertising period is 21 days or longer', meta:'34 days from 20 Sep to 24 Oct', ok:true }
+      ].map(c => ({ label:c.label, meta:c.meta, bg:'#F4FAF7', dot:GREEN, path:'M5 13l4 4L19 7' })),
+      approvalHistory:[
+        { what:'Submitted for approval', who:'Sipho Mkhize, SCM Officer', when:'16 Sep 2026, 08:42' },
+        { what:'Specification attached', who:'Infrastructure Development', when:'12 Sep 2026, 15:10' },
+        { what:'Draft created', who:'Sipho Mkhize, SCM Officer', when:'09 Sep 2026, 10:04' }
+      ],
+      approved:st.approved,
+      approveTender:() => this.setState({ approved:true }),
+      isAO:st.role === 'ao', notAO:st.role !== 'ao',
+      notAOnote:'Only the Accounting Officer can approve a tender for publication. You are signed in as ' + role.label + ', so this tender is read-only for you. The decision sits with Dr N. Zulu.',
+      isBAC:st.role === 'bac', notBAC:st.role !== 'bac',
+      notBACnote:'Only appointed BAC members may vote on a recommendation. You are signed in as ' + role.label + ', so the vote is read-only for you.',
+
+      publishSettings:[
+        { key:'app', label:'Publish in the eProcure bidder app', meta:'Appears in the feed and in matching For You feeds' },
+        { key:'register', label:'Publish on the RBIDZ public tender register', meta:'Required for transparency reporting' },
+        { key:'email', label:'Notify registered suppliers in matching industries', meta:'47 suppliers match construction and civils' },
+        { key:'gazette', label:'Submit to the Government Tender Bulletin', meta:'Optional for a Schedule 3D entity' }
+      ].map(p => Object.assign({ label:p.label, meta:p.meta, toggle:() => this.setState(s => ({ publish:Object.assign({}, s.publish, { [p.key]:!s.publish[p.key] }) })) }, this.sw(st.publish[p.key]))),
+      published:st.published,
+      publishTender:() => this.setState({ published:true }),
+
+      appStats:[
+        { label:'BIDS SUBMITTED', value:'5', note:'All fees verified' },
+        { label:'BLOCKED AT THE GATE', value:'2', note:'Failed pre-qualification' },
+        { label:'FEES COLLECTED', value:'R2 500', note:'5 × R500.00' },
+        { label:'TIME TO CLOSING', value:'Closed', note:'06 Oct 2026, 12:00' }
+      ],
+      bidRows:BIDDERS.map(b => ({
+        name:b.name, size:b.size, csd:b.csd, bbbee:b.bbbee, elig:b.elig, fee:b.fee, when:b.when,
+        eligBg:'#E6F4EF', eligColor:'#0B5F45', feeColor:GREEN
+      })),
+
+      becBidder:{ name:becBidder.name },
+      becIndexLabel:(st.becIdx + 1) + ' of ' + BIDDERS.length,
+      becCriteria:FUNC_CRITERIA.map((c, i) => ({
+        label:c.label, meta:c.meta, weight:c.weight,
+        scores:[1, 2, 3, 4, 5].map(n => Object.assign({ label:n, pick:() => this.setState(s => ({ becScores:Object.assign({}, s.becScores, { [i]:n }) })) }, this.chip(st.becScores[i] === n)))
+      })),
+      becScore:becScore,
+      becPct:becScore + '%',
+      becBarColor:becScore >= 65 ? '#5EB07A' : '#E3B341',
+      becVerdict:becScore === 0 ? 'Score each criterion to calculate the weighted total.' : becScore >= 65 ? 'Meets the 65% minimum. This bid proceeds to price and preference.' : 'Below the 65% minimum. If the committee average lands here, the bid is disqualified before price is considered.',
+      becVerdictColor:becScore === 0 ? 'rgba(255,255,255,.5)' : becScore >= 65 ? '#9FE0C0' : '#F0CE8A',
+      becNextLabel:st.becIdx < BIDDERS.length - 1 ? 'Submit and score the next bidder' : 'Submit and finish scoring',
+      becNext:() => {
+        if (st.becIdx < BIDDERS.length - 1) this.setState({ becIdx:st.becIdx + 1, becScores:{} });
+        else this.go('bac');
+      },
+      becMembers:BEC_MEMBERS.map(m => ({
+        name:m.name, initials:m.initials, role:m.role,
+        status:m.done ? 'Submitted' : 'Outstanding',
+        bg:m.done ? '#E6F4EF' : '#FDF2DC', color:m.done ? '#0B5F45' : '#7A5314'
+      })),
+
+      bacRows:BIDDERS.map((b, i) => ({
+        name:b.name, bbbee:b.bbbee, size:b.size, price:b.price,
+        func:b.func + '%', funcColor:b.func >= 65 ? '#0B5F45' : '#B4791C',
+        priceScore:b.priceScore, prefScore:b.prefScore, total:b.total,
+        totalColor:i === 0 ? '#0B5F45' : b.func >= 65 ? NAVY : '#8C9CAB',
+        rowBg:i === 0 ? '#F4FAF7' : '#fff'
+      })),
+      bacVotes:BAC_MEMBERS.map(m => {
+        const you = m.vote === 'you';
+        const st2 = { 'In favour':{ bg:'#E6F4EF', color:'#0B5F45' }, 'Against':{ bg:'#FBEDEB', color:'#8E3A32' }, 'Abstained':{ bg:'#F2F6FA', color:GREY } };
+        const canVote = you && st.role === 'bac';
+        return Object.assign({
+          name:m.name + (you && st.role === 'bac' ? ' (you)' : ''), initials:m.initials, role:m.role,
+          isYou:canVote, readOnly:you && st.role !== 'bac', isOther:!you,
+          status:m.vote, bg:(st2[m.vote] || {}).bg, color:(st2[m.vote] || {}).color,
+          voteFor:() => this.setState({ myVote:'for' }),
+          voteAgainst:() => this.setState({ myVote:'against' }),
+          voteAbstain:() => this.setState({ myVote:'abstain' })
+        }, {
+          forBorder:st.myVote === 'for' ? GREEN : '#D6E2EC', forBg:st.myVote === 'for' ? GREEN : '#fff', forColor:st.myVote === 'for' ? '#fff' : GREY,
+          againstBorder:st.myVote === 'against' ? '#B3453B' : '#D6E2EC', againstBg:st.myVote === 'against' ? '#B3453B' : '#fff', againstColor:st.myVote === 'against' ? '#fff' : GREY,
+          abstainBorder:st.myVote === 'abstain' ? NAVY : '#D6E2EC', abstainBg:st.myVote === 'abstain' ? NAVY : '#fff', abstainColor:st.myVote === 'abstain' ? '#fff' : GREY
+        });
+      }),
+      recFacts:[
+        { k:'Bid price', v:'R8 240 000' }, { k:'Functionality', v:'78% average' },
+        { k:'B-BBEE', v:'Level 2 · QSE' }, { k:'Total score', v:'92.4 / 100' }
+      ],
+      tally:[
+        { label:'In favour', n:votesFor, pct:(votesFor / 5 * 100) + '%', color:'#5EB07A' },
+        { label:'Against', n:votesAgainst, pct:(votesAgainst / 5 * 100) + '%', color:'#D8483F' },
+        { label:'Abstained', n:abstain, pct:(abstain / 5 * 100) + '%', color:'#B9CBDA' }
+      ],
+      voteIntro:st.role === 'bac' ? 'One vote per member, recorded against your name. A quorum of four is required.' : 'One vote per member, recorded against their name. A quorum of four is required.',
+      quorumNote:st.role !== 'bac' ? 'Four of five members have voted. The chair\u2019s vote is outstanding.' : voted ? 'All five members have voted. Quorum met and the recommendation carries.' : 'Four of five members have voted. Your vote is outstanding.',
+      awardBtnBg:voted && st.role === 'bac' ? BLUE : '#B9CBDA',
+
+      awardFacts:[
+        { k:'PREFERRED BIDDER', v:'Coastal Network Systems' },
+        { k:'BAC VOTE', v:'4 in favour, 1 abstention' },
+        { k:'TOTAL SCORE', v:'92.4 / 100' }
+      ],
+      awardChecks:[
+        { label:'Tax compliance re-verified today', meta:'SARS status valid to 31 March 2027' },
+        { label:'Not listed on the Register of Tender Defaulters', meta:'Checked against the National Treasury database' },
+        { label:'No unresolved declared interest', meta:'One BEC recusal recorded and minuted' },
+        { label:'Award within delegated authority', meta:'R8 240 000 is below the R50 million board threshold' }
+      ].map(c => ({ label:c.label, meta:c.meta, bg:'#F4FAF7', dot:GREEN })),
+      awarded:st.awarded, notAwarded:!st.awarded, canAward:!st.awarded && st.role === 'ao',
+      doAward:() => this.setState({ awarded:true }),
+      notifyList:BIDDERS.map((b, i) => ({
+        name:b.name, outcome:i === 0 ? 'Awarded' : 'Not awarded',
+        color:i === 0 ? '#0B5F45' : GREY, dot:i === 0 ? '#5EB07A' : '#B9CBDA'
+      })),
+
+      auditRows:AUDIT,
+      userRows:USERS.map(u => ({
+        name:u.name, email:u.email, initials:u.initials, role:u.role,
+        bec:u.bec, bac:u.bac,
+        becColor:u.bec === 'Blocked' ? '#B4791C' : u.bec === '—' ? '#8C9CAB' : NAVY,
+        bacColor:u.bac === 'Blocked' ? '#B4791C' : u.bac === '—' ? '#8C9CAB' : NAVY
+      })),
+
+      jumpList:jump.map(j => ({
+        no:j[0], label:j[1],
+        bg:screen === j[2] ? '#fff' : 'transparent',
+        border:screen === j[2] ? BLUE : '#D3DFE9',
+        color:screen === j[2] ? NAVY : GREY,
+        go:() => this.go(j[2], j[2] === 'create' ? { cStep:1 } : {})
+      }))
+    };
+  }
+
+  setDraft(k, v) { this.setState(s => ({ draft:Object.assign({}, s.draft, { [k]:v }) })); }
+}
+</script>
+
+
+</body></html>
