@@ -481,3 +481,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 \n# eProcure local ignores\nbin/\nobj/\n.vs/\n*.user\n# Uploaded files (should be excluded from git)\nsrc/EProcure.Web/App_Data/uploads/\n
+C O M M I T _ M S G . t x t  
+ 
