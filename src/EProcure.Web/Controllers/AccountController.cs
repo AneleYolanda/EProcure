@@ -89,6 +89,24 @@ public class AccountController : Controller
         return View(new RegisterViewModel());
     }
 
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult VerifyPhone()
+    {
+        return View(new EProcure.Web.ViewModels.Account.VerifyPhoneViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyPhone(EProcure.Web.ViewModels.Account.VerifyPhoneViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+        // For now, use SignInManager's token or a demo flow. This will be implemented further.
+        ModelState.AddModelError(string.Empty, "Verification flow not yet implemented.");
+        return View(model);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]

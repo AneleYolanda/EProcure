@@ -1,0 +1,22 @@
+@model EProcure.Web.ViewModels.Account.VerifyPhoneViewModel
+@{
+    ViewData["Title"] = "Verify phone";
+}
+<div class="ep-card">
+    <h2>Verify your phone</h2>
+    <p class="text-muted">Enter the 6-digit code we sent to your phone. In demo mode the code is shown above.</p>
+    @if (Model.DemoCode != null)
+    {
+        <div class="ep-card" style="background: #FFF3BF; border:1px solid #FEE191;">
+            <strong>DEMO MODE:</strong> your code is @Model.DemoCode
+        </div>
+    }
+    <form method="post" asp-action="VerifyPhone">
+        <div class="mb-3">
+            <label asp-for="Code" class="form-label"></label>
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger"></span>
+        </div>
+        <button class="ep-btn ep-btn-primary" type="submit">Verify</button>
+    </form>
+</div>
