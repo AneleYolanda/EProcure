@@ -13,6 +13,10 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Required]
+    [Display(Name = "Cellphone number")]
+    public string Cellphone { get; set; } = string.Empty;
+
+    [Required]
     [DataType(DataType.Password)]
     [MinLength(10, ErrorMessage = "Password must be at least 10 characters long")]
     public string Password { get; set; } = string.Empty;

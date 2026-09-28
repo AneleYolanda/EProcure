@@ -20,19 +20,22 @@ public class AccountController : Controller
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly EProcureDbContext _db;
     private readonly IAuditService _audit;
+    private readonly EProcure.Web.Services.External.IOtpSender _otpSender;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         RoleManager<ApplicationRole> roleManager,
         EProcureDbContext db,
-        IAuditService audit)
+        IAuditService audit,
+        EProcure.Web.Services.External.IOtpSender otpSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _db = db;
         _audit = audit;
+        _otpSender = otpSender;
     }
 
     [HttpGet]
@@ -120,6 +123,7 @@ public class AccountController : Controller
         {
             UserId = user.Id,
             PopiaConsentAtUtc = model.PopiaConsent ? DateTime.UtcNow : null,
+            ContactNumber = model.Cellphone,
             CreatedAtUtc = DateTime.UtcNow
         };
         _db.SupplierProfiles.Add(profile);
