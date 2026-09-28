@@ -16,7 +16,8 @@
   --ep-accent: #1CA3EC;
   --ep-accent-hover: #1587C7;
   --ep-accent-soft: #7FD0F7;
-  /* Same hue, dark enough for WHITE text (WCAG AA 4.5:1): filled buttons and selected chips (DECISIONS D42). */
+  /* Same hue, dark enough for 4.5:1 against white (WCAG AA): white text on it (buttons, selected chips) and
+     it as text on white (links, text buttons). Decorative uses keep --ep-accent. DECISIONS D42. */
   --ep-accent-strong: #157CB3;
   --ep-accent-strong-hover: #12699A;
   --ep-ink: #1B2A4A;
@@ -67,8 +68,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; font-family: var(--ep-font); color: var(--ep-ink); line-height: 1.4; -webkit-font-smoothing: antialiased; }
 input, button, select, textarea { font-family: inherit; }
-a { color: var(--ep-accent); }
-a:hover { color: var(--ep-accent-hover); }
+a { color: var(--ep-accent-strong); }
+a:hover { color: var(--ep-accent-strong-hover); }
 img, svg { display: block; }
 button { cursor: pointer; }
 :where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--ep-accent); outline-offset: 2px; }
@@ -129,9 +130,9 @@ select.ep-input { padding: 0 10px; }
 .ep-btn--tall { height: 52px; }
 .ep-btn--secondary { height: 48px; border: 1px solid var(--ep-input-border); background: #fff; color: var(--ep-ink); font-size: 14px; }
 .ep-btn--secondary:hover { color: var(--ep-ink); background: var(--ep-page); }
-.ep-btn--outline-accent { height: 46px; border: 1px solid var(--ep-accent); background: #fff; color: var(--ep-accent); font-size: 14px; }
+.ep-btn--outline-accent { height: 46px; border: 1px solid var(--ep-accent-strong); background: #fff; color: var(--ep-accent-strong); font-size: 14px; }
 .ep-btn--danger-outline { height: 48px; border: 1px solid var(--ep-danger-border); background: #fff; color: var(--ep-danger-text); font-size: 14px; }
-.ep-textbtn { background: none; border: 0; padding: 0; font-size: 13px; font-weight: 600; color: var(--ep-accent); text-decoration: none; }
+.ep-textbtn { background: none; border: 0; padding: 0; font-size: 13px; font-weight: 600; color: var(--ep-accent-strong); text-decoration: none; }
 .ep-textbtn--muted { font-weight: 400; color: var(--ep-muted); }
 
 /* Card-style checkbox (POPIA consent) */
@@ -189,7 +190,7 @@ select.ep-input { padding: 0 10px; }
 .ep-tender-card__chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .ep-tender-card__foot { display: flex; gap: 16px; padding-top: 10px; border-top: 1px solid var(--ep-line-soft); }
 .ep-tender-card__value { margin-top: 2px; font-size: 12.5px; font-weight: 600; white-space: nowrap; color: var(--ep-ink); }
-.ep-tender-card__days { margin-left: auto; align-self: flex-end; font-size: 11.5px; font-weight: 600; white-space: nowrap; color: var(--ep-accent); }
+.ep-tender-card__days { margin-left: auto; align-self: flex-end; font-size: 11.5px; font-weight: 600; white-space: nowrap; color: var(--ep-accent-strong); }
 .ep-empty { padding: 40px 10px; text-align: center; font-size: 13px; color: var(--ep-muted); }
 
 /* ---------- 7. Bottom tab bar ---------- */
@@ -197,7 +198,7 @@ select.ep-input { padding: 0 10px; }
 .ep-tabbar__item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 0; color: var(--ep-subtle); text-decoration: none; }
 .ep-tabbar__item span { font-size: 10px; font-weight: 600; letter-spacing: .01em; }
 .ep-tabbar__item:hover { color: var(--ep-ink); }
-.ep-tabbar__item--active, .ep-tabbar__item--active:hover { color: var(--ep-accent); }
+.ep-tabbar__item--active, .ep-tabbar__item--active:hover { color: var(--ep-accent-strong); }
 .ep-tabbar__item--soon { opacity: .45; cursor: default; }
 .ep-tabbar__item--soon:hover { color: var(--ep-subtle); }
 
@@ -296,7 +297,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
 .ep-wizard-head { padding: 14px 18px 12px; background: #fff; border-bottom: 1px solid var(--ep-line); }
 .ep-wizard-head .ep-topbar { padding: 0; border: 0; }
 .ep-q { background: #fff; border: 1px solid var(--ep-line); border-radius: 12px; padding: 15px; margin: 0; min-inline-size: 0; }
-.ep-q__form { font-size: 10px; font-weight: 600; letter-spacing: .07em; color: var(--ep-accent); }
+.ep-q__form { font-size: 10px; font-weight: 600; letter-spacing: .07em; color: var(--ep-accent-strong); }
 .ep-q__label { margin-top: 6px; font-size: 13px; font-weight: 600; line-height: 1.45; text-wrap: pretty; padding: 0; }
 .ep-q__label:first-child { margin-top: 0; }
 .ep-q__note { margin-top: 4px; font-size: 11.5px; color: var(--ep-muted); }

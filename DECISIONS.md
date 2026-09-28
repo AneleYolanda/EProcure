@@ -589,5 +589,7 @@ progress bars, dots, focus rings, borders) keep the original bright colour.
 **Why:** Chosen by the product owner after D25 was flagged. Public-sector sites must be usable by people with low
 vision; a darker button keeps the design's look while making every button label readable.
 
-**Not changed:** blue text links on white (e.g. "Register" on the sign-in page) still use the bright blue, which is
-below 4.5:1 for small text. The same token can be applied to them later if wanted.
+**Also text (follow-up, same day):** links, text buttons (e.g. "Register"), the outline button, the "closes in" label on
+tender cards, the active phone tab and the small SBD form labels use the same darker shade as TEXT on white (contrast is
+symmetric, so one token serves both). Kept bright on purpose: the "e" of the eProcure wordmark (logos are exempt from
+WCAG contrast) and decorative icons that carry no text.
