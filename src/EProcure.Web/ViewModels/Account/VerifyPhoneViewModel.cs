@@ -1,8 +1,10 @@
-namespace EProcure.Web.ViewModels.Account
+using System.ComponentModel.DataAnnotations;
+
+namespace EProcure.Web.ViewModels.Account;
+
+public class VerifyPhoneViewModel
 {
-    public class VerifyPhoneViewModel
-    {
-        public string Code { get; set; } = string.Empty;
-        public string? DemoCode { get; set; }
-    }
+    [Required(ErrorMessage = "Please enter the verification code")]
+    [Display(Name = "Verification code")]
+    public string Code { get; set; } = string.Empty;
 }

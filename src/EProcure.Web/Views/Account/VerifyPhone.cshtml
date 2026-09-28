@@ -1,22 +1,37 @@
 @model EProcure.Web.ViewModels.Account.VerifyPhoneViewModel
 @{
-    ViewData["Title"] = "Verify phone";
+    ViewData["Title"] = "Verify Phone Number";
 }
-<div class="ep-card">
-    <h2>Verify your phone</h2>
-    <p class="text-muted">Enter the 6-digit code we sent to your phone. In demo mode the code is shown above.</p>
-    @if (Model.DemoCode != null)
-    {
-        <div class="ep-card" style="background: #FFF3BF; border:1px solid #FEE191;">
-            <strong>DEMO MODE:</strong> your code is @Model.DemoCode
-        </div>
-    }
-    <form method="post" asp-action="VerifyPhone">
-        <div class="mb-3">
-            <label asp-for="Code" class="form-label"></label>
-            <input asp-for="Code" class="form-control" />
-            <span asp-validation-for="Code" class="text-danger"></span>
-        </div>
-        <button class="ep-btn ep-btn-primary" type="submit">Verify</button>
+
+<h1>Verify Your Phone Number</h1>
+
+@if (TempData["DemoOtp"] is string demoCode)
+{
+    <div style="background-color: #FDF8EF; border: 1px solid #F0DFC0; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <strong style="color: #B4791C;">DEMO MODE:</strong> Your code is <code style="background-color: #FDF2DC; padding: 2px 6px; border-radius: 4px;">@demoCode</code>
+    </div>
+}
+
+<p>We've sent a verification code to your phone number. Enter it below to complete registration.</p>
+
+<form asp-action="VerifyPhone" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Code" class="form-label"></label>
+        <input asp-for="Code" class="form-control" placeholder="Enter 6-digit code" />
+        <span asp-validation-for="Code" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Verify Code</button>
+</form>
+
+<p style="margin-top: 16px;">
+    <form asp-action="ResendCode" method="post" style="display: inline;">
+        Didn't receive a code? <button type="submit" class="btn btn-link" style="padding: 0; margin: 0;">Resend code</button>
     </form>
-</div>
+</p>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

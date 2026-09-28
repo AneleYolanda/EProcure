@@ -1,19 +1,35 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace EProcure.Web.Services.External
+namespace EProcure.Web.Services.External;
+
+/// <summary>
+/// Mock OTP sender for development/demo mode.
+/// Logs the code to ILogger and stores it in TempData["DemoOtp"] so it can be displayed on the VerifyPhone page.
+/// </summary>
+public class MockOtpSender : IOtpSender
 {
-    public class MockOtpSender : IOtpSender
+    private readonly ILogger<MockOtpSender> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public MockOtpSender(ILogger<MockOtpSender> logger, IHttpContextAccessor httpContextAccessor)
     {
-        private readonly ILogger<MockOtpSender> _logger;
-        public MockOtpSender(ILogger<MockOtpSender> logger)
+        _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public Task SendAsync(string phoneNumber, string code)
+    {
+        // Log the code so developers can see it during testing.
+        _logger.LogInformation("DEMO MODE: OTP code '{Code}' generated for phone {Phone}", code, phoneNumber);
+
+        // Store in TempData so VerifyPhone can display it.
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext?.Session != null)
         {
-            _logger = logger;
+            httpContext.Session.SetString("DemoOtp", code);
         }
 
-        public System.Threading.Tasks.Task SendOtpAsync(string phoneNumber, string code)
-        {
-            _logger.LogInformation("DEMO MODE: OTP for {phone} is {code}", phoneNumber, code);
-            return System.Threading.Tasks.Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

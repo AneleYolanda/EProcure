@@ -1,6 +1,7 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Services;
+using EProcure.Web.Services.External;
 using EProcure.Web.Tenancy;
 using EProcure.Web.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ public class AccountController : Controller
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly EProcureDbContext _db;
     private readonly IAuditService _audit;
-    private readonly EProcure.Web.Services.External.IOtpSender _otpSender;
+    private readonly IOtpSender _otpSender;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
@@ -28,7 +29,7 @@ public class AccountController : Controller
         RoleManager<ApplicationRole> roleManager,
         EProcureDbContext db,
         IAuditService audit,
-        EProcure.Web.Services.External.IOtpSender otpSender)
+        IOtpSender otpSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -65,11 +66,11 @@ public class AccountController : Controller
             {
                 if (await _userManager.IsInRoleAsync(user, AppRoles.Supplier))
                 {
-                    return Redirect(returnUrl ?? "/Supplier/Dashboard");
+                    return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
                 }
                 if (await _userManager.IsInRoleAsync(user, AppRoles.OrgAdmin) || await _userManager.IsInRoleAsync(user, AppRoles.Evaluator))
                 {
-                    return Redirect(returnUrl ?? "/Admin/Dashboard");
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
             }
 
@@ -89,24 +90,6 @@ public class AccountController : Controller
         return View(new RegisterViewModel());
     }
 
-    [HttpGet]
-    [AllowAnonymous]
-    public IActionResult VerifyPhone()
-    {
-        return View(new EProcure.Web.ViewModels.Account.VerifyPhoneViewModel());
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    [AllowAnonymous]
-    public async Task<IActionResult> VerifyPhone(EProcure.Web.ViewModels.Account.VerifyPhoneViewModel model)
-    {
-        if (!ModelState.IsValid) return View(model);
-        // For now, use SignInManager's token or a demo flow. This will be implemented further.
-        ModelState.AddModelError(string.Empty, "Verification flow not yet implemented.");
-        return View(model);
-    }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
@@ -114,11 +97,24 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
+        // Validate POPIA consent was ticked.
+        if (!model.PopiaConsent)
+        {
+            ModelState.AddModelError(nameof(model.PopiaConsent), "You must accept the POPIA processing notice to register.");
+            return View(model);
+        }
+
+        // Normalize SA phone number to +27 format.
+        var normalizedPhone = model.PhoneNumber.StartsWith("0")
+            ? "+27" + model.PhoneNumber.Substring(1)
+            : model.PhoneNumber;
+
         var user = new ApplicationUser
         {
             UserName = model.Email,
             Email = model.Email,
             FullName = model.FullName,
+            PhoneNumber = normalizedPhone,
             CreatedAtUtc = DateTime.UtcNow
         };
 
@@ -140,19 +136,24 @@ public class AccountController : Controller
         var profile = new SupplierProfile
         {
             UserId = user.Id,
-            PopiaConsentAtUtc = model.PopiaConsent ? DateTime.UtcNow : null,
-            ContactNumber = model.Cellphone,
+            ContactNumber = normalizedPhone,
+            PopiaConsentAtUtc = DateTime.UtcNow,
             CreatedAtUtc = DateTime.UtcNow
         };
         _db.SupplierProfiles.Add(profile);
         await _db.SaveChangesAsync();
+
+        // Generate OTP token and send it.
+        var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, normalizedPhone);
+        await _otpSender.SendAsync(normalizedPhone, code);
 
         await _audit.LogAsync("Account.Registered", "ApplicationUser", user.Id, null);
 
         // Sign in the new user.
         await _signInManager.SignInAsync(user, isPersistent: false);
 
-        return RedirectToAction("Dashboard", "Supplier");
+        // Redirect to phone verification.
+        return RedirectToAction(nameof(VerifyPhone));
     }
 
     [HttpPost]
@@ -167,6 +168,62 @@ public class AccountController : Controller
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    [HttpGet]
+    [Authorize]
+    public IActionResult VerifyPhone()
+    {
+        return View(new VerifyPhoneViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> VerifyPhone(VerifyPhoneViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        // A supplier always has a phone number from registration; without one there is nothing to verify.
+        if (string.IsNullOrEmpty(user.PhoneNumber))
+        {
+            ModelState.AddModelError(string.Empty, "No phone number on file.");
+            return View(model);
+        }
+
+        var result = await _userManager.ChangePhoneNumberAsync(user, user.PhoneNumber, model.Code);
+        if (result.Succeeded)
+        {
+            await _audit.LogAsync("Account.PhoneVerified", "ApplicationUser", user.Id, null);
+            await _signInManager.RefreshSignInAsync(user);
+            return RedirectToAction("Index", "Dashboard", new { area = "Supplier" });
+        }
+
+        ModelState.AddModelError(string.Empty, "That code is incorrect or has expired.");
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> ResendCode()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        if (string.IsNullOrEmpty(user.PhoneNumber))
+        {
+            ModelState.AddModelError(string.Empty, "No phone number on file.");
+            return RedirectToAction(nameof(VerifyPhone));
+        }
+
+        var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, user.PhoneNumber);
+        await _otpSender.SendAsync(user.PhoneNumber, code);
+
+        return RedirectToAction(nameof(VerifyPhone));
     }
 
     private bool IsLocalReturnUrl(string? returnUrl)

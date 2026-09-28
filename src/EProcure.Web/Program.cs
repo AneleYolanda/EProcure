@@ -1,7 +1,9 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Infrastructure;
+using EProcure.Web.Infrastructure.Filters;
 using EProcure.Web.Services;
+using EProcure.Web.Services.External;
 using EProcure.Web.Tenancy;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -40,8 +42,10 @@ builder.Services
 // Add our custom claims principal factory so the signed-in user's ClaimsPrincipal
 // includes the tenant claim "eprocure:org_id" when the user has an OrganisationId.
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, OrganisationClaimsPrincipalFactory>();
-builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<ICurrentOrganisation, CurrentOrganisation>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IOtpSender, MockOtpSender>();
+builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
 
 // Configure the authentication cookie per product requirements:

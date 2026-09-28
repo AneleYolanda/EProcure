@@ -13,10 +13,6 @@ public class RegisterViewModel
     public string Email { get; set; } = string.Empty;
 
     [Required]
-    [Display(Name = "Cellphone number")]
-    public string Cellphone { get; set; } = string.Empty;
-
-    [Required]
     [DataType(DataType.Password)]
     [MinLength(10, ErrorMessage = "Password must be at least 10 characters long")]
     public string Password { get; set; } = string.Empty;
@@ -30,4 +26,9 @@ public class RegisterViewModel
     [Required(ErrorMessage = "You must accept the POPIA processing notice to register.")]
     [Display(Name = "I agree to the POPIA processing notice")]
     public bool PopiaConsent { get; set; }
+
+    [Required(ErrorMessage = "Phone number is required for verification")]
+    [Display(Name = "South African cellphone number")]
+    [RegularExpression(@"^(0[0-9]{9}|\+27[0-9]{9})$", ErrorMessage = "Enter a valid SA cellphone (0XXXXXXXXX or +27XXXXXXXXX)")]
+    public string PhoneNumber { get; set; } = string.Empty;
 }

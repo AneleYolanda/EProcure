@@ -1,5 +1,6 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
+using EProcure.Web.Infrastructure.Filters;
 using EProcure.Web.ViewModels.Supplier;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,6 +11,7 @@ namespace EProcure.Web.Areas.Supplier;
 
 [Area("Supplier")]
 [Authorize(Policy = "SupplierOnly")]
+[ServiceFilter(typeof(EnsurePhoneVerifiedFilter))]
 public class DashboardController : Controller
 {
     private readonly UserManager<ApplicationUser> _userManager;
