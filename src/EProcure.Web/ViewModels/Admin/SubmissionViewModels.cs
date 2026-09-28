@@ -5,7 +5,8 @@ namespace EProcure.Web.ViewModels.Admin;
 
 /// <summary>A row in the organisation's list of received applications.</summary>
 public record ReceivedApplicationRow(int Id, string? ReferenceNumber, string CompanyName, BbbeeLevel DeclaredLevel,
-    string TenderReference, string TenderTitle, SubmissionStatus Status, DateTime? SubmittedAtUtc, int FlagCount, int DocumentCount);
+    string TenderReference, string TenderTitle, SubmissionStatus Status, DateTime? SubmittedAtUtc, int FlagCount, int DocumentCount,
+    DateTime? SealedUntilUtc = null);
 
 public class ReceivedApplicationsViewModel
 {
@@ -37,21 +38,13 @@ public class ReceivedApplicationViewModel
     public IReadOnlyList<DocumentRow> Documents { get; set; } = Array.Empty<DocumentRow>();
     public IReadOnlyList<(string What, string Who, DateTime WhenUtc)> Timeline { get; set; } = Array.Empty<(string, string, DateTime)>();
 
-    public bool CanChangeStatus { get; set; }
-    public IReadOnlyList<SubmissionStatus> AllowedNext { get; set; } = Array.Empty<SubmissionStatus>();
+    /// <summary>True until the tender's closing date: only the fact that a bid arrived is shown.</summary>
+    public bool IsSealed { get; set; }
+    public DateTime ClosingDateUtc { get; set; }
+    public EProcure.Web.Services.EvaluationStage Stage { get; set; }
+    public string EvaluationText { get; set; } = string.Empty;
 
     public record DocumentRow(int Id, string Requirement, string FileName, long SizeBytes, string Sha256Short, DateTime UploadedAtUtc);
-}
-
-/// <summary>Status change form (SCM Officers only).</summary>
-public class ChangeStatusForm
-{
-    [Required]
-    public SubmissionStatus? NewStatus { get; set; }
-
-    [Required(ErrorMessage = "Give a note. The supplier sees it on their application.")]
-    [StringLength(1000, MinimumLength = 5, ErrorMessage = "The note must be between 5 and 1000 characters.")]
-    public string Note { get; set; } = string.Empty;
 }
 
 public record AuditRow(DateTime OccurredAtUtc, string Action, string EntityType, string EntityId, string Who, string? Details, string? IpAddress);

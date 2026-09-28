@@ -88,6 +88,38 @@ public class TenderConfiguration : IEntityTypeConfiguration<Tender>
         b.HasIndex(t => new { t.OrganisationId, t.ReferenceNumber }).IsUnique();
         // Speeds up the supplier marketplace (open tenders ordered by closing date).
         b.HasIndex(t => new { t.Status, t.ClosingDateUtc });
+
+        // Evaluation hand-over to the BAC.
+        b.Property(t => t.RecommendationReason).HasMaxLength(2000);
+        b.Property(t => t.BacReturnNote).HasMaxLength(2000);
+        b.HasOne(t => t.EvaluationSubmittedByUser)
+            .WithMany()
+            .HasForeignKey(t => t.EvaluationSubmittedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class BidEvaluationConfiguration : IEntityTypeConfiguration<BidEvaluation>
+{
+    public void Configure(EntityTypeBuilder<BidEvaluation> b)
+    {
+        // One evaluation per bid.
+        b.HasOne(e => e.Submission)
+            .WithOne(s => s.Evaluation)
+            .HasForeignKey<BidEvaluation>(e => e.SubmissionId)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.HasIndex(e => e.SubmissionId).IsUnique();
+
+        b.HasOne(e => e.EvaluatedByUser)
+            .WithMany()
+            .HasForeignKey(e => e.EvaluatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.Property(e => e.NonResponsiveReason).HasMaxLength(1000);
+        b.Property(e => e.Notes).HasMaxLength(2000);
+        b.Property(e => e.PricePoints).HasPrecision(6, 2);
+        b.Property(e => e.PreferencePoints).HasPrecision(6, 2);
+        b.Property(e => e.TotalPoints).HasPrecision(6, 2);
     }
 }
 

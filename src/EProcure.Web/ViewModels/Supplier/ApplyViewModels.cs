@@ -30,6 +30,11 @@ public class SupplierTenderViewModel
     /// <summary>The supplier's existing application for this tender, if any.</summary>
     public int? ApplicationId { get; set; }
     public SubmissionStatus? ApplicationStatus { get; set; }
+
+    /// <summary>The published award notice (NULL until the tender is awarded).</summary>
+    public AwardNotice? Award { get; set; }
+
+    public record AwardNotice(string CompanyName, decimal? Amount, DateTime DecisionDateUtc, decimal? TotalPoints, BbbeeLevel Level);
 }
 
 /// <summary>One step of the application wizard (design screen "sApply", steps 1 to 5).</summary>

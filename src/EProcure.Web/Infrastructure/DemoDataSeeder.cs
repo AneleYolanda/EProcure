@@ -79,7 +79,127 @@ public class DemoDataSeeder
 
         await EnsureEstimatedValuesAsync(db, cancellationToken);
 
+        var supplier3 = await EnsureUserAsync(userManager, "supplier3@demo.co.za", "Supplier Three", AppRoles.Supplier, null, password, "+27820000006");
+        await EnsureSupplierProfileAsync(db, supplier3, "Siyakha Business Solutions (Pty) Ltd", "2019/246810/07", "MAAA2468101", BbbeeLevel.Level2, EnterpriseSize.QSE, "Professional Services", cancellationToken);
+        await EnsureEvaluationDemoAsync(db, rbidz, rbidzAdmin, new[] { supplier1, supplier2, supplier3 }, cancellationToken);
+
         _logger.LogInformation("Development demo data is ready.");
+    }
+
+    /// <summary>
+    /// A tender that has already CLOSED with three submitted bids, so bid opening, BEC evaluation and the BAC
+    /// award can be demonstrated at once. Each bid's pricing schedule PDF states its price, which the BEC member
+    /// reads and captures (80/20): Umhlathi R1 380 000 (Level 1), Khanya R1 150 000 (Level 6, lowest price),
+    /// Siyakha R1 240 000 (Level 2). Siyakha ranks first once preference points are added.
+    /// </summary>
+    private async Task EnsureEvaluationDemoAsync(EProcureDbContext db, Organisation organisation, ApplicationUser createdBy,
+        ApplicationUser[] bidders, CancellationToken cancellationToken)
+    {
+        const string reference = "RBIDZ/2026/011";
+        if (await db.Tenders.AnyAsync(t => t.OrganisationId == organisation.Id && t.ReferenceNumber == reference, cancellationToken)) return;
+
+        var files = _services.GetRequiredService<Services.External.IFileStorage>();
+        var closing = DateTime.UtcNow.Date.AddDays(-3).AddHours(9); // 11:00 SAST three days ago
+        var requirementNames = new[] { "CSD registration summary", "B-BBEE certificate or sworn affidavit", "Pricing schedule" };
+        var tender = new Tender
+        {
+            OrganisationId = organisation.Id,
+            Title = "Printing and document management services (36 months)",
+            ReferenceNumber = reference,
+            Category = "Professional Services",
+            Description = "Demo tender that has already closed, for demonstrating bid opening, evaluation by the BEC and the BAC award. Managed printing, scanning and records digitisation for the RBIDZ offices over 36 months.",
+            ClosingDateUtc = closing,
+            TenderFee = 0m,
+            EstimatedValue = 1_400_000m,
+            PointSystem = PreferencePointSystem.EightyTwenty,
+            Status = TenderStatus.Published,
+            CreatedByUserId = createdBy.Id,
+            CreatedAtUtc = closing.AddDays(-30),
+            PublishedAtUtc = closing.AddDays(-30),
+            Requirements = requirementNames.Select((name, index) => new TenderRequirement { Name = name, IsMandatory = true, SortOrder = index + 1 }).ToList()
+        };
+        db.Tenders.Add(tender);
+        await db.SaveChangesAsync(cancellationToken);
+
+        var prices = new[] { "R1 380 000.00", "R1 150 000.00", "R1 240 000.00" };
+        for (var i = 0; i < bidders.Length; i++)
+        {
+            var bidder = bidders[i];
+            var company = await db.SupplierProfiles.Where(p => p.UserId == bidder.Id).Select(p => p.Company!).SingleAsync(cancellationToken);
+            var submittedAt = closing.AddDays(-2).AddHours(i * 3);
+            var submission = new Submission
+            {
+                TenderId = tender.Id,
+                CompanyId = company.Id,
+                SubmittedByUserId = bidder.Id,
+                Status = SubmissionStatus.Submitted,
+                IsCsdRegistered = true,
+                IsTaxCompliant = true,
+                DeclaredBbbeeLevel = company.BbbeeLevel,
+                HasDeclaredInterest = i == 1,
+                InterestDetails = i == 1 ? "A director's sister works in the RBIDZ finance department (not in supply chain management)." : null,
+                ConfirmsNotRestricted = true,
+                ConfirmsIndependentBid = true,
+                DeclaredAtUtc = submittedAt,
+                PaymentStatus = PaymentStatus.NotRequired,
+                CreatedAtUtc = submittedAt.AddHours(-1),
+                SubmittedAtUtc = submittedAt
+            };
+            submission.StatusHistory.Add(new SubmissionStatusHistory { ToStatus = SubmissionStatus.Draft, ChangedByUserId = bidder.Id, ChangedAtUtc = submittedAt.AddHours(-1), Note = "Application started" });
+            submission.StatusHistory.Add(new SubmissionStatusHistory { FromStatus = SubmissionStatus.Draft, ToStatus = SubmissionStatus.Submitted, ChangedByUserId = bidder.Id, ChangedAtUtc = submittedAt, Note = "Submitted (no tender fee)" });
+
+            foreach (var requirement in tender.Requirements)
+            {
+                var text = requirement.Name == "Pricing schedule"
+                    ? $"Pricing schedule - {company.Name} - Total bid price for 36 months, including VAT: {prices[i]}"
+                    : $"{requirement.Name} - {company.Name} - demo document";
+                var bytes = DemoPdf(text);
+                var key = await files.SaveAsync(new MemoryStream(bytes), ".pdf", cancellationToken);
+                submission.Documents.Add(new UploadedDocument
+                {
+                    TenderRequirementId = requirement.Id,
+                    OriginalFileName = $"{requirement.Name.Replace(' ', '-')}.pdf",
+                    StorageKey = key,
+                    ContentType = "application/pdf",
+                    SizeBytes = bytes.Length,
+                    Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant(),
+                    UploadedByUserId = bidder.Id,
+                    UploadedAtUtc = submittedAt.AddMinutes(-30)
+                });
+            }
+
+            db.Submissions.Add(submission);
+            await db.SaveChangesAsync(cancellationToken);
+            submission.ReferenceNumber = $"EP-{submittedAt:yyyy}-{submission.Id:D6}";
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    /// <summary>A minimal one-page PDF showing one line of text (for demo bid documents).</summary>
+    private static byte[] DemoPdf(string text)
+    {
+        var safe = text.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
+        var content = $"BT /F1 12 Tf 60 740 Td ({safe}) Tj 0 -24 Td (eProcure demonstration document. Not a real record.) Tj ET";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"
+        };
+        var pdf = new System.Text.StringBuilder("%PDF-1.4\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(pdf.Length);
+            pdf.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xref = pdf.Length;
+        pdf.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) pdf.Append($"{offset:D10} 00000 n \n");
+        pdf.Append($"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return System.Text.Encoding.ASCII.GetBytes(pdf.ToString());
     }
 
     private static async Task<ApplicationUser> EnsureUserAsync(

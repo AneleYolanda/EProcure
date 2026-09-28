@@ -1,0 +1,120 @@
+@* The BEC's evaluation of one bid: read the documents, record responsiveness and the price from the pricing
+   schedule. Points are calculated on the scoresheet, never typed in. *@
+@model EvaluateBidViewModel
+@{
+    ViewData["Title"] = $"Evaluate · {Model.ReferenceNumber}";
+    ViewData["Nav"] = "scoring";
+    var f = Model.Form;
+}
+<div class="ep-stack">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <div class="ep-detail">
+        <div class="ep-detail__main">
+            <section class="ep-section">
+                <div class="ep-detail__head">
+                    <div class="ep-grow">
+                        <div class="ep-detail__ref">@Model.ReferenceNumber · <a asp-action="Tender" asp-route-id="@Model.TenderId">@Model.TenderReference scoresheet</a></div>
+                        <h2 class="ep-detail__title">@Model.CompanyName</h2>
+                        <div class="ep-detail__meta">@Model.TenderTitle · declared @EligibilityRules.Describe(Model.DeclaredLevel) (@DisplayFormat.Points(EvaluationRules.PreferencePoints(Model.DeclaredLevel, Model.PointSystem)) preference points, @EvaluationRules.Describe(Model.PointSystem))</div>
+                    </div>
+                    <span class="@EvaluationService.BadgeCss(Model.Stage)">@EvaluationService.Label(Model.Stage)</span>
+                </div>
+                @if (Model.RedFlags.Count > 0)
+                {
+                    <div class="ep-warning-note ep-mt-18">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+                        <div><strong>Declarations to check:</strong> @string.Join(" · ", Model.RedFlags). The committee decides whether they make the bid non-responsive.</div>
+                    </div>
+                }
+            </section>
+
+            <section class="ep-section">
+                <h3 class="ep-section__title">Bid documents (@Model.Documents.Count)</h3>
+                <div class="ep-section__sub">Read the pricing schedule for the bid price. Every download is recorded in the audit trail. <a asp-controller="Submissions" asp-action="Details" asp-route-id="@Model.SubmissionId">Open the full application</a> for the SBD answers and company details.</div>
+                <ul class="ep-doclist">
+                    @foreach (var (id, requirement, fileName) in Model.Documents)
+                    {
+                        <li>
+                            <span class="ep-grow"><span class="ep-docrow__name">@requirement</span><span class="ep-docrow__meta">@fileName</span></span>
+                            <a class="ep-abtn" asp-controller="Submissions" asp-action="Document" asp-route-id="@id">Download PDF</a>
+                        </li>
+                    }
+                </ul>
+            </section>
+        </div>
+
+        <aside class="ep-detail__side">
+            @if (Model.CanEdit)
+            {
+                <section class="ep-side-card" aria-labelledby="evaluate-title">
+                    <h3 class="ep-side-card__title" id="evaluate-title">BEC evaluation</h3>
+                    <div class="ep-side-card__text">A bid is responsive if it meets the tender's administrative and mandatory requirements. You can change this until the BEC submits its recommendation.</div>
+                    <form asp-action="Bid" asp-route-id="@Model.SubmissionId" method="post" class="ep-mt-14">
+                        <div class="ep-radio-pills" role="radiogroup" aria-label="Responsive">
+                            <label class="ep-radio-pill"><input type="radio" asp-for="Form.IsResponsive" value="true" /><span>Responsive</span></label>
+                            <label class="ep-radio-pill"><input type="radio" asp-for="Form.IsResponsive" value="false" /><span>Not responsive</span></label>
+                        </div>
+                        <span asp-validation-for="Form.IsResponsive"></span>
+                        <label class="ep-afield ep-mt-14">BID PRICE INCL. VAT (FROM THE PRICING SCHEDULE)
+                            <input class="ep-ainput" asp-for="Form.BidPrice" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="e.g. 1240000.00" />
+                            <span class="ep-afield__hint">Needed for a responsive bid.</span>
+                            <span asp-validation-for="Form.BidPrice"></span>
+                        </label>
+                        <label class="ep-afield ep-mt-14">REASON IT IS NOT RESPONSIVE
+                            <textarea class="ep-ainput" asp-for="Form.NonResponsiveReason" rows="3" maxlength="1000"></textarea>
+                            <span class="ep-afield__hint">Needed for a non-responsive bid. The bidder is told this reason.</span>
+                            <span asp-validation-for="Form.NonResponsiveReason"></span>
+                        </label>
+                        <label class="ep-afield ep-mt-14">COMMITTEE NOTES (NOT SHOWN TO THE BIDDER)
+                            <textarea class="ep-ainput" asp-for="Form.Notes" rows="3" maxlength="2000"></textarea>
+                            <span asp-validation-for="Form.Notes"></span>
+                        </label>
+                        <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block">Save evaluation</button>
+                    </form>
+                    @if (Model.EvaluatedBy is string by)
+                    {
+                        <div class="ep-side-card__text ep-mt-14">Last saved by @by · @DisplayFormat.DateTime(Model.EvaluatedAtUtc!.Value)</div>
+                    }
+                </section>
+            }
+            else
+            {
+                <section class="ep-side-card">
+                    <h3 class="ep-side-card__title">BEC evaluation</h3>
+                    @if (f.IsResponsive is bool responsive)
+                    {
+                        <div class="ep-kvs">
+                            <div class="ep-kv"><span class="ep-kv__k">Responsive</span><span class="ep-kv__v">@(responsive ? "Yes" : "No")</span></div>
+                            @if (responsive)
+                            {
+                                <div class="ep-kv"><span class="ep-kv__k">Bid price</span><span class="ep-kv__v">@DisplayFormat.Money(f.BidPrice!.Value)</span></div>
+                            }
+                            else
+                            {
+                                <div class="ep-kv"><span class="ep-kv__k">Reason</span><span class="ep-kv__v">@f.NonResponsiveReason</span></div>
+                            }
+                            <div class="ep-kv"><span class="ep-kv__k">Evaluated by</span><span class="ep-kv__v">@Model.EvaluatedBy</span></div>
+                        </div>
+                        @if (f.Notes is string notes)
+                        {
+                            <div class="ep-side-card__text ep-mt-14"><strong>Notes:</strong> @notes</div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="ep-side-card__text">Not evaluated yet.</div>
+                    }
+                    <div class="ep-side-card__text ep-mt-14">
+                        @(Model.Stage switch
+                        {
+                            EvaluationStage.NotClosed => "Bids are sealed until the closing date.",
+                            EvaluationStage.Evaluating => "Only BEC members record evaluations.",
+                            _ => "The evaluation is locked."
+                        })
+                    </div>
+                </section>
+            }
+        </aside>
+    </div>
+</div>

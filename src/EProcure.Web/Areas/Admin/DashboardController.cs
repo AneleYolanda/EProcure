@@ -49,6 +49,7 @@ public class DashboardController : Controller
                 t.Title,
                 t.Status,
                 t.ClosingDateUtc,
+                t.EvaluationSubmittedAtUtc,
                 Applications = t.Submissions.Count() // only paid submissions: the filter hides unpaid ones
             })
             .ToListAsync(cancellationToken);
@@ -73,9 +74,17 @@ public class DashboardController : Controller
                 $"{t.ReferenceNumber} closes {DisplayFormat.DateTime(t.ClosingDateUtc)}",
                 $"{t.Title} · {Plural(t.Applications, "application")} so far", "Closing soon", "warning", "clock")));
         }
-        actions.AddRange(closed.Select(t => new ActionItem(t.Id,
+        // Closed tenders with bids: the BEC evaluates; once it has submitted, the SCM Officer records the BAC decision.
+        var withBids = closed.Where(t => t.Applications > 0).ToList();
+        if (isOrgAdmin)
+        {
+            actions.AddRange(withBids.Where(t => t.EvaluationSubmittedAtUtc is not null).Select(t => new ActionItem(t.Id,
+                $"{t.ReferenceNumber}: BAC decision to record",
+                $"{t.Title} · the BEC has submitted its recommendation", "BAC", "warning", "inbox")));
+        }
+        actions.AddRange(withBids.Where(t => t.EvaluationSubmittedAtUtc is null).Select(t => new ActionItem(t.Id,
             $"{t.ReferenceNumber} has closed",
-            $"{t.Title} · {Plural(t.Applications, "application")} to evaluate", "Evaluate", "info", "inbox")));
+            $"{t.Title} · {Plural(t.Applications, "bid")} for the BEC to evaluate", "Evaluate", "info", "inbox")));
 
         var stages = new (string Label, int Count, string Colour)[]
         {

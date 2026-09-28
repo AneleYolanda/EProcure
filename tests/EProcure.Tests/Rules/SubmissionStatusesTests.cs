@@ -4,32 +4,19 @@ using EProcure.Web.Services;
 
 namespace EProcure.Tests.Rules;
 
-/// <summary>Digitise, do not automate decisions: staff record limited status changes, never an award.</summary>
+/// <summary>
+/// Digitise, do not automate decisions: risky declarations are flagged for the committee, never auto-rejected.
+/// (Status changes are covered by EvaluationServiceTests: they only happen through evaluation and award.)
+/// </summary>
 public class SubmissionStatusesTests
 {
-    [Fact]
-    public void Submitted_can_move_to_under_evaluation_or_not_awarded()
-    {
-        Assert.Equal(new[] { SubmissionStatus.UnderEvaluation, SubmissionStatus.Unsuccessful },
-            SubmissionStatuses.AllowedNext(SubmissionStatus.Submitted));
-    }
-
-    [Fact]
-    public void No_status_ever_offers_awarded()
-    {
-        foreach (var status in Enum.GetValues<SubmissionStatus>())
-            Assert.DoesNotContain(SubmissionStatus.Awarded, SubmissionStatuses.AllowedNext(status));
-    }
-
     [Theory]
-    [InlineData(SubmissionStatus.Draft)]
-    [InlineData(SubmissionStatus.AwaitingPayment)]
-    [InlineData(SubmissionStatus.Unsuccessful)]
-    [InlineData(SubmissionStatus.Awarded)]
-    [InlineData(SubmissionStatus.Withdrawn)]
-    public void Unsubmitted_and_final_statuses_cannot_be_changed_by_staff(SubmissionStatus status)
+    [InlineData(SubmissionStatus.Awarded, "Awarded")]
+    [InlineData(SubmissionStatus.Unsuccessful, "Not awarded")]
+    [InlineData(SubmissionStatus.UnderEvaluation, "Under evaluation")]
+    public void Statuses_have_plain_labels(SubmissionStatus status, string label)
     {
-        Assert.Empty(SubmissionStatuses.AllowedNext(status));
+        Assert.Equal(label, SubmissionStatuses.Label(status));
     }
 
     [Fact]

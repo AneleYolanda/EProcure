@@ -74,4 +74,7 @@ public class Submission
 
     public ICollection<UploadedDocument> Documents { get; set; } = new List<UploadedDocument>();
     public ICollection<SubmissionStatusHistory> StatusHistory { get; set; } = new List<SubmissionStatusHistory>();
+
+    /// <summary>The BEC's evaluation of this bid (NULL until evaluated).</summary>
+    public BidEvaluation? Evaluation { get; set; }
 }

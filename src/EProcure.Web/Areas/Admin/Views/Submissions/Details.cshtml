@@ -1,6 +1,6 @@
-@* One received application: company, SBD answers with red flags, the uploaded documents (download is
-   audited), status history, and the status change form for SCM Officers. The system records decisions;
-   it does not score or choose a winner. *@
+@* One received application. Sealed until the tender's closing date (only the fact that it arrived is shown).
+   After closing: company, SBD answers with red flags, documents (download audited), the BEC's evaluation and the
+   history. Statuses change through the evaluation and the BAC's decision, never by hand. *@
 @model ReceivedApplicationViewModel
 @{
     ViewData["Title"] = Model.ReferenceNumber ?? "Application";
@@ -23,7 +23,7 @@
                     <div class="ep-grow">
                         <div class="ep-detail__ref">@Model.ReferenceNumber · <a asp-controller="Tenders" asp-action="Details" asp-route-id="@Model.TenderId">@Model.TenderReference</a></div>
                         <h2 class="ep-detail__title">@Model.CompanyName</h2>
-                        <div class="ep-detail__meta">@Model.TenderTitle · submitted @(Model.SubmittedAtUtc is DateTime at ? DisplayFormat.DateTime(at) : "—") · @Model.PaymentText</div>
+                        <div class="ep-detail__meta">@Model.TenderTitle · submitted @(Model.SubmittedAtUtc is DateTime at ? DisplayFormat.DateTime(at) : "—")@(Model.IsSealed ? "" : $" · {Model.PaymentText}")</div>
                     </div>
                     <span class="@SubmissionStatuses.BadgeCss(Model.Status)">@SubmissionStatuses.Label(Model.Status)</span>
                 </div>
@@ -36,69 +36,73 @@
                 }
             </section>
 
-            <section class="ep-section">
-                <h3 class="ep-section__title">Documents (@Model.Documents.Count)</h3>
-                <div class="ep-section__sub">Downloads are recorded in the audit trail. The fingerprint (SHA-256) proves a file has not changed since it was submitted.</div>
-                <ul class="ep-doclist">
-                    @foreach (var d in Model.Documents)
-                    {
-                        <li>
-                            <span class="ep-grow"><span class="ep-docrow__name">@d.Requirement</span><span class="ep-docrow__meta">@d.FileName · @Math.Max(1, d.SizeBytes / 1024) KB · uploaded @DisplayFormat.DateTime(d.UploadedAtUtc) · fingerprint @d.Sha256Short…</span></span>
-                            <a class="ep-abtn" asp-action="Document" asp-route-id="@d.Id">Download PDF</a>
-                        </li>
-                    }
-                </ul>
-            </section>
+            @if (Model.IsSealed)
+            {
+                <section class="ep-section">
+                    <h3 class="ep-section__title">Sealed until @DisplayFormat.DateTime(Model.ClosingDateUtc)</h3>
+                    <div class="ep-section__sub">
+                        The bid arrived complete and on time. Its company, answers, prices and documents open automatically at the closing
+                        date, for the Bid Evaluation Committee. Until then nobody can read it, so no one can pass on a competitor's price.
+                    </div>
+                </section>
+            }
+            else
+            {
+                <section class="ep-section">
+                    <h3 class="ep-section__title">Documents (@Model.Documents.Count)</h3>
+                    <div class="ep-section__sub">Downloads are recorded in the audit trail. The fingerprint (SHA-256) proves a file has not changed since it was submitted.</div>
+                    <ul class="ep-doclist">
+                        @foreach (var d in Model.Documents)
+                        {
+                            <li>
+                                <span class="ep-grow"><span class="ep-docrow__name">@d.Requirement</span><span class="ep-docrow__meta">@d.FileName · @Math.Max(1, d.SizeBytes / 1024) KB · uploaded @DisplayFormat.DateTime(d.UploadedAtUtc) · fingerprint @d.Sha256Short…</span></span>
+                                <a class="ep-abtn" asp-action="Document" asp-route-id="@d.Id">Download PDF</a>
+                            </li>
+                        }
+                    </ul>
+                </section>
 
-            <section class="ep-section">
-                <h3 class="ep-section__title">SBD answers and declarations</h3>
-                <div class="ep-kvs">
-                    @foreach (var (question, answer, flag) in Model.Answers)
-                    {
-                        <div class="ep-kv"><span class="ep-kv__k">@question</span><span class="ep-kv__v">@answer @if (flag) {<span class="ep-badge ep-badge--warning">Check</span>}</span></div>
-                    }
-                </div>
-            </section>
+                <section class="ep-section">
+                    <h3 class="ep-section__title">SBD answers and declarations</h3>
+                    <div class="ep-kvs">
+                        @foreach (var (question, answer, flag) in Model.Answers)
+                        {
+                            <div class="ep-kv"><span class="ep-kv__k">@question</span><span class="ep-kv__v">@answer @if (flag) {<span class="ep-badge ep-badge--warning">Check</span>}</span></div>
+                        }
+                    </div>
+                </section>
 
-            <section class="ep-section">
-                <h3 class="ep-section__title">Bidding company</h3>
-                <div class="ep-kvs">
-                    @foreach (var (key, value) in Model.CompanyFields)
-                    {
-                        <div class="ep-kv"><span class="ep-kv__k">@key</span><span class="ep-kv__v">@value</span></div>
-                    }
-                    <div class="ep-kv"><span class="ep-kv__k">Submitted by</span><span class="ep-kv__v">@Model.ContactName · @Model.ContactEmail</span></div>
-                </div>
-            </section>
+                <section class="ep-section">
+                    <h3 class="ep-section__title">Bidding company</h3>
+                    <div class="ep-kvs">
+                        @foreach (var (key, value) in Model.CompanyFields)
+                        {
+                            <div class="ep-kv"><span class="ep-kv__k">@key</span><span class="ep-kv__v">@value</span></div>
+                        }
+                        <div class="ep-kv"><span class="ep-kv__k">Submitted by</span><span class="ep-kv__v">@Model.ContactName · @Model.ContactEmail</span></div>
+                    </div>
+                </section>
+            }
         </div>
 
         <aside class="ep-detail__side">
-            @if (Model.CanChangeStatus && Model.AllowedNext.Count > 0)
-            {
-                <section class="ep-side-card" aria-labelledby="status-title">
-                    <h3 class="ep-side-card__title" id="status-title">Record a status change</h3>
-                    <div class="ep-side-card__text">The supplier sees the new status and your note on their application. Award decisions are recorded separately and are never made by the system.</div>
-                    <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" class="ep-mt-14">
-                        <div class="ep-radio-pills">
-                            @foreach (var next in Model.AllowedNext)
-                            {
-                                <label class="ep-radio-pill"><input type="radio" name="NewStatus" value="@next" required /><span>@SubmissionStatuses.Label(next)</span></label>
-                            }
-                        </div>
-                        <label class="ep-afield ep-mt-14">NOTE FOR THE SUPPLIER AND THE RECORD
-                            <textarea class="ep-ainput" name="Note" rows="3" maxlength="1000" required placeholder="e.g. Bid opened by the BEC on 05 Oct 2026"></textarea>
-                        </label>
-                        <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block">Save status</button>
-                    </form>
-                </section>
-            }
-            else if (!Model.CanChangeStatus)
-            {
-                <section class="ep-side-card">
-                    <h3 class="ep-side-card__title">Read-only</h3>
-                    <div class="ep-side-card__text">BEC members can read applications and download documents. Status changes are recorded by the SCM Officer.</div>
-                </section>
-            }
+            <section class="ep-side-card" aria-labelledby="evaluation-title">
+                <h3 class="ep-side-card__title" id="evaluation-title">Evaluation</h3>
+                @if (Model.IsSealed)
+                {
+                    <div class="ep-side-card__text">Opens at the closing date. The BEC then evaluates every bid on the tender's scoresheet.</div>
+                }
+                else
+                {
+                    <div class="ep-kvs">
+                        <div class="ep-kv"><span class="ep-kv__k">Stage</span><span class="ep-kv__v">@EvaluationService.Label(Model.Stage)</span></div>
+                        <div class="ep-kv"><span class="ep-kv__k">BEC</span><span class="ep-kv__v">@Model.EvaluationText</span></div>
+                    </div>
+                    <div class="ep-side-card__text ep-mt-14">The bidder's status changes when the BEC opens the bid and when the BAC's decision is recorded.</div>
+                    <a class="ep-abtn ep-abtn--block" asp-controller="Evaluation" asp-action="Bid" asp-route-id="@Model.Id">Open evaluation</a>
+                    <a class="ep-abtn ep-abtn--block" asp-controller="Evaluation" asp-action="Tender" asp-route-id="@Model.TenderId">Tender scoresheet</a>
+                }
+            </section>
 
             <section class="ep-side-card" aria-labelledby="timeline-title">
                 <h3 class="ep-side-card__title" id="timeline-title">Application history</h3>
@@ -112,6 +116,10 @@
                                 <div class="ep-timeline__who">@who · @DisplayFormat.DateTime(when)</div>
                             </div>
                         </div>
+                    }
+                    @if (Model.IsSealed)
+                    {
+                        <div class="ep-side-card__text">Shown after the closing date.</div>
                     }
                 </div>
             </section>

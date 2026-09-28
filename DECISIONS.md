@@ -597,3 +597,58 @@ WCAG contrast) and decorative icons that carry no text.
 
 **Still below AA (not changed):** the design's light grey secondary text `#8C9CAB` (column headings, field hints, fact
 labels) is about 2.8:1 on white. Darkening it to about `#6B7C8D` would pass; left as designed until requested.
+
+---
+
+## D43. Bids are sealed until the closing date (bid opening)
+
+**What:** Before a tender's closing date, the organisation's staff see only that a bid arrived (reference and time).
+The company, SBD answers, documents and prices are hidden, and document downloads are refused on the server
+(`Document.SealedRefused` in the audit trail). At the closing date the bids open automatically for evaluation.
+Suppliers still see their own application at all times.
+
+**Why:** Public procurement integrity: if anyone inside the organisation could read bids early, a competitor's price or
+approach could be passed on before the closing date. Sealing replaces the physical tender box. It is enforced in the same
+place for every screen (`EvaluationService.IsSealed`), so no page can accidentally show a sealed bid.
+
+**Changed from Step 7:** staff could open submitted bids at once. RBIDZ/2026/014's two bids are now sealed until it closes.
+
+---
+
+## D44. Evaluation: people judge, the system calculates, the committees decide
+
+**What:**
+- **BEC (Evaluator role):** for each bid records *responsive yes/no* (with the reason, which the bidder is told) and the
+  *bid price* read from the pricing schedule. Points are calculated by `EvaluationRules` with the Preferential Procurement
+  Regulations, 2022 formula: `Ps = 80 (or 90) × (1 − (Pt − Pmin) / Pmin)` plus preference points. The specific goal used
+  is the B-BBEE status level with the standard table (80/20: Level 1 = 20 … Level 8 = 2, non-compliant = 0;
+  90/10: 10 … 1, 0). Ranking: highest total, then higher preference points; a remaining tie shares the rank and must be
+  broken by drawing lots, which the BEC records.
+- The BEC **submits** the scoresheet with a recommendation (default: the top-ranked bid; any other choice, or a tie,
+  needs written reasons). Points and ranks are then **frozen** in `BidEvaluations` and the scoresheet is locked.
+- **BAC (SCM Officer records it):** awards to a responsive bid with the minute reference, decision date and reasons, or
+  returns the evaluation to the BEC with a note. Awarding against the recommendation needs full reasons (50+ characters)
+  and is logged as `Tender.AwardedAgainstRecommendation`.
+- On award: `AwardRecord` is created, the tender becomes Awarded, the winner's status is Awarded, and every other bidder
+  gets "Not awarded" with either the non-responsiveness reason or their points and rank. A public award notice (winner,
+  amount, points, B-BBEE level, date) appears on the tender page.
+
+**Why:** "Digitise, do not automate decisions." Responsiveness and the award are human, accountable decisions with
+recorded reasons; the arithmetic the regulations prescribe is exactly the part where a machine is more reliable than a
+spreadsheet, and nobody can type in or adjust points. Separation of duties: BEC members cannot award and the SCM Officer
+cannot evaluate (policies `BecOnly` / `OrgAdminOnly`), matching the separate BEC and BAC required by the SCM regulations.
+
+**Simplifications (documented, not hidden):** one consolidated BEC evaluation per bid (not one score per committee
+member); no functionality stage (tenders without a functionality threshold); specific goal = B-BBEE level only. An organ of
+state with other specific goals, or a functionality stage, would extend `EvaluationRules` and the capture form.
+
+---
+
+## D45. Bid statuses change only through evaluation and award (supersedes the manual form of D37)
+
+**What:** The Step 7 "Record a status change" form is removed. A bid becomes *Under evaluation* when the BEC opens it
+(records its evaluation), and *Awarded* / *Not awarded* when the BAC decision is recorded, each with a note on the
+bidder's timeline.
+
+**Why:** One source of truth: a bid's status can never disagree with the recorded evaluation or award, and there is no
+way to mark a bid "Not awarded" without the reasons being on record.

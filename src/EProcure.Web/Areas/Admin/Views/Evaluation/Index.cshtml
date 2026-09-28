@@ -1,0 +1,48 @@
+@* Tenders past their closing date with bids: the BEC's and BAC's work queue. *@
+@model EvaluationListViewModel
+@{
+    ViewData["Title"] = Model.View switch { "scoring" => "BEC scoring", "adjudication" => "BAC adjudication", _ => "Evaluation and award" };
+    ViewData["Nav"] = Model.View == "adjudication" ? "adjudication" : "scoring";
+    var filters = new[] { ("all", "All closed tenders"), ("scoring", "BEC evaluating"), ("adjudication", "Awaiting BAC decision") };
+}
+<div class="ep-stack">
+    <div class="ep-panel__sub">
+        Bids stay sealed until a tender's closing date. After that the Bid Evaluation Committee (BEC) records whether each bid is
+        responsive and its price; eProcure calculates the price and preference points (PPPFA 2022). The Bid Adjudication
+        Committee (BAC) then decides; the SCM Officer records its decision.
+    </div>
+    <nav class="ep-pills" aria-label="Filter">
+        @foreach (var (key, label) in filters)
+        {
+            <a class="ep-pill@(Model.View == key ? " ep-pill--active" : "")" asp-action="Index" asp-route-view="@(key == "all" ? null : key)" aria-current="@(Model.View == key ? "page" : null)">@label</a>
+        }
+    </nav>
+
+    <section class="ep-register" aria-label="Tenders for evaluation">
+        <div class="ep-register__head ep-register__head--eval" aria-hidden="true">
+            <div>Reference</div><div>Tender</div><div>Stage</div><div>Closed</div><div>Evaluated</div><div></div>
+        </div>
+        @foreach (var row in Model.Rows)
+        {
+            <a class="ep-register__row ep-register__row--eval" asp-action="Tender" asp-route-id="@row.TenderId">
+                <span class="ep-register__ref">@row.ReferenceNumber</span>
+                <span class="ep-register__title">@row.Title</span>
+                <span class="@EvaluationService.BadgeCss(row.Stage)">@EvaluationService.Label(row.Stage)</span>
+                <span class="ep-register__cell ep-register__cell--muted">@DisplayFormat.Date(row.ClosingDateUtc)</span>
+                <span class="ep-register__cell">@row.Evaluated of @row.Bids bid@(row.Bids == 1 ? "" : "s")</span>
+                <svg class="ep-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </a>
+        }
+        @if (Model.Rows.Count == 0)
+        {
+            <div class="ep-register__empty">
+                @(Model.View switch
+                {
+                    "scoring" => "No tender is waiting for the BEC.",
+                    "adjudication" => "No evaluation is waiting for a BAC decision.",
+                    _ => "No closed tender with bids yet. Bids can be evaluated once a tender's closing date has passed."
+                })
+            </div>
+        }
+    </section>
+</div>

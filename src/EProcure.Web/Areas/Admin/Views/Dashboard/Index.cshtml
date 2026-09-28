@@ -55,7 +55,8 @@
             </div>
             @foreach (var item in Model.ActionItems)
             {
-                <a class="ep-action" asp-controller="Tenders" asp-action="Details" asp-route-id="@item.TenderId">
+                var toScoresheet = item.Tag is "Evaluate" or "BAC";
+                <a class="ep-action" asp-controller="@(toScoresheet ? "Evaluation" : "Tenders")" asp-action="@(toScoresheet ? "Tender" : "Details")" asp-route-id="@item.TenderId">
                     <span class="@ToneIcon(item.Tone)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="@IconPath(item.Icon)" /></svg>
                     </span>

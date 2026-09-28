@@ -50,18 +50,24 @@ public class SubmissionsController : Controller
                 s.Id, s.ReferenceNumber, CompanyName = s.Company.Name, s.DeclaredBbbeeLevel,
                 TenderReference = s.Tender.ReferenceNumber, TenderTitle = s.Tender.Title, s.Status, s.SubmittedAtUtc,
                 s.IsCsdRegistered, s.IsTaxCompliant, s.HasDeclaredInterest, s.ConfirmsNotRestricted, s.ConfirmsIndependentBid,
-                Documents = s.Documents.Count()
+                Documents = s.Documents.Count(),
+                s.Tender.ClosingDateUtc
             })
             .ToListAsync(ct);
 
-        var rows = raw.Select(s => new ReceivedApplicationRow(s.Id, s.ReferenceNumber, s.CompanyName, s.DeclaredBbbeeLevel,
-            s.TenderReference, s.TenderTitle, s.Status, s.SubmittedAtUtc,
-            SubmissionStatuses.RedFlags(new Submission
-            {
-                IsCsdRegistered = s.IsCsdRegistered, IsTaxCompliant = s.IsTaxCompliant, HasDeclaredInterest = s.HasDeclaredInterest,
-                ConfirmsNotRestricted = s.ConfirmsNotRestricted, ConfirmsIndependentBid = s.ConfirmsIndependentBid
-            }).Count,
-            s.Documents)).ToList();
+        var now = DateTime.UtcNow;
+        var rows = raw.Select(s =>
+        {
+            var sealedBid = EvaluationService.IsSealed(s.ClosingDateUtc, now);
+            return new ReceivedApplicationRow(s.Id, s.ReferenceNumber, sealedBid ? "Sealed bid" : s.CompanyName, s.DeclaredBbbeeLevel,
+                s.TenderReference, s.TenderTitle, s.Status, s.SubmittedAtUtc,
+                sealedBid ? 0 : SubmissionStatuses.RedFlags(new Submission
+                {
+                    IsCsdRegistered = s.IsCsdRegistered, IsTaxCompliant = s.IsTaxCompliant, HasDeclaredInterest = s.HasDeclaredInterest,
+                    ConfirmsNotRestricted = s.ConfirmsNotRestricted, ConfirmsIndependentBid = s.ConfirmsIndependentBid
+                }).Count,
+                s.Documents, sealedBid ? s.ClosingDateUtc : null);
+        }).ToList();
 
         string? tenderRef = tenderId is null ? null
             : await _db.Tenders.Where(t => t.Id == tenderId).Select(t => t.ReferenceNumber).SingleOrDefaultAsync(ct);
@@ -86,9 +92,17 @@ public class SubmissionsController : Controller
     {
         var document = await _db.UploadedDocuments.AsNoTracking()
             .Where(d => d.Id == id)
-            .Select(d => new { d.StorageKey, d.OriginalFileName, d.SubmissionId, d.Submission.Tender.OrganisationId, d.Submission.ReferenceNumber })
+            .Select(d => new { d.StorageKey, d.OriginalFileName, d.SubmissionId, d.Submission.Tender.OrganisationId, d.Submission.ReferenceNumber, d.Submission.Tender.ClosingDateUtc })
             .SingleOrDefaultAsync(ct);
         if (document is null) return NotFound();
+
+        // Sealed until the closing date: refused on the server, not just hidden on the page.
+        if (EvaluationService.IsSealed(document.ClosingDateUtc, DateTime.UtcNow))
+        {
+            await _audit.LogAsync("Document.SealedRefused", "Submission", document.SubmissionId.ToString(), document.OrganisationId, document.ReferenceNumber);
+            TempData["FlashError"] = $"Bids are sealed until the closing date ({DisplayFormat.DateTime(document.ClosingDateUtc)}).";
+            return RedirectToAction(nameof(Details), new { id = document.SubmissionId });
+        }
 
         var stream = await _files.OpenReadAsync(document.StorageKey, ct);
         if (stream is null) return NotFound();
@@ -98,39 +112,8 @@ public class SubmissionsController : Controller
         return File(stream, "application/pdf", document.OriginalFileName);
     }
 
-    /// <summary>Records a status change with a note. SCM Officers only; awards are not made here.</summary>
-    [HttpPost]
-    [Authorize(Policy = "OrgAdminOnly")]
-    public async Task<IActionResult> ChangeStatus(int id, ChangeStatusForm form, CancellationToken ct)
-    {
-        var submission = await _db.Submissions.Include(s => s.Tender).SingleOrDefaultAsync(s => s.Id == id, ct);
-        if (submission is null) return NotFound();
-
-        if (!ModelState.IsValid || form.NewStatus is not SubmissionStatus next || !SubmissionStatuses.AllowedNext(submission.Status).Contains(next))
-        {
-            TempData["FlashError"] = ModelState.IsValid
-                ? "That status change is not allowed."
-                : string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-            return RedirectToAction(nameof(Details), new { id });
-        }
-
-        var from = submission.Status;
-        submission.Status = next;
-        submission.StatusHistory.Add(new SubmissionStatusHistory
-        {
-            FromStatus = from,
-            ToStatus = next,
-            ChangedByUserId = _userManager.GetUserId(User)!,
-            ChangedAtUtc = DateTime.UtcNow,
-            Note = $"{SubmissionStatuses.Label(next)}: {form.Note.Trim()}"
-        });
-        await _db.SaveChangesAsync(ct);
-        await _audit.LogAsync("Submission.StatusChanged", "Submission", id.ToString(), submission.Tender.OrganisationId,
-            $"{from} -> {next}: {form.Note.Trim()}");
-
-        TempData["Flash"] = $"Status changed to {SubmissionStatuses.Label(next)}. The supplier can see it on their application.";
-        return RedirectToAction(nameof(Details), new { id });
-    }
+    // Status changes are no longer made by hand here: they follow the evaluation and the BAC's award decision
+    // (EvaluationController), so a bid's status always matches the recorded evaluation (DECISIONS D43).
 
     private async Task<ReceivedApplicationViewModel?> BuildAsync(int id, CancellationToken ct)
     {
@@ -139,8 +122,29 @@ public class SubmissionsController : Controller
             .Include(x => x.Company)
             .Include(x => x.SubmittedByUser)
             .Include(x => x.Documents)
+            .Include(x => x.Evaluation)
             .SingleOrDefaultAsync(x => x.Id == id, ct);
         if (s is null) return null;
+
+        var stage = EvaluationService.StageOf(s.Tender, DateTime.UtcNow);
+        if (stage == EvaluationStage.NotClosed)
+        {
+            // Sealed bid: staff may know that a bid arrived and when, nothing more, until the closing date.
+            return new ReceivedApplicationViewModel
+            {
+                Id = s.Id,
+                ReferenceNumber = s.ReferenceNumber,
+                TenderId = s.TenderId,
+                TenderReference = s.Tender.ReferenceNumber,
+                TenderTitle = s.Tender.Title,
+                Status = s.Status,
+                SubmittedAtUtc = s.SubmittedAtUtc,
+                IsSealed = true,
+                ClosingDateUtc = s.Tender.ClosingDateUtc,
+                Stage = stage,
+                CompanyName = "Sealed bid"
+            };
+        }
 
         var history = await _db.SubmissionStatusHistory.AsNoTracking()
             .Where(h => h.SubmissionId == id)
@@ -186,8 +190,11 @@ public class SubmissionsController : Controller
                 d.Id, d.TenderRequirementId is int r && requirementNames.TryGetValue(r, out var n) ? n : "Supporting document",
                 d.OriginalFileName, d.SizeBytes, d.Sha256[..12], d.UploadedAtUtc)).ToList(),
             Timeline = history.Select(h => (h.Note ?? SubmissionStatuses.Label(h.ToStatus), h.FullName, h.ChangedAtUtc)).ToList(),
-            CanChangeStatus = User.IsInRole(AppRoles.OrgAdmin),
-            AllowedNext = SubmissionStatuses.AllowedNext(s.Status)
+            ClosingDateUtc = s.Tender.ClosingDateUtc,
+            Stage = stage,
+            EvaluationText = s.Evaluation is null ? "Not evaluated yet"
+                : s.Evaluation.IsResponsive ? $"Responsive · {DisplayFormat.Money(s.Evaluation.BidPrice!.Value)}"
+                : $"Not responsive: {s.Evaluation.NonResponsiveReason}"
         };
     }
 }

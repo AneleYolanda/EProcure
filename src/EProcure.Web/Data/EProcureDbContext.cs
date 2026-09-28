@@ -29,6 +29,7 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
     public DbSet<UploadedDocument> UploadedDocuments => Set<UploadedDocument>();
     public DbSet<SubmissionStatusHistory> SubmissionStatusHistory => Set<SubmissionStatusHistory>();
     public DbSet<AwardRecord> AwardRecords => Set<AwardRecord>();
+    public DbSet<BidEvaluation> BidEvaluations => Set<BidEvaluation>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     // These two properties are read by the query filters below. Because they are members of
@@ -90,6 +91,14 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
             (h.Submission.Tender.OrganisationId == CurrentOrgId
              && h.Submission.Status != SubmissionStatus.Draft
              && h.Submission.Status != SubmissionStatus.AwaitingPayment));
+
+        // Evaluations follow their bid (own organisation, submitted bids only). Supplier pages never query
+        // this table; the only supplier-facing value (the winner's points) is read through the award.
+        builder.Entity<BidEvaluation>().HasQueryFilter(e =>
+            !IsOrgScoped ||
+            (e.Submission.Tender.OrganisationId == CurrentOrgId
+             && e.Submission.Status != SubmissionStatus.Draft
+             && e.Submission.Status != SubmissionStatus.AwaitingPayment));
 
         // AuditEntry.OrganisationId is nullable (platform events such as supplier sign-ins have none).
         // EF compares nullables with C# rules, where NULL == NULL is true, so without the explicit

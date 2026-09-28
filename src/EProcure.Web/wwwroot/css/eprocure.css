@@ -777,3 +777,30 @@ a.ep-action:hover { background: #F7FAFC; }
   .ep-register__row--audit > :nth-child(4) { display: block; grid-column: 1 / -1; grid-row: 3; white-space: normal; }
   .ep-register__row--audit > :nth-child(5) { display: none; }
 }
+
+/* ---------- Evaluation and award (scoresheet) ---------- */
+.ep-register__head--eval, .ep-register__row--eval { grid-template-columns: 150px minmax(0, 1fr) 170px 110px 120px 20px; }
+.ep-register__head--score, .ep-register__row--score { grid-template-columns: 44px minmax(0, 1fr) 80px 130px 60px 52px 60px 110px; gap: 12px; }
+.ep-score__rank { font-size: 15px; font-weight: 600; color: var(--ep-ink); }
+.ep-score__sub { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ep-muted); font-weight: 400; }
+.ep-register__row--score .ep-register__title { white-space: normal; }
+.ep-register__row--score .ep-register__title .ep-badge { margin-left: 6px; vertical-align: 1px; }
+.ep-options--single { margin-top: 0; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.ep-options--single .ep-option__card { padding: 11px 13px; }
+.ep-option { position: relative; }
+.ep-option input:checked + .ep-option__card { border-color: var(--ep-accent-strong); box-shadow: 0 0 0 1px var(--ep-accent-strong); }
+@media (min-width: 992px) and (max-width: 1279.98px) {
+  /* Narrower screens drop the split points; total and rank stay. */
+  .ep-register__head--score, .ep-register__row--score { grid-template-columns: 40px minmax(0, 1fr) 120px 60px 110px; }
+  .ep-register__head--score > :nth-child(3), .ep-register__row--score > :nth-child(3),
+  .ep-register__head--score > :nth-child(5), .ep-register__row--score > :nth-child(5),
+  .ep-register__head--score > :nth-child(6), .ep-register__row--score > :nth-child(6) { display: none; }
+}
+@media (max-width: 991.98px) {
+  .ep-register__row--score > :nth-child(4), .ep-register__row--score > :nth-child(7) { display: block; }
+  .ep-register__row--score > :nth-child(3), .ep-register__row--score > :nth-child(5), .ep-register__row--score > :nth-child(6) { display: none; }
+}
+
+/* Supplier award notice */
+.ep-award { border-color: var(--ep-success-border); background: var(--ep-success-soft); }
+.ep-award .ep-kv { border-bottom-color: color-mix(in srgb, var(--ep-success-border) 60%, transparent); }

@@ -1,6 +1,6 @@
 # eProcure: Data Model
 
-Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the first migration) , [`schema/AddDesignFields.sql`](schema/AddDesignFields.sql) , [`schema/AddTenderPublishingFields.sql`](schema/AddTenderPublishingFields.sql) and [`schema/AddSubmissionDeclarations.sql`](schema/AddSubmissionDeclarations.sql).
+Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the first migration) , [`schema/AddDesignFields.sql`](schema/AddDesignFields.sql) , [`schema/AddTenderPublishingFields.sql`](schema/AddTenderPublishingFields.sql), [`schema/AddSubmissionDeclarations.sql`](schema/AddSubmissionDeclarations.sql) and [`schema/AddEvaluationAndAward.sql`](schema/AddEvaluationAndAward.sql).
 
 ## Migration history
 
@@ -10,6 +10,7 @@ Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql)
 | `AddDesignFields` | `Tenders.EstimatedValue` (decimal(18,2), optional), `Companies.EnterpriseSize` (text: EME / QSE / Generic; existing rows set to Generic), `Submissions.ReferenceNumber` (nvarchar(20), unique where not NULL, assigned when payment succeeds), RBIDZ branding re-seeded to the design (#0F1B33 / #1CA3EC, `rbidz-logo.png`). |
 | `AddTenderPublishingFields` | `Tenders.PointSystem` (text: EightyTwenty / NinetyTen; existing rows set to EightyTwenty), `Tenders.CancelledAtUtc`, `Tenders.CancellationReason` (nvarchar(1000)). A cancelled tender is never deleted; it keeps its reason. |
 | `AddSubmissionDeclarations` | SBD answers on `Submissions` become nullable (NULL = not answered yet; a declaration is never a default "No"); new `InterestDetails`, `RestrictionDetails` (nvarchar(1000)) and `DeclaredAtUtc`. |
+| `AddEvaluationAndAward` | New table `BidEvaluations` (one per submission: responsive yes/no with reason, bid price, notes, evaluator; points and rank frozen when the BEC submits; `IsRecommended`). `Tenders` gets `EvaluationSubmittedAtUtc`, `EvaluationSubmittedByUserId`, `RecommendationReason` and `BacReturnNote` (all nullable). No existing data changes. |
 
 ## Entity-relationship diagram
 
@@ -30,6 +31,8 @@ erDiagram
     Submissions ||--o{ AwardRecords : "wins"
     Users ||--o{ Tenders : "created by"
     Users ||--o{ AwardRecords : "recorded by"
+    Submissions ||--o| BidEvaluations : "evaluated in"
+    Users ||--o{ BidEvaluations : "evaluated by"
 ```
 
 `||` = exactly one, `o|` = zero or one, `o{` = zero or many.
@@ -52,6 +55,7 @@ erDiagram
 | 11 | Submission 1 → * SubmissionStatusHistory | Append-only timeline; powers "track my application". | Restrict |
 | 12 | Tender 1 → 0..1 AwardRecord | The recorded **human** award decision (unique `TenderId`). | Restrict |
 | 13 | Submission 1 → * AwardRecord | The successful submission referenced by the award. | Restrict |
+| 13b | Submission 1 → 0..1 BidEvaluation | The BEC's evaluation of the bid (unique `SubmissionId`). People record responsiveness and price; points are calculated (PPPFA) and frozen at the BEC's submission. | Restrict |
 | 14 | User 1 → * (Tenders, Documents, History, Awards) | "Created/uploaded/changed/recorded by" references for accountability. | Restrict |
 
 ## How tenant isolation works
@@ -69,6 +73,7 @@ erDiagram
 | AwardRecords | via `Tender.OrganisationId` |
 | Submissions | via `Tender.OrganisationId` **and** status not Draft/AwaitingPayment (visible only after payment) |
 | UploadedDocuments, SubmissionStatusHistory | via `Submission.Tender.OrganisationId` + same paid rule |
+| BidEvaluations | via `Submission.Tender.OrganisationId` + same paid rule |
 | AuditLog | `OrganisationId = @myOrg` |
 
 4. If an admin has no organisation claim, `@myOrg` is NULL and they see **nothing** (fail closed).
@@ -86,6 +91,7 @@ erDiagram
 | `Companies(RegistrationNumber)`, `Companies(CsdNumber)` | A legal entity is registered once. |
 | `SupplierProfiles(UserId)` | One profile per supplier login. |
 | `AwardRecords(TenderId)` | One award per tender (MVP). |
+| `BidEvaluations(SubmissionId)` | One BEC evaluation per bid. |
 | `UploadedDocuments(StorageKey)` | Each stored file is referenced once. |
 
 ## POPIA register: personal information per table
@@ -101,6 +107,7 @@ erDiagram
 | Submissions | Link between company, user and tender; SBD declarations; **payment reference only, never card data** | Evaluating bids | The submitting supplier; owning organisation after payment |
 | UploadedDocuments | Metadata; PDFs may contain directors' ID copies etc. | Evaluating bids | Same as the parent submission |
 | SubmissionStatusHistory | Who changed status, when | Transparency to bidder, audit | Same as the parent submission |
+| BidEvaluations | Evaluating official reference; committee notes about a juristic person's bid | Record of the BEC's evaluation | Owning organisation only (bidders see only their outcome, points and rank, and the winner's published award notice) |
 | AwardRecords | Deciding official reference | Record of human decision | Owning organisation |
 | AuditLog | User id/email, IP address | Accountability, security | Platform operator; owning organisation for its own rows |
 

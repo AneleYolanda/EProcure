@@ -41,7 +41,7 @@ public class Tender
 
     /// <summary>
     /// Preference point system that will be used to evaluate this tender (80/20 or 90/10).
-    /// Pre-filled from the organisation's default; recorded here, never calculated by the system.
+    /// Pre-filled from the organisation's default. Chosen by people; the evaluation then applies its formula.
     /// </summary>
     public PreferencePointSystem PointSystem { get; set; } = PreferencePointSystem.EightyTwenty;
 
@@ -56,6 +56,19 @@ public class Tender
 
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? PublishedAtUtc { get; set; }
+
+    // ---- Evaluation (BEC) and adjudication (BAC) ----
+
+    /// <summary>When the BEC submitted its scoresheet and recommendation to the BAC (locks the scoresheet).</summary>
+    public DateTime? EvaluationSubmittedAtUtc { get; set; }
+    public string? EvaluationSubmittedByUserId { get; set; }
+    public ApplicationUser? EvaluationSubmittedByUser { get; set; }
+
+    /// <summary>The BEC's reasons, required when it recommends a bid other than the highest-ranked one.</summary>
+    public string? RecommendationReason { get; set; }
+
+    /// <summary>Why the BAC last sent the evaluation back to the BEC (shown to the BEC).</summary>
+    public string? BacReturnNote { get; set; }
 
     /// <summary>The required-documents checklist.</summary>
     public ICollection<TenderRequirement> Requirements { get; set; } = new List<TenderRequirement>();

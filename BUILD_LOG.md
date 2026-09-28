@@ -573,3 +573,55 @@ fix: readable white text on buttons (WCAG AA) with a darker shade of each brand 
 ```
 fix: accent shade readable on light grey surfaces too; contrast verified on every page
 ```
+
+---
+
+## Step 12: Sealed bids, BEC evaluation and BAC award
+
+### What was built
+- **Sealed bids** (D43): before the closing date staff see only "Sealed bid · opens (date)"; company, answers and
+  documents are hidden and downloads are refused on the server (audited as `Document.SealedRefused`).
+- **`EvaluationRules`**: PPPFA 2022 price points (80/20, 90/10), B-BBEE preference points table, ranking with the
+  preference-points tie-break and shared ranks for true ties. Pure functions.
+- **`EvaluationService`** + **`EvaluationController`** (D44): the BEC captures responsiveness and price per bid; the
+  scoresheet calculates and ranks; the BEC submits a recommendation (reasons needed if not ranked first or tied), which
+  freezes the points; the SCM Officer records the BAC decision (minute reference, date, reasons; full reasons when
+  deviating) or returns the evaluation to the BEC. On award: `AwardRecord`, tender Awarded, every bidder's status and
+  a note with their outcome (reason, or points and rank).
+- New table `BidEvaluations`; four nullable columns on `Tenders` (migration `AddEvaluationAndAward`, script in
+  `docs/schema`).
+- Screens: sidebar **BEC scoring** and **BAC adjudication** (now live), scoresheet, bid evaluation page; application
+  page shows the evaluation instead of the old status form (D45); admin tender page links to the scoresheet; the
+  dashboard's action items point the BEC to closed tenders and the SCM Officer to decisions awaiting the BAC.
+- Supplier side: public **award notice** on the tender page; "Awarded to your company" / "Not awarded" cards on the
+  application page.
+- Demo data: `supplier3@demo.co.za` (Siyakha, Level 2) and the closed tender **RBIDZ/2026/011** with three bids whose
+  pricing-schedule PDFs state the prices.
+- Tests: 17 rules tests and 16 service tests (113 in total, all passing).
+
+### Verified in the browser (Visual Studio run)
+- RBIDZ admin: RBIDZ/2026/014's two bids listed as "Sealed bid · opens 04 Oct 2026"; the application page shows only
+  "Sealed until 04 Oct 2026, 20:13"; a document download is refused and audited.
+- SCM Officer on the bid page: no evaluation form; forcing the request → Access denied. SCM forcing a recommendation →
+  Access denied.
+- BEC member: pricing schedule PDF downloads and states the price; "Responsive" without a price → "Enter the total bid
+  price…"; three bids captured; scoresheet: Siyakha 73.74 + 18.00 = **91.74** (rank 1), Khanya 80.00 + 6.00 = 86.00,
+  Umhlathi 64.00 + 20.00 = 84.00. Recommending Khanya without reasons → refused. Recommendation form pre-selects rank 1;
+  submitted; scoresheet locked (a later change → "submitted to the BAC and is locked"); evaluator forcing an award →
+  Access denied.
+- SCM Officer: return with a 2-character note → refused; returned with a note, the BEC sees "Returned by the BAC: …",
+  resubmits. Award with no reference, a future date and a short reason for a non-recommended bid → three errors.
+  Award through the form (recommended bid and today's date pre-filled) → "The BAC decision has been recorded".
+- Audit trail: Evaluation.Captured ×3, Evaluation.Submitted, Evaluation.Returned, Evaluation.Submitted, Tender.Awarded,
+  Document.Downloaded, Document.SealedRefused.
+- MVLM: scoresheet, bid page and document of RBIDZ → 404; its evaluation list is empty.
+- Suppliers: Siyakha "Awarded to your company … R1 240 000.00"; Khanya "Not awarded … scored 86.00 points and ranked 2
+  of 3"; Umhlathi "… 84.00 … ranked 3 of 3"; the tender page shows the award notice (R1 240 000.00, 91.74 points,
+  Level 2).
+- Fixed during testing: the scoresheet was squeezed beside the side column (it now spans the full width, with the
+  formula and actions below); the winner's note said "BAC BAC 2026/41" (now "decision reference …").
+
+### Commit message
+```
+feat: sealed bids, BEC evaluation with PPPFA points, and BAC award
+```

@@ -75,6 +75,7 @@ builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
 builder.Services.AddScoped<ITenderService, TenderService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 
 // Configure the authentication cookie per product requirements:
 // HttpOnly, Secure, SameSite=Lax, 8-hour sliding expiry. Also configure the
@@ -95,6 +96,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("SupplierOnly", policy => policy.RequireRole(AppRoles.Supplier));
     options.AddPolicy("OrgStaff", policy => policy.RequireRole(AppRoles.OrgAdmin, AppRoles.Evaluator));
     options.AddPolicy("OrgAdminOnly", policy => policy.RequireRole(AppRoles.OrgAdmin));
+    // Separation of duties: BEC members evaluate bids; the SCM Officer records the BAC's award decision.
+    options.AddPolicy("BecOnly", policy => policy.RequireRole(AppRoles.Evaluator));
     options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();

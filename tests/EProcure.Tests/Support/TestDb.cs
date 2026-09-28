@@ -114,7 +114,7 @@ public sealed class TestDb : IDisposable
     }
 
     /// <summary>An application in a given state, with one document and one history row (for isolation tests).</summary>
-    public int AddSubmission(int tenderId, int companyId, string userId, SubmissionStatus status)
+    public int AddSubmission(int tenderId, int companyId, string userId, SubmissionStatus status, BbbeeLevel level = BbbeeLevel.Level1)
     {
         using var db = Marketplace();
         var submission = new Submission
@@ -123,6 +123,7 @@ public sealed class TestDb : IDisposable
             CompanyId = companyId,
             SubmittedByUserId = userId,
             Status = status,
+            DeclaredBbbeeLevel = level,
             CreatedAtUtc = DateTime.UtcNow
         };
         submission.Documents.Add(new UploadedDocument

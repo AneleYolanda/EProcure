@@ -36,8 +36,16 @@ public class TendersController : Controller
         var tender = await _db.Tenders.AsNoTracking()
             .Include(t => t.Organisation)
             .Include(t => t.Requirements)
-            .SingleOrDefaultAsync(t => t.Id == id && t.Status == TenderStatus.Published, ct);
+            .SingleOrDefaultAsync(t => t.Id == id && (t.Status == TenderStatus.Published || t.Status == TenderStatus.Awarded), ct);
         if (tender is null) return NotFound();
+
+        // Award notice: public information (who, how much, on how many points), as organs of state publish it.
+        // The BAC's reasons and the other bids' scores are NOT shown here.
+        var award = await _db.AwardRecords.AsNoTracking()
+            .Where(a => a.TenderId == id)
+            .Select(a => new SupplierTenderViewModel.AwardNotice(a.Submission.Company.Name, a.AwardedAmount, a.DecisionDateUtc,
+                a.Submission.Evaluation!.TotalPoints, a.Submission.DeclaredBbbeeLevel))
+            .SingleOrDefaultAsync(ct);
 
         var userId = _userManager.GetUserId(User)!;
         var company = await _db.SupplierProfiles.AsNoTracking()
@@ -69,7 +77,8 @@ public class TendersController : Controller
             CompanyCsd = company?.CsdNumber,
             Eligibility = EligibilityRules.CheckBbbee(company?.BbbeeLevel, tender.MinimumBbbeeLevel),
             ApplicationId = application?.Id,
-            ApplicationStatus = application?.Status
+            ApplicationStatus = application?.Status,
+            Award = award
         });
     }
 }

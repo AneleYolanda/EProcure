@@ -31,16 +31,24 @@
                 <a class="ep-btn ep-btn--primary ep-mt-14" asp-action="Pay" asp-route-id="@Model.Id">Pay tender fee</a>
             </div>
             break;
+        case SubmissionStatus.Awarded:
+            <div class="ep-card ep-award">
+                <h2 class="ep-card__title">Awarded to your company</h2>
+                <p class="ep-card__text">@Model.OrganisationName's Bid Adjudication Committee awarded this tender to @Model.CompanyName. The details are in the timeline below; the organisation will contact you about the contract.</p>
+                <a class="ep-textbtn ep-mt-14" asp-controller="Tenders" asp-action="Details" asp-route-id="@Model.TenderId">View the award notice</a>
+            </div>
+            break;
         case SubmissionStatus.Unsuccessful:
             <div class="ep-card">
                 <h2 class="ep-card__title">Not awarded</h2>
-                <p class="ep-card__text">The organisation has recorded that this bid was not successful. The reason, if given, is in the timeline below.</p>
+                <p class="ep-card__text">The tender was decided and this bid was not successful. The reason, with your points and rank where the bid was scored, is in the timeline below.</p>
+                <a class="ep-textbtn ep-mt-14" asp-controller="Tenders" asp-action="Details" asp-route-id="@Model.TenderId">View the award notice</a>
             </div>
             break;
         default:
             <div class="ep-card">
                 <h2 class="ep-card__title">With @Model.OrganisationName</h2>
-                <p class="ep-card__text">Your application and documents are with the organisation and locked. Status changes made by the evaluation team appear in the timeline below.</p>
+                <p class="ep-card__text">Your application and documents are with the organisation and locked. Bids stay sealed until the closing date; after that the evaluation committee opens them, and each step appears in the timeline below.</p>
             </div>
             break;
     }

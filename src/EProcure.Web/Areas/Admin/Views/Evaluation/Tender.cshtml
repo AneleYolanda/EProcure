@@ -1,0 +1,267 @@
+@* The scoresheet: every bid, the BEC's inputs and the calculated points. The side column changes with the stage
+   and the signed-in role: BEC members evaluate and recommend; the SCM Officer records the BAC's decision. *@
+@model ScoresheetPageViewModel
+@{
+    var sheet = Model.Sheet;
+    ViewData["Title"] = $"Scoresheet · {sheet.ReferenceNumber}";
+    ViewData["Nav"] = sheet.Stage == EvaluationStage.AwaitingAdjudication ? "adjudication" : "scoring";
+    var system = EvaluationRules.Describe(sheet.PointSystem);
+    var maxPrice = EvaluationRules.MaxPricePoints(sheet.PointSystem);
+    var maxPreference = EvaluationRules.MaxPreferencePoints(sheet.PointSystem);
+    var ranked = sheet.Bids.Where(b => b.Score.Rank is not null).ToList();
+    var sealedBids = sheet.Stage == EvaluationStage.NotClosed;
+}
+<div class="ep-stack">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+    <div asp-validation-summary="ModelOnly"></div>
+
+    @* The scoresheet uses the full width (eight columns); the formula and the committee actions sit below it. *@
+            <section class="ep-section">
+                <div class="ep-detail__head">
+                    <div class="ep-grow">
+                        <div class="ep-detail__ref"><a asp-controller="Tenders" asp-action="Details" asp-route-id="@sheet.TenderId">@sheet.ReferenceNumber</a> · @system preference point system</div>
+                        <h2 class="ep-detail__title">@sheet.Title</h2>
+                        <div class="ep-detail__meta">Closed @DisplayFormat.DateTime(sheet.ClosingDateUtc) · @sheet.Bids.Count bid@(sheet.Bids.Count == 1 ? "" : "s") · @sheet.EvaluatedCount evaluated</div>
+                    </div>
+                    <span class="@EvaluationService.BadgeCss(sheet.Stage)">@EvaluationService.Label(sheet.Stage)</span>
+                </div>
+            </section>
+
+            @if (sealedBids)
+            {
+                <section class="ep-section">
+                    <h3 class="ep-section__title">Bids are sealed</h3>
+                    <div class="ep-section__sub">This tender closes on @DisplayFormat.DateTime(sheet.ClosingDateUtc). Until then no one can open a bid, so nobody can see a competitor's price or documents.</div>
+                </section>
+            }
+            else
+            {
+                <section class="ep-register" aria-label="Scoresheet">
+                    <div class="ep-register__head ep-register__head--score" aria-hidden="true">
+                        <div>Rank</div><div>Bidder</div><div>B-BBEE</div><div>Bid price</div><div>Price</div><div>Pref.</div><div>Total</div><div>Evaluation</div>
+                    </div>
+                    @foreach (var bid in sheet.Bids)
+                    {
+                        var s = bid.Score;
+                        <a class="ep-register__row ep-register__row--score" asp-action="Bid" asp-route-id="@bid.SubmissionId">
+                            <span class="ep-score__rank">@(s.Rank is int r ? (s.TiedForRank ? $"{r}=" : r.ToString()) : "—")</span>
+                            <span class="ep-register__title">
+                                @bid.CompanyName
+                                @if (sheet.Award?.SubmissionId == bid.SubmissionId) { <span class="ep-badge ep-badge--success">Awarded</span> }
+                                else if (bid.IsRecommended) { <span class="ep-badge ep-badge--info">Recommended</span> }
+                                <span class="ep-score__sub">@bid.ReferenceNumber@(bid.RedFlagCount > 0 ? $" · {bid.RedFlagCount} declaration flag{(bid.RedFlagCount == 1 ? "" : "s")}" : "")</span>
+                            </span>
+                            <span class="ep-register__cell ep-register__cell--muted">@(bid.Level == BbbeeLevel.NonCompliant ? "Non-compl." : $"Level {(int)bid.Level}")</span>
+                            <span class="ep-register__cell">@(s.Price is decimal p ? DisplayFormat.Money(p) : "—")</span>
+                            <span class="ep-register__cell">@DisplayFormat.Points(s.PricePoints)</span>
+                            <span class="ep-register__cell">@DisplayFormat.Points(s.PreferencePoints)</span>
+                            <span class="ep-register__cell ep-register__cell--strong">@DisplayFormat.Points(s.TotalPoints)</span>
+                            @if (bid.Evaluation is null)
+                            {
+                                <span class="ep-badge ep-badge--warning">Not evaluated</span>
+                            }
+                            else if (bid.Evaluation.IsResponsive)
+                            {
+                                <span class="ep-badge ep-badge--success">Responsive</span>
+                            }
+                            else
+                            {
+                                <span class="ep-badge" title="@bid.Evaluation.NonResponsiveReason">Not responsive</span>
+                            }
+                        </a>
+                    }
+                </section>
+            }
+
+    <div class="ep-detail">
+        <div class="ep-detail__main">
+            @if (!sealedBids)
+            {
+                <section class="ep-section">
+                    <h3 class="ep-section__title">How the points are calculated</h3>
+                    <div class="ep-section__sub">
+                        Preferential Procurement Regulations, 2022 · @system system. Only responsive bids are scored; nobody types points in.
+                    </div>
+                    <div class="ep-kvs">
+                        <div class="ep-kv"><span class="ep-kv__k">Price points (max @maxPrice)</span><span class="ep-kv__v">@maxPrice × (1 − (bid price − lowest price) ÷ lowest price), never below 0</span></div>
+                        <div class="ep-kv"><span class="ep-kv__k">Preference points (max @maxPreference)</span><span class="ep-kv__v">B-BBEE status level declared by the bidder: Level 1 = @maxPreference … non-compliant = 0</span></div>
+                        <div class="ep-kv"><span class="ep-kv__k">Ranking</span><span class="ep-kv__v">Highest total; equal totals go to the higher preference points; still equal: drawing of lots</span></div>
+                    </div>
+                </section>
+            }
+        </div>
+
+        <aside class="ep-detail__side">
+            @if (sheet.BacReturnNote is string returned && sheet.Stage == EvaluationStage.Evaluating)
+            {
+                <div class="ep-warning-note">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.7" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+                    <div><strong>Returned by the BAC:</strong> @returned</div>
+                </div>
+            }
+
+            @switch (sheet.Stage)
+            {
+                case EvaluationStage.NotClosed:
+                    <section class="ep-side-card">
+                        <h3 class="ep-side-card__title">Sealed until closing</h3>
+                        <div class="ep-side-card__text">Evaluation opens automatically at the closing date.</div>
+                    </section>
+                    break;
+
+                case EvaluationStage.Evaluating when Model.IsBecMember && !sheet.AllEvaluated:
+                    <section class="ep-side-card">
+                        <h3 class="ep-side-card__title">Evaluate every bid</h3>
+                        <div class="ep-side-card__text">@sheet.EvaluatedCount of @sheet.Bids.Count evaluated. Open each bid, read its documents, and record whether it is responsive and its price. The recommendation opens when every bid is done.</div>
+                        @if (sheet.Bids.FirstOrDefault(b => b.Evaluation is null) is { } next)
+                        {
+                            <a class="ep-abtn ep-abtn--primary ep-abtn--block" asp-action="Bid" asp-route-id="@next.SubmissionId">Evaluate next bid</a>
+                        }
+                    </section>
+                    break;
+
+                case EvaluationStage.Evaluating when Model.IsBecMember:
+                    <section class="ep-side-card" aria-labelledby="recommend-title">
+                        <h3 class="ep-side-card__title" id="recommend-title">Recommend to the BAC</h3>
+                        @if (ranked.Count == 0)
+                        {
+                            <div class="ep-side-card__text">No bid is responsive, so none can be recommended. Tell the SCM Officer; the tender can be cancelled and re-advertised.</div>
+                        }
+                        else
+                        {
+                            <div class="ep-side-card__text">Submitting locks the scoresheet exactly as it is now. Choosing a bid that is not ranked first, or breaking a tie, needs written reasons.</div>
+                            <form asp-action="Recommend" asp-route-id="@sheet.TenderId" method="post" class="ep-mt-14">
+                                <div class="ep-options ep-options--single">
+                                    @foreach (var bid in ranked)
+                                    {
+                                        <label class="ep-option">
+                                            <input type="radio" asp-for="Recommend.RecommendedSubmissionId" value="@bid.SubmissionId" />
+                                            <span class="ep-option__card">
+                                                <span class="ep-option__label">@(bid.Score.TiedForRank ? $"{bid.Score.Rank}=" : bid.Score.Rank.ToString()). @bid.CompanyName</span>
+                                                <span class="ep-option__meta">@DisplayFormat.Points(bid.Score.TotalPoints) points · @DisplayFormat.Money(bid.Score.Price!.Value)</span>
+                                            </span>
+                                        </label>
+                                    }
+                                </div>
+                                <span asp-validation-for="Recommend.RecommendedSubmissionId"></span>
+                                <label class="ep-afield ep-mt-14">REASONS (REQUIRED IF NOT RANKED FIRST OR TIED)
+                                    <textarea class="ep-ainput" asp-for="Recommend.Reason" rows="3" maxlength="2000"></textarea>
+                                    <span asp-validation-for="Recommend.Reason"></span>
+                                </label>
+                                <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block">Submit to the BAC</button>
+                            </form>
+                        }
+                    </section>
+                    break;
+
+                case EvaluationStage.Evaluating:
+                    <section class="ep-side-card">
+                        <h3 class="ep-side-card__title">The BEC is evaluating</h3>
+                        <div class="ep-side-card__text">@sheet.EvaluatedCount of @sheet.Bids.Count bids evaluated. The award form opens here when the BEC submits its scoresheet and recommendation.</div>
+                    </section>
+                    break;
+
+                case EvaluationStage.AwaitingAdjudication:
+                case EvaluationStage.Awarded:
+                    <section class="ep-side-card">
+                        <h3 class="ep-side-card__title">BEC recommendation</h3>
+                        @if (sheet.Recommended is { } rec)
+                        {
+                            <div class="ep-kvs">
+                                <div class="ep-kv"><span class="ep-kv__k">Bidder</span><span class="ep-kv__v">@rec.CompanyName</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Points · rank</span><span class="ep-kv__v">@DisplayFormat.Points(rec.Score.TotalPoints) · @rec.Score.Rank</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Bid price</span><span class="ep-kv__v">@DisplayFormat.Money(rec.Score.Price!.Value)</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Submitted</span><span class="ep-kv__v">@sheet.SubmittedBy · @(sheet.SubmittedAtUtc is DateTime at ? DisplayFormat.DateTime(at) : "")</span></div>
+                            </div>
+                            @if (sheet.RecommendationReason is string why)
+                            {
+                                <div class="ep-side-card__text ep-mt-14"><strong>Reasons:</strong> @why</div>
+                            }
+                        }
+                    </section>
+
+                    @if (sheet.Award is { } award)
+                    {
+                        <section class="ep-side-card">
+                            <h3 class="ep-side-card__title">BAC decision</h3>
+                            <div class="ep-kvs">
+                                <div class="ep-kv"><span class="ep-kv__k">Awarded to</span><span class="ep-kv__v">@award.CompanyName</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Amount</span><span class="ep-kv__v">@(award.Amount is decimal amount ? DisplayFormat.Money(amount) : "—")</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">BAC reference</span><span class="ep-kv__v">@award.CommitteeReference</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Decided</span><span class="ep-kv__v">@DisplayFormat.Date(award.DecisionDateUtc)</span></div>
+                                <div class="ep-kv"><span class="ep-kv__k">Recorded by</span><span class="ep-kv__v">@award.RecordedBy</span></div>
+                            </div>
+                            @if (!award.FollowedRecommendation)
+                            {
+                                <div class="ep-warning-note ep-mt-14"><div><strong>Differs from the BEC recommendation.</strong> Reasons are recorded below and in the audit trail.</div></div>
+                            }
+                            <div class="ep-side-card__text ep-mt-14"><strong>Reasons:</strong> @award.Rationale</div>
+                        </section>
+                    }
+                    else if (Model.IsScmOfficer)
+                    {
+                        <section class="ep-side-card" aria-labelledby="award-title">
+                            <h3 class="ep-side-card__title" id="award-title">Record the BAC decision</h3>
+                            <div class="ep-side-card__text">Capture the decision the Bid Adjudication Committee took. eProcure does not choose a winner. Awarding a bid other than the recommended one needs the BAC's full reasons.</div>
+                            <form asp-action="Award" asp-route-id="@sheet.TenderId" method="post" class="ep-mt-14">
+                                <div class="ep-options ep-options--single">
+                                    @foreach (var bid in ranked)
+                                    {
+                                        <label class="ep-option">
+                                            <input type="radio" asp-for="Award.SubmissionId" value="@bid.SubmissionId" />
+                                            <span class="ep-option__card">
+                                                <span class="ep-option__label">@bid.CompanyName@(bid.IsRecommended ? " (recommended)" : "")</span>
+                                                <span class="ep-option__meta">Rank @bid.Score.Rank · @DisplayFormat.Points(bid.Score.TotalPoints) points · @DisplayFormat.Money(bid.Score.Price!.Value)</span>
+                                            </span>
+                                        </label>
+                                    }
+                                </div>
+                                <span asp-validation-for="Award.SubmissionId"></span>
+                                <label class="ep-afield ep-mt-14">BAC MINUTE OR RESOLUTION REFERENCE
+                                    <input class="ep-ainput" asp-for="Award.CommitteeReference" maxlength="100" placeholder="e.g. BAC 2026/41" />
+                                    <span asp-validation-for="Award.CommitteeReference"></span>
+                                </label>
+                                <label class="ep-afield ep-mt-14">DATE OF THE DECISION
+                                    <input class="ep-ainput" asp-for="Award.DecisionDateLocal" type="date" asp-format="{0:yyyy-MM-dd}" />
+                                    <span asp-validation-for="Award.DecisionDateLocal"></span>
+                                </label>
+                                <label class="ep-afield ep-mt-14">REASONS FOR THE DECISION
+                                    <textarea class="ep-ainput" asp-for="Award.Rationale" rows="4" maxlength="4000"></textarea>
+                                    <span asp-validation-for="Award.Rationale"></span>
+                                </label>
+                                <button type="submit" class="ep-abtn ep-abtn--primary ep-abtn--block">Record award</button>
+                            </form>
+                        </section>
+
+                        <section class="ep-side-card" aria-labelledby="return-title">
+                            <h3 class="ep-side-card__title" id="return-title">Return to the BEC</h3>
+                            <div class="ep-side-card__text">If the BAC does not accept the evaluation, send it back with what must be reconsidered. The scoresheet is unlocked for the BEC.</div>
+                            <form asp-action="Return" asp-route-id="@sheet.TenderId" method="post" class="ep-mt-14">
+                                <textarea class="ep-ainput" asp-for="Return.ReturnReason" rows="3" maxlength="2000" aria-label="What the BEC must reconsider"></textarea>
+                                <span asp-validation-for="Return.ReturnReason"></span>
+                                <button type="submit" class="ep-abtn ep-abtn--block">Return to the BEC</button>
+                            </form>
+                        </section>
+                    }
+                    else
+                    {
+                        <section class="ep-side-card">
+                            <h3 class="ep-side-card__title">Locked</h3>
+                            <div class="ep-side-card__text">The scoresheet was submitted to the BAC. The SCM Officer records the BAC's decision, or returns the evaluation to the BEC.</div>
+                        </section>
+                    }
+                    break;
+
+                default:
+                    <section class="ep-side-card">
+                        <h3 class="ep-side-card__title">Cancelled</h3>
+                        <div class="ep-side-card__text">This tender was cancelled; its bids are kept on record.</div>
+                    </section>
+                    break;
+            }
+        </aside>
+    </div>
+</div>

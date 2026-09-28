@@ -89,6 +89,24 @@
         </div>
 
         <aside class="ep-tender-page__side" aria-label="Apply">
+            @if (Model.Award is { } award)
+            {
+                <section class="ep-card ep-award" aria-labelledby="award-title">
+                    <div class="ep-caption">Award notice</div>
+                    <h2 class="ep-card__title" id="award-title">Awarded to @award.CompanyName</h2>
+                    <div class="ep-kvs">
+                        @if (award.Amount is decimal amount)
+                        {
+                            <div class="ep-kv"><span class="ep-kv__k">Contract value</span><span class="ep-kv__v">@DisplayFormat.Money(amount) incl. VAT</span></div>
+                        }
+                        <div class="ep-kv"><span class="ep-kv__k">Points scored</span><span class="ep-kv__v">@DisplayFormat.Points(award.TotalPoints) (@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20"))</span></div>
+                        <div class="ep-kv"><span class="ep-kv__k">B-BBEE status</span><span class="ep-kv__v">@EligibilityRules.Describe(award.Level)</span></div>
+                        <div class="ep-kv"><span class="ep-kv__k">Decided</span><span class="ep-kv__v">@DisplayFormat.Date(award.DecisionDateUtc)</span></div>
+                    </div>
+                    <p class="ep-card__text ep-mt-14">Decided by @Model.OrganisationName's Bid Adjudication Committee. If you bid, your application shows the outcome and the reason.</p>
+                </section>
+            }
+
             <div class="@eligCss">
                 <span class="ep-elig__dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="@eligIcon" /></svg></span>
                 <div>
@@ -107,7 +125,7 @@
                 <div class="ep-card">
                     <h2 class="ep-card__title">@(submitted ? "You have applied" : "Your application is in progress")</h2>
                     <p class="ep-card__text">@(submitted ? "Your application has been submitted to " + Model.OrganisationName + "." : Model.ApplicationStatus == SubmissionStatus.AwaitingPayment ? "The tender fee has not been paid yet, so the organisation cannot see it." : "Continue where you left off.")</p>
-                    <a class="ep-btn ep-btn--primary ep-btn--tall ep-mt-14" asp-controller="Applications" asp-action="@(submitted ? "Confirmation" : "Step")" asp-route-id="@applicationId" asp-route-n="@(submitted ? null : "1")">@(submitted ? "View confirmation" : "Continue application")</a>
+                    <a class="ep-btn ep-btn--primary ep-btn--tall ep-mt-14" asp-controller="Applications" asp-action="@(submitted ? "Details" : "Step")" asp-route-id="@applicationId" asp-route-n="@(submitted ? null : "1")">@(submitted ? "View my application" : "Continue application")</a>
                 </div>
             }
             else if (!Model.IsOpen)

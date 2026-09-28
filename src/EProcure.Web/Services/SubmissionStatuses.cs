@@ -26,16 +26,8 @@ public static class SubmissionStatuses
         _ => "ep-badge"
     };
 
-    /// <summary>
-    /// Status changes an SCM Officer may record in the MVP. Awarding is NOT here: award decisions are
-    /// recorded separately (AwardRecord, a later phase) and are never made by the system.
-    /// </summary>
-    public static IReadOnlyList<SubmissionStatus> AllowedNext(SubmissionStatus current) => current switch
-    {
-        SubmissionStatus.Submitted => new[] { SubmissionStatus.UnderEvaluation, SubmissionStatus.Unsuccessful },
-        SubmissionStatus.UnderEvaluation => new[] { SubmissionStatus.Unsuccessful },
-        _ => Array.Empty<SubmissionStatus>()
-    };
+    // Statuses after submission are set only by the evaluation workflow (EvaluationService): Under evaluation when
+    // the BEC opens a bid, Awarded / Not awarded when the BAC's decision is recorded. There is no manual change.
 
     /// <summary>Answers the evaluation committee should look at closely. Recorded and flagged, never auto-rejected.</summary>
     public static IReadOnlyList<string> RedFlags(Submission s)

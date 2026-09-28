@@ -117,10 +117,14 @@
             {
                 <section class="ep-side-card">
                     <h3 class="ep-side-card__title">Applications</h3>
-                    <div class="ep-side-card__text">@(Model.Applications == 0 ? "No submitted applications yet." : $"{Model.Applications} submitted application{(Model.Applications == 1 ? "" : "s")}.") Unpaid applications are not visible to staff.</div>
+                    <div class="ep-side-card__text">@(Model.Applications == 0 ? "No submitted applications yet." : $"{Model.Applications} submitted application{(Model.Applications == 1 ? "" : "s")}.") Unpaid applications are not visible to staff.@(Model.Stage == TenderStage.Advertised ? " Bids stay sealed until the closing date." : "")</div>
+                    @if (Model.Applications > 0 && Model.Stage is TenderStage.UnderEvaluation or TenderStage.Awarded)
+                    {
+                        <a class="ep-abtn ep-abtn--primary ep-abtn--block" asp-controller="Evaluation" asp-action="Tender" asp-route-id="@Model.Id">@(Model.Stage == TenderStage.Awarded ? "Scoresheet and award" : "Evaluation scoresheet")</a>
+                    }
                     @if (Model.Applications > 0)
                     {
-                        <a class="ep-abtn ep-abtn--primary ep-abtn--block" asp-controller="Submissions" asp-action="Index" asp-route-tenderId="@Model.Id">View applications</a>
+                        <a class="ep-abtn ep-abtn--block" asp-controller="Submissions" asp-action="Index" asp-route-tenderId="@Model.Id">View applications</a>
                     }
                 </section>
             }

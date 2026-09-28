@@ -12,6 +12,14 @@ public static class DisplayFormat
     public static string Rand(decimal amount) =>
         "R" + amount.ToString("#,0", CultureInfo.InvariantCulture).Replace(",", " ");
 
+    /// <summary>Rand and cents for bid prices and awards, e.g. R1 150 000.00.</summary>
+    public static string Money(decimal amount) =>
+        "R" + amount.ToString("#,0.00", CultureInfo.InvariantCulture).Replace(",", " ");
+
+    /// <summary>Points on a scoresheet, always two decimals, e.g. 91.74.</summary>
+    public static string Points(decimal? points) =>
+        points is decimal p ? p.ToString("0.00", CultureInfo.InvariantCulture) : "—";
+
     /// <summary>Rand and cents, e.g. R1 500.00. A zero fee is shown as "Free".</summary>
     public static string Fee(decimal amount) =>
         amount == 0 ? "Free" : "R" + amount.ToString("#,0.00", CultureInfo.InvariantCulture).Replace(",", " ");
