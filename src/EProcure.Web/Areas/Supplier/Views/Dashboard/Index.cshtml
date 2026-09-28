@@ -7,8 +7,13 @@
     ViewData["ScreenClass"] = "ep-screen--page";
 }
 <header class="ep-feed-head">
+    @* Computers: a page heading (the top navigation bar already shows the wordmark). *@
+    <div class="ep-feed-head__title">
+        <h1 class="ep-page-title">Open tenders</h1>
+        <p class="ep-page-sub">@Model.Tenders.Count open @(Model.Tenders.Count == 1 ? "tender" : "tenders") from @Model.Tenders.Select(t => t.OrganisationName).Distinct().Count() public-sector @(Model.Tenders.Select(t => t.OrganisationName).Distinct().Count() == 1 ? "organisation" : "organisations")@(Model.CompanyName is null ? "" : $" · checked against {Model.CompanyName}")</p>
+    </div>
+    @* Phones: the design's app header with the wordmark. *@
     <div class="ep-feed-head__row">
-        <h1 class="ep-visually-hidden">Open tenders</h1>
         <partial name="~/Views/Shared/Partials/_Wordmark.cshtml" model="@("ep-wordmark--sm")" />
         <span class="ep-grow"></span>
         @if (Model.CompanyName is not null)

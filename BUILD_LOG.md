@@ -290,3 +290,32 @@ feat: restyle bidder app and admin console to the Claude Design prototypes
 ```
 feat: org admins create, edit, publish and cancel tenders
 ```
+
+---
+
+## Supplier side as a responsive web app (2026-09-28)
+
+### Changed
+- `Views/Shared/_Layout.cshtml`: three layouts chosen per page with `ViewData["Shell"]`: "app" (top navigation bar on
+  computers, bottom tab bar on phones), "auth" (split screen on computers), "splash" (full screen). DECISIONS D30.
+- `eprocure.css` section 15: web layout from 768px (top bar, 1200px content, tender card grid, page headings, profile
+  and privacy pages at 760px) and split-screen sign-in from 992px. Phones are unchanged.
+- Tender feed: a proper page heading on computers ("Open tenders", count, organisations, company checked against).
+- Splash photo cropped to the buildings on wide screens (the photo has text printed on its left side).
+
+### Verified in the browser (1200x760)
+- Sign in and Register: split screen, brand panel left, form right; no printed text from the photo showing.
+- Splash: full screen, branding left, buildings right.
+- **Not yet verified:** the tender feed and profile pages on a computer. LocalDB would not start on the laptop
+  ("SQL Server process failed to start", Windows error 575), so pages that read the database could not be opened.
+
+### Manual tests
+1. On a computer, open `/Account/Login`: split screen. Make the window narrow (phone width): the phone layout returns.
+2. Sign in as `supplier1@demo.co.za`: top navigation bar, "Open tenders" heading, tender cards in 2 to 3 columns.
+3. Profile: centred page, Sign out in the top bar and on the page.
+4. On a phone (or narrow window): bottom tab bar as before.
+
+### Commit message
+```
+feat: supplier side as a responsive web app on tablets and computers
+```

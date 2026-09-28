@@ -2,6 +2,7 @@
    Without JavaScript the Skip link still works. *@
 @{
     ViewData["Title"] = "Procurement, simplified";
+    ViewData["Shell"] = "splash";
     var loginUrl = Url.Action("Login", "Account")!;
 }
 <div class="ep-splash" data-ep-autocontinue="@loginUrl" data-ep-delay="2500">

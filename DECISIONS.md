@@ -413,3 +413,20 @@ job. Cancelling sets status Cancelled with a required reason (10 to 1000 charact
 
 **Why:** No scheduled job to maintain, and the register can never be out of date. Keeping cancelled tenders
 (with reasons) is required for records retention and audit (D10).
+
+---
+
+## D30. Supplier side is a responsive web app (replaces D20)
+
+**What:** Phones (< 768px) keep the design's phone app with the bottom tab bar. From 768px the same screens become a
+normal website: a top navigation bar (wordmark, Tenders / Applications / Profile, the signed-in person, Sign out),
+full-width content up to 1200px, and the tender feed as a grid of cards. From 992px, sign in / register / verify are
+a split screen: the brand photo panel on the left, the form on the right. Pages pick their layout with
+`ViewData["Shell"]` ("app", "auth" or "splash").
+
+**Why:** Feedback on the first version: on a laptop it looked like a phone in the middle of the page. Suppliers use
+both phones and office computers. Colours, type, cards and wording are unchanged; only the page structure adapts.
+
+**Detail:** The design's splash photo has "eProcure / Procurement, simplified." printed on its left side. On wide
+screens the photo is kept to the right-hand part of the panel and the left fades into navy, so the printed text
+never shows under our own wordmark.

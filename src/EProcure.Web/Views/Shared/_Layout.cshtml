@@ -1,12 +1,22 @@
 @*
-    Bidder (supplier) and public pages. The design is a phone app: full width on a phone,
-    a centred 480px column on bigger screens. Signed-in suppliers get the bottom tab bar
-    unless a page sets ViewData["HideTabBar"] = true (e.g. Verify phone).
+    Bidder (supplier) and public pages. Responsive web app:
+      - Phones (< 768px): the design's phone app, with the bottom tab bar.
+      - Tablets and computers (>= 768px): a normal website: top navigation bar, full-width content.
+    Pages choose a "shell" with ViewData["Shell"]:
+      "app"    (default) normal page: top bar on computers, bottom tab bar on phones
+      "auth"   sign in / register / verify: on computers a split screen (brand photo left, form right)
+      "splash" full-screen splash with no navigation
 *@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 @{
-    var showTabBar = User.Identity?.IsAuthenticated == true
-                     && User.IsInRole(AppRoles.Supplier)
-                     && ViewData["HideTabBar"] as bool? != true;
+    var shell = ViewData["Shell"] as string ?? "app";
+    var isSignedIn = User.Identity?.IsAuthenticated == true;
+    var isSupplier = isSignedIn && User.IsInRole(AppRoles.Supplier);
+    var showTabBar = shell == "app" && isSupplier && ViewData["HideTabBar"] as bool? != true;
+    var tab = ViewData["Tab"] as string;
+    var fullName = isSignedIn ? (await UserManager.GetUserAsync(User))?.FullName : null;
+    string NavCss(string key) => "ep-webnav__link" + (tab == key ? " ep-webnav__link--active" : "");
 }
 <!DOCTYPE html>
 <html lang="en-ZA">
@@ -18,16 +28,71 @@
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/eprocure.css" asp-append-version="true" />
 </head>
-<body class="ep-body">
-    <div class="ep-app">
+<body class="ep-body ep-body--@shell">
+    @if (shell == "app")
+    {
+        <header class="ep-webnav">
+            <div class="ep-webnav__inner">
+                <a class="ep-webnav__brand" asp-area="" asp-controller="Home" asp-action="Index" aria-label="eProcure home">
+                    <partial name="~/Views/Shared/Partials/_Wordmark.cshtml" model="@("ep-wordmark--sm")" />
+                </a>
+                @if (isSupplier)
+                {
+                    <nav class="ep-webnav__links" aria-label="Main">
+                        <a class="@NavCss("tenders")" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index" aria-current="@(tab == "tenders" ? "page" : null)">Tenders</a>
+                        <span class="ep-webnav__link ep-webnav__link--soon" aria-disabled="true" title="Coming in a later step">Applications<span class="ep-soon-pill">Soon</span></span>
+                        <a class="@NavCss("profile")" asp-area="Supplier" asp-controller="Profile" asp-action="Index" aria-current="@(tab == "profile" ? "page" : null)">Profile</a>
+                    </nav>
+                }
+                <span class="ep-grow"></span>
+                @if (isSignedIn)
+                {
+                    <span class="ep-webnav__user">
+                        <span class="ep-webnav__initials" aria-hidden="true">@DisplayFormat.Initials(fullName)</span>
+                        <span class="ep-webnav__name">@fullName</span>
+                    </span>
+                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="ep-webnav__button">Sign out</button>
+                    </form>
+                }
+                else
+                {
+                    <a class="ep-webnav__button" asp-area="" asp-controller="Account" asp-action="Login">Sign in</a>
+                    <a class="ep-webnav__button ep-webnav__button--primary" asp-area="" asp-controller="Account" asp-action="Register">Register</a>
+                }
+            </div>
+        </header>
+    }
+
+    <div class="ep-app ep-app--@shell">
+        @if (shell == "auth")
+        {
+            @* Brand panel beside the form on computers; hidden on phones, where the form is the whole screen. *@
+            <aside class="ep-auth-hero" aria-hidden="true">
+                <img class="ep-splash__photo" src="~/img/brand/splash.jpg" alt="" />
+                <div class="ep-splash__shade"></div>
+                <div class="ep-auth-hero__content">
+                    <partial name="~/Views/Shared/Partials/_Wordmark.cshtml" model="@("ep-wordmark--xl ep-wordmark--light")" />
+                    <div class="ep-splash__tagline">Procurement, simplified.</div>
+                    <div class="ep-splash__line"></div>
+                    <ul class="ep-auth-hero__points">
+                        <li>Browse public-sector tenders from every participating organisation</li>
+                        <li>See at once whether your company qualifies to bid</li>
+                        <li>Apply, pay the tender fee and track your application in one place</li>
+                    </ul>
+                </div>
+                <div class="ep-auth-hero__foot">Secure procurement platform · South Africa</div>
+            </aside>
+        }
         <main class="ep-screen@(ViewData["ScreenClass"] is string extra ? " " + extra : "")">
             @RenderBody()
         </main>
-        @if (showTabBar)
-        {
-            <partial name="~/Views/Shared/Partials/_TabBar.cshtml" />
-        }
     </div>
+
+    @if (showTabBar)
+    {
+        <partial name="~/Views/Shared/Partials/_TabBar.cshtml" />
+    }
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

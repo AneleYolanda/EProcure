@@ -87,6 +87,8 @@ button { cursor: pointer; }
 .ep-screen { flex: 1; display: flex; flex-direction: column; background: #fff; }
 .ep-screen--page { background: var(--ep-page); }
 .ep-screen__body { padding: 20px 18px 40px; display: flex; flex-direction: column; gap: 14px; }
+/* Parts that only appear on computers (the web layout, section 15). Hidden on phones. */
+.ep-webnav, .ep-auth-hero, .ep-feed-head__title { display: none; }
 .ep-wordmark { font-weight: 600; letter-spacing: -.9px; line-height: 1; font-size: 34px; color: var(--ep-ink); text-decoration: none; white-space: nowrap; }
 .ep-wordmark--sm { font-size: 21px; letter-spacing: -.5px; }
 .ep-wordmark--xl { font-size: 52px; letter-spacing: -1.4px; }
@@ -542,6 +544,87 @@ a.ep-action:hover { background: #F7FAFC; }
   .ep-fact:nth-child(-n+2) { border-bottom: 1px solid #EDF2F7; }
   .ep-section { padding: 18px 16px; }
   .ep-form-actions { flex-wrap: wrap; }
+}
+/* ---------- 15. Bidder side as a website on tablets and computers ----------
+   Same colours, type, cards and components as the phone design; only the page structure changes:
+   top navigation instead of the bottom tab bar, full-width content, a grid of tender cards, and
+   (from 992px) a split-screen sign-in with the brand photo beside the form. */
+.ep-body--splash .ep-app { max-width: none; box-shadow: none; }
+@media (min-width: 520px) and (max-width: 767.98px) {
+  .ep-body--app .ep-tabbar { max-width: 480px; margin: 0 auto; }
+}
+@media (min-width: 768px) {
+  .ep-body--app { background: var(--ep-page); }
+  .ep-tabbar { display: none; }
+
+  /* The splash photo has "eProcure / Procurement, simplified." printed on its LEFT side. Phones only ever
+     show the middle (the buildings); on wide screens the photo is kept to the right-hand part of the panel
+     and the left fades into navy, where our own wordmark sits, so the printed text never shows. */
+  .ep-splash, .ep-auth-hero { background: #0D1629; }
+  .ep-splash .ep-splash__photo, .ep-auth-hero .ep-splash__photo { left: 38%; width: 62%; object-position: right center; }
+  .ep-splash .ep-splash__shade, .ep-auth-hero .ep-splash__shade {
+    background: linear-gradient(90deg, #0D1629 38%, rgba(13, 22, 41, .72) 52%, rgba(27, 42, 74, .38) 100%),
+                linear-gradient(180deg, rgba(27, 42, 74, 0) 55%, rgba(13, 22, 41, .6) 100%);
+  }
+
+  .ep-webnav { display: block; position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 1px solid var(--ep-line); }
+  .ep-webnav__inner { max-width: 1200px; margin: 0 auto; height: 64px; padding: 0 32px; display: flex; align-items: center; gap: 28px; }
+  .ep-webnav__brand { text-decoration: none; }
+  .ep-webnav__links { display: flex; gap: 24px; align-self: stretch; }
+  .ep-webnav__link { display: flex; align-items: center; padding-top: 2px; font-size: 14px; font-weight: 600; color: var(--ep-muted); text-decoration: none; border-bottom: 2px solid transparent; }
+  .ep-webnav__link:hover { color: var(--ep-ink); }
+  .ep-webnav__link--active, .ep-webnav__link--active:hover { color: var(--ep-ink); border-bottom-color: var(--ep-accent); }
+  .ep-webnav__link--soon { opacity: .55; cursor: default; }
+  .ep-webnav__link--soon:hover { color: var(--ep-muted); }
+  .ep-webnav__user { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; color: var(--ep-ink); }
+  .ep-webnav__initials { width: 30px; height: 30px; border-radius: 8px; background: var(--ep-ink); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .ep-webnav__button { display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border: 1px solid var(--ep-input-border); border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: var(--ep-ink); text-decoration: none; }
+  .ep-webnav__button:hover { color: var(--ep-ink); background: var(--ep-page); }
+  .ep-webnav__button--primary, .ep-webnav__button--primary:hover { border-color: var(--ep-accent); background: var(--ep-accent); color: #fff; }
+
+  .ep-body--app .ep-app { max-width: 1200px; min-height: calc(100vh - 65px); padding: 0 32px 64px; background: transparent; box-shadow: none; }
+  .ep-body--app .ep-screen { background: transparent; }
+  .ep-screen--narrow { width: 100%; max-width: 760px; margin: 0 auto; }
+
+  /* Tender feed */
+  .ep-feed-head { background: transparent; border: 0; padding: 32px 0 0; }
+  .ep-feed-head__row, .ep-tabs { display: none; }
+  .ep-feed-head__title { display: block; }
+  .ep-page-title { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -.5px; color: var(--ep-ink); }
+  .ep-page-sub { margin: 6px 0 0; font-size: 13.5px; color: var(--ep-muted); }
+  .ep-feed-head form { margin-top: 22px; max-width: 560px; }
+  .ep-feed-head .ep-search { background: #fff; height: 46px; }
+  .ep-filter-chips { padding: 16px 0 4px; flex-wrap: wrap; overflow: visible; }
+  .ep-info-strip { margin: 12px 0 0; }
+  .ep-tender-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; padding: 16px 0 0; }
+  .ep-tender-list .ep-empty { grid-column: 1 / -1; }
+
+  /* Profile, privacy and other content pages */
+  .ep-body--app .ep-page-head { background: transparent; border: 0; padding: 32px 0 8px; }
+  .ep-body--app .ep-page-head__title { font-size: 26px; letter-spacing: -.5px; }
+  .ep-body--app .ep-topbar { background: transparent; border: 0; padding: 32px 0 8px; }
+  .ep-body--app .ep-topbar__title { font-size: 26px; letter-spacing: -.5px; }
+  .ep-body--app .ep-screen__body { padding: 16px 0 40px; }
+}
+@media (min-width: 992px) {
+  .ep-body--auth { background: #fff; }
+  .ep-body--auth .ep-app { max-width: none; min-height: 100vh; flex-direction: row; box-shadow: none; }
+  .ep-auth-hero { display: block; position: relative; flex: 1; overflow: hidden; background: var(--ep-ink); }
+  .ep-auth-hero__content { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 64px; max-width: 660px; }
+  .ep-auth-hero__content .ep-wordmark { animation: epFade .7s ease both; }
+  .ep-auth-hero__points { margin: 34px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; animation: epFade .6s ease 1.1s both; }
+  .ep-auth-hero__points li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, .8); }
+  .ep-auth-hero__points li::before { content: ""; flex: none; width: 7px; height: 7px; margin-top: 8px; border-radius: 99px; background: var(--ep-accent); }
+  .ep-auth-hero__foot { position: absolute; bottom: 40px; left: 64px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .45); }
+  .ep-body--auth .ep-screen { width: 520px; flex: none; min-height: 100vh; }
+  .ep-body--auth .ep-auth { justify-content: center; padding: 48px 56px; }
+  .ep-body--auth .ep-auth > .ep-wordmark, .ep-body--auth .ep-auth__tagline { display: none; }
+  .ep-body--auth .ep-auth__title { margin-top: 0; font-size: 26px; letter-spacing: -.5px; }
+  .ep-body--auth .ep-auth__spacer { flex: none; min-height: 32px; }
+  .ep-body--auth .ep-topbar { padding: 32px 52px 16px; border-bottom: 0; }
+  .ep-body--auth .ep-topbar__title { font-size: 22px; }
+  .ep-body--auth .ep-register__body { padding: 8px 56px 48px; }
+  .ep-splash__content { padding: 0 10vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

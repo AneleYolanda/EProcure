@@ -3,6 +3,7 @@
 @model EProcure.Web.ViewModels.Account.RegisterViewModel
 @{
     ViewData["Title"] = "Create your profile";
+    ViewData["Shell"] = "auth";
     ViewData["BackUrl"] = Url.Action("Login", "Account");
 }
 <partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
