@@ -1,0 +1,186 @@
+@* Design screen "sApply": 5 steps with a progress bar. Each step is its own small form, so a supplier can
+   stop and come back later (the draft is saved on the server). Nothing is visible to the organisation
+   until the application is submitted. *@
+@model ApplyStepViewModel
+@{
+    var n = Model.Step;
+    ViewData["Title"] = ApplyStepViewModel.StepTitles[n];
+    ViewData["Tab"] = "tenders";
+    ViewData["BackUrl"] = n == 1 ? Url.Action("Details", "Tenders", new { id = Model.TenderId }) : Url.Action("Step", new { id = Model.SubmissionId, n = n - 1 });
+    ViewData["TopBarMeta"] = $"Step {n} of {ApplyStepViewModel.StepCount}";
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+    string Checked(bool? value, bool option) => value == option ? "checked" : "";
+    var fee = Model.TenderFee == 0 ? "no tender fee" : $"the {DisplayFormat.Fee(Model.TenderFee)} tender fee";
+}
+<div class="ep-wizard-head">
+    <partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+    <div class="ep-progress" role="progressbar" aria-valuemin="1" aria-valuemax="5" aria-valuenow="@n" aria-label="Step @n of 5"><span style="width:@(n * 20)%"></span></div>
+</div>
+
+<div class="ep-screen__body">
+    <div class="ep-q__note">@Model.TenderReference · @Model.TenderTitle · @Model.OrganisationName · closes @DisplayFormat.DateTime(Model.ClosingDateUtc)</div>
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+    <div asp-validation-summary="All"></div>
+
+    @switch (n)
+    {
+        case 1:
+            <p class="ep-card__text">Pre-filled from your company profile. Check the details; if something is wrong, correct it on your company page first.</p>
+            <div class="ep-card">
+                <div class="ep-caption">Bidding as</div>
+                <div class="ep-company-card__name ep-mt-8">@Model.CompanyName</div>
+                <div class="ep-kvs">
+                    @foreach (var (key, value) in Model.CompanyFields)
+                    {
+                        <div class="ep-kv"><span class="ep-kv__k">@key</span><span class="ep-kv__v">@value</span></div>
+                    }
+                </div>
+                <a class="ep-btn ep-btn--secondary ep-mt-14" asp-controller="Company" asp-action="Edit">Correct company details</a>
+            </div>
+            <a class="ep-btn ep-btn--primary ep-btn--tall" asp-action="Step" asp-route-id="@Model.SubmissionId" asp-route-n="2">Continue</a>
+            break;
+
+        case 2:
+            <p class="ep-card__text">Pick your answers. These are the standard checks every SBD bidding document asks for. Answer truthfully: a "No" is recorded and shown to the evaluation committee; eProcure does not reject it automatically.</p>
+            <form asp-action="Compliance" asp-route-id="@Model.SubmissionId" method="post" class="ep-tender-page__main">
+                <fieldset class="ep-q" aria-labelledby="q1">
+                    <div class="ep-q__label" id="q1">Is your company registered on the Central Supplier Database?</div>
+                    <div class="ep-q__note">Mandatory for all organs of state.</div>
+                    <div class="ep-answers">
+                        <label class="ep-answer"><input type="radio" name="csdRegistered" value="true" @Checked(Model.CsdRegistered, true) /><span>Yes</span></label>
+                        <label class="ep-answer"><input type="radio" name="csdRegistered" value="false" @Checked(Model.CsdRegistered, false) /><span>No</span></label>
+                    </div>
+                    @if (Model.CsdRegistered == false)
+                    {
+                        <div class="ep-q__warn">Without CSD registration a bid is usually disqualified.</div>
+                    }
+                </fieldset>
+                <fieldset class="ep-q" aria-labelledby="q2">
+                    <div class="ep-q__label" id="q2">Do you have a valid SARS tax compliance status?</div>
+                    <div class="ep-q__note">The organisation verifies it with your tax compliance PIN.</div>
+                    <div class="ep-answers">
+                        <label class="ep-answer"><input type="radio" name="taxCompliant" value="true" @Checked(Model.TaxCompliant, true) /><span>Yes</span></label>
+                        <label class="ep-answer"><input type="radio" name="taxCompliant" value="false" @Checked(Model.TaxCompliant, false) /><span>No</span></label>
+                    </div>
+                    @if (Model.TaxCompliant == false)
+                    {
+                        <div class="ep-q__warn">A bidder that is not tax compliant cannot be awarded a contract.</div>
+                    }
+                </fieldset>
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--tall">Continue</button>
+            </form>
+            break;
+
+        case 3:
+            <p class="ep-card__text">Declarations carry legal weight. A false declaration can disqualify the bid and be reported.</p>
+            <form asp-action="Declarations" asp-route-id="@Model.SubmissionId" method="post" class="ep-tender-page__main">
+                <fieldset class="ep-q" aria-labelledby="q3">
+                    <div class="ep-q__form">SBD 4 · DECLARATION OF INTEREST</div>
+                    <div class="ep-q__label" id="q3">Do you or any director have a relationship with a person employed by the procuring organisation or the state?</div>
+                    <div class="ep-answers">
+                        <label class="ep-answer"><input type="radio" name="hasInterest" value="true" @Checked(Model.HasInterest, true) /><span>Yes</span></label>
+                        <label class="ep-answer"><input type="radio" name="hasInterest" value="false" @Checked(Model.HasInterest, false) /><span>No</span></label>
+                    </div>
+                    <label class="ep-visually-hidden" for="interestDetails">If yes, name and nature of the relationship</label>
+                    <textarea class="ep-input" id="interestDetails" name="interestDetails" rows="2" maxlength="1000" placeholder="If yes: name of the person and the nature of the relationship">@Model.InterestDetails</textarea>
+                    <span class="field-validation-error">@ViewData.ModelState["InterestDetails"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+                </fieldset>
+                <fieldset class="ep-q" aria-labelledby="q4">
+                    <div class="ep-q__form">SBD 8 · PAST SUPPLY CHAIN PRACTICES</div>
+                    <div class="ep-q__label" id="q4">Has your company been listed as a restricted supplier or tender defaulter in the past five years?</div>
+                    <div class="ep-answers">
+                        <label class="ep-answer"><input type="radio" name="onRestrictedList" value="true" @Checked(Model.OnRestrictedList, true) /><span>Yes</span></label>
+                        <label class="ep-answer"><input type="radio" name="onRestrictedList" value="false" @Checked(Model.OnRestrictedList, false) /><span>No</span></label>
+                    </div>
+                    <label class="ep-visually-hidden" for="restrictionDetails">If yes, explain</label>
+                    <textarea class="ep-input" id="restrictionDetails" name="restrictionDetails" rows="2" maxlength="1000" placeholder="If yes: when, by whom and why">@Model.RestrictionDetails</textarea>
+                    <span class="field-validation-error">@ViewData.ModelState["RestrictionDetails"]?.Errors.FirstOrDefault()?.ErrorMessage</span>
+                </fieldset>
+                <fieldset class="ep-q" aria-labelledby="q5">
+                    <div class="ep-q__form">SBD 9 · INDEPENDENT BID DETERMINATION</div>
+                    <div class="ep-q__label" id="q5">Confirm your bid price was arrived at independently, without consultation or agreement with any competitor.</div>
+                    <div class="ep-answers">
+                        <label class="ep-answer"><input type="radio" name="independentBid" value="true" @Checked(Model.IndependentBid, true) /><span>I confirm</span></label>
+                        <label class="ep-answer"><input type="radio" name="independentBid" value="false" @Checked(Model.IndependentBid, false) /><span>I cannot confirm</span></label>
+                    </div>
+                </fieldset>
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--tall">Continue</button>
+            </form>
+            break;
+
+        case 4:
+            <p class="ep-card__text">This checklist is exactly what @Model.OrganisationName requires for this tender. Upload each document as a PDF (maximum @(Model.MaxFileSizeBytes / (1024 * 1024)) MB). You can replace a file until you submit.</p>
+            @foreach (var item in Model.Checklist)
+            {
+                <div class="ep-docrow@(item.DocumentId is null ? "" : " ep-docrow--done")">
+                    <div class="ep-docrow__top">
+                        <span class="ep-docrow__box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg></span>
+                        <span class="ep-grow">
+                            <span class="ep-docrow__name">@item.Name</span>
+                            <span class="ep-docrow__meta">@(item.DocumentId is null ? (item.Mandatory ? "Required · not uploaded yet" : "Optional") : $"{item.FileName} · {Math.Max(1, item.SizeBytes / 1024)} KB · uploaded {DisplayFormat.DateTime(item.UploadedAtUtc!.Value)}")</span>
+                        </span>
+                    </div>
+                    <div class="ep-docrow__actions">
+                        <form asp-action="Upload" asp-route-id="@Model.SubmissionId" method="post" enctype="multipart/form-data" class="ep-docrow__actions ep-grow">
+                            <input type="hidden" name="requirementId" value="@item.RequirementId" />
+                            <label class="ep-visually-hidden" for="file-@item.RequirementId">PDF for @item.Name</label>
+                            <input type="file" id="file-@item.RequirementId" name="file" accept="application/pdf,.pdf" required />
+                            <button type="submit" class="ep-btn ep-btn--secondary ep-btn--small">@(item.DocumentId is null ? "Upload" : "Replace")</button>
+                        </form>
+                        @if (item.DocumentId is int documentId)
+                        {
+                            <form asp-action="RemoveDocument" asp-route-id="@Model.SubmissionId" method="post">
+                                <input type="hidden" name="documentId" value="@documentId" />
+                                <button type="submit" class="ep-textbtn ep-textbtn--muted">Remove</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+            <a class="ep-btn ep-btn--primary ep-btn--tall" asp-action="Step" asp-route-id="@Model.SubmissionId" asp-route-n="5">Continue to review</a>
+            break;
+
+        default:
+            <div class="ep-review">
+                <h2 class="ep-card__title">Review before @(Model.TenderFee == 0 ? "submitting" : "payment")</h2>
+                <div class="ep-kvs">
+                    @foreach (var (key, value) in Model.ReviewRows)
+                    {
+                        <div class="ep-kv"><span class="ep-kv__k">@key</span><span class="ep-kv__v">@value</span></div>
+                    }
+                </div>
+            </div>
+            <div class="ep-review">
+                <h2 class="ep-card__title">Eligibility re-check</h2>
+                <div class="ep-icon-row ep-mt-8">
+                    <span class="ep-elig__dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg></span>
+                    <div class="ep-card__text ep-m0">Run again against the live tender just now. @Model.EligibilityText</div>
+                </div>
+            </div>
+            @if (Model.Missing.Count > 0)
+            {
+                <div class="ep-blocked">
+                    <div class="ep-blocked__title">Not ready yet</div>
+                    <ul class="ep-missing">
+                        @foreach (var item in Model.Missing)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                </div>
+            }
+            <form asp-action="Submit" asp-route-id="@Model.SubmissionId" method="post" class="ep-tender-page__main">
+                <label class="ep-check-card">
+                    <input type="checkbox" name="declared" value="true" />
+                    <span class="ep-check-card__box" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7" /></svg></span>
+                    <span class="ep-check-card__text">I declare that the information in this application and its documents is true and correct, and I am authorised to submit it on behalf of @Model.CompanyName.</span>
+                </label>
+                <div class="ep-note">Your application is not submitted until @(Model.TenderFee == 0 ? "you press the button below" : "the tender fee clears"). Until then @Model.OrganisationName cannot see it.</div>
+                <button type="submit" class="ep-btn ep-btn--primary ep-btn--tall" @(Model.Missing.Count > 0 ? "disabled" : "")>@(Model.TenderFee == 0 ? "Submit application" : "Continue to payment")</button>
+            </form>
+            break;
+    }
+</div>

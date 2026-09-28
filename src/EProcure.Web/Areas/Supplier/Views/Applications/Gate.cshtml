@@ -1,0 +1,22 @@
+@* Design screen "sGate": the eligibility hard stop. Nothing is created and nothing is paid. *@
+@model GateViewModel
+@{
+    ViewData["Title"] = "Not eligible";
+    ViewData["Tab"] = "tenders";
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<div class="ep-screen__body">
+    <div class="ep-gate__icon ep-mt-18">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B4791C" stroke-width="1.6" aria-hidden="true"><path d="M12 3l9 16H3l9-16z" /><path d="M12 9v5" /><path d="M12 16.5v.5" /></svg>
+    </div>
+    <h1 class="ep-otp__title">You do not meet the minimum standard for this tender</h1>
+    <p class="ep-otp__text">We have stopped the application here. Nothing has been submitted and no payment has been taken.</p>
+    <div class="ep-gate__criterion">
+        <div class="ep-gate__caption">CRITERION FAILED</div>
+        <div class="ep-gate__text">@Model.Reason</div>
+        <div class="ep-gate__small">This is a pre-qualification gate set by @Model.OrganisationName for tender @Model.TenderReference. The same rule is applied to every bidder. There is no override and no appeal inside the app.</div>
+    </div>
+    <p class="ep-otp__text">You have @Model.QualifyingCount open @(Model.QualifyingCount == 1 ? "tender" : "tenders") that your company does qualify for.</p>
+    <a class="ep-btn ep-btn--primary ep-btn--tall" asp-controller="Dashboard" asp-action="Index">View tenders you qualify for</a>
+    <a class="ep-btn ep-btn--secondary" asp-controller="Company" asp-action="Index">My B-BBEE level has changed</a>
+</div>

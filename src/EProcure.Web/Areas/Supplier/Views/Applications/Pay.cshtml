@@ -1,0 +1,40 @@
+@* Design screen "sPay". The supplier chooses a method and is handed over to the payment provider;
+   eProcure never asks for or stores card or bank details. *@
+@model PayViewModel
+@{
+    ViewData["Title"] = "Tender fee payment";
+    ViewData["Tab"] = "tenders";
+    ViewData["BackUrl"] = Url.Action("Step", new { id = Model.SubmissionId, n = 5 });
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<form asp-action="Pay" asp-route-id="@Model.SubmissionId" method="post" class="ep-screen__body">
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">@flashError</div>
+    }
+    else if (Model.LastAttemptFailed)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">Your last payment attempt did not go through. You can try again.</div>
+    }
+
+    <div class="ep-amount">
+        <div class="ep-amount__caption">Amount due to @Model.OrganisationName</div>
+        <div class="ep-amount__value">@DisplayFormat.Fee(Model.Amount)</div>
+        <div class="ep-amount__text">Tender fee for @Model.TenderReference. Paid to the organisation; eProcure only verifies that the payment cleared. Pay before @DisplayFormat.DateTime(Model.ClosingDateUtc).</div>
+    </div>
+
+    <fieldset class="ep-fieldset ep-tender-page__main">
+        <legend class="ep-card__title ep-mt-8">Choose a payment method</legend>
+        <label class="ep-method"><input type="radio" name="method" value="card" checked /><span class="ep-method__card"><span class="ep-method__dot"></span><span><span class="ep-method__label">Debit or credit card</span><span class="ep-method__meta">Visa, Mastercard · clears immediately</span></span></span></label>
+        <label class="ep-method"><input type="radio" name="method" value="eft" /><span class="ep-method__card"><span class="ep-method__dot"></span><span><span class="ep-method__label">Instant EFT</span><span class="ep-method__meta">Pay from your bank account</span></span></span></label>
+        <label class="ep-method"><input type="radio" name="method" value="transfer" /><span class="ep-method__card"><span class="ep-method__dot"></span><span><span class="ep-method__label">Manual bank transfer</span><span class="ep-method__meta">Up to 2 business days to clear</span></span></span></label>
+    </fieldset>
+
+    <div class="ep-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6B7B" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6" /><path d="M12 8v.5" /></svg>
+        <span>You are handed over to the payment gateway. eProcure never sees or stores your card number. Until the payment clears, your application stays unsubmitted and invisible to the organisation.</span>
+    </div>
+    <button type="submit" class="ep-btn ep-btn--primary ep-btn--tall">Pay @DisplayFormat.Fee(Model.Amount) and submit</button>
+</form>

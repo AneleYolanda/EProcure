@@ -46,7 +46,31 @@ builder.Services
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, OrganisationClaimsPrincipalFactory>();
 builder.Services.AddScoped<ICurrentOrganisation, CurrentOrganisation>();
 builder.Services.AddScoped<IAuditService, AuditService>();
-builder.Services.AddScoped<IOtpSender, MockOtpSender>();
+// ---- External services (swappable) ----
+// Each outside service sits behind an interface. appsettings.json "ExternalServices" chooses the
+// implementation, so moving to Azure Blob / PayFast / SMSPortal later is a new class + a config change.
+var external = builder.Configuration.GetSection("ExternalServices");
+builder.Services.Configure<UploadOptions>(builder.Configuration.GetSection("Uploads"));
+
+switch (external["Otp"] ?? "Mock")
+{
+    case "Mock": builder.Services.AddScoped<IOtpSender, MockOtpSender>(); break;
+    default: throw new InvalidOperationException($"Unknown ExternalServices:Otp provider '{external["Otp"]}'.");
+}
+switch (external["FileStorage"] ?? "Local")
+{
+    case "Local": builder.Services.AddSingleton<IFileStorage, LocalFileStorage>(); break;
+    default: throw new InvalidOperationException($"Unknown ExternalServices:FileStorage provider '{external["FileStorage"]}'.");
+}
+switch (external["Payment"] ?? "Mock")
+{
+    case "Mock":
+        builder.Services.AddSingleton<MockPaymentGateway>();
+        builder.Services.AddSingleton<IPaymentGateway>(sp => sp.GetRequiredService<MockPaymentGateway>());
+        break;
+    default: throw new InvalidOperationException($"Unknown ExternalServices:Payment provider '{external["Payment"]}'.");
+}
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
 builder.Services.AddScoped<ITenderService, TenderService>();
@@ -87,6 +111,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
+    // Development only: bring the local database up to the latest migration on start-up, so pulling new
+    // code and pressing Run is enough. Production databases are migrated deliberately with the SQL scripts
+    // in docs/schema, never automatically.
+    await scope.ServiceProvider.GetRequiredService<EProcureDbContext>().Database.MigrateAsync();
     var seeder = scope.ServiceProvider.GetRequiredService<DemoDataSeeder>();
     await seeder.SeedAsync();
 }

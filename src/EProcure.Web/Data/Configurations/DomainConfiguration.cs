@@ -130,6 +130,8 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         b.HasIndex(s => new { s.TenderId, s.CompanyId }).IsUnique();
 
         b.Property(s => s.PaymentReference).HasMaxLength(100);
+        b.Property(s => s.InterestDetails).HasMaxLength(1000);
+        b.Property(s => s.RestrictionDetails).HasMaxLength(1000);
 
         // Application reference shown to the supplier (EP-2026-000123). Assigned when payment succeeds,
         // so it is NULL on drafts; the unique index ignores NULLs so many drafts can exist.

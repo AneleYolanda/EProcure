@@ -1,0 +1,142 @@
+@* Design screen "sDetail". On computers: details left, the decision (eligibility + apply) in a sticky
+   column on the right. The Apply button POSTs to Applications/Start, which re-checks everything. *@
+@model SupplierTenderViewModel
+@{
+    ViewData["Title"] = Model.ReferenceNumber;
+    ViewData["Tab"] = "tenders";
+    ViewData["BackUrl"] = Url.Action("Index", "Dashboard");
+    ViewData["ScreenClass"] = "ep-screen--page";
+    var e = Model.Eligibility;
+    var (eligCss, eligHeading, eligIcon) = e.Outcome switch
+    {
+        EligibilityOutcome.Qualifies => ("ep-elig", "Your company qualifies to bid", "M5 13l4 4L19 7"),
+        EligibilityOutcome.NotEligible => ("ep-elig ep-elig--warning", "You do not meet the minimum standard", "M12 6v7M12 16.5v.5"),
+        _ => ("ep-elig ep-elig--neutral", "Add your company to check eligibility", "M12 6v7M12 16.5v.5")
+    };
+    var bbbeeOk = Model.MinimumBbbeeLevel is null || e.Outcome == EligibilityOutcome.Qualifies;
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<div class="ep-screen__body">
+    @if (TempData["FlashError"] is string flashError)
+    {
+        <div class="ep-flash ep-flash--error" role="alert">@flashError</div>
+    }
+
+    <div class="ep-tender-page">
+        <div class="ep-tender-page__main">
+            <div>
+                <h1 class="ep-detail-title">@Model.Title</h1>
+                <div class="ep-detail-org">
+                    @if (!string.IsNullOrWhiteSpace(Model.OrganisationLogoPath))
+                    {
+                        <img src="@Model.OrganisationLogoPath" alt="" />
+                    }
+                    <span>Posted by <strong>@Model.OrganisationName</strong></span>
+                </div>
+            </div>
+
+            <div class="ep-facts2">
+                <div><div class="ep-caption">Closing</div><div class="ep-facts2__v">@DisplayFormat.DateTime(Model.ClosingDateUtc)</div></div>
+                <div><div class="ep-caption">Tender fee</div><div class="ep-facts2__v">@DisplayFormat.Fee(Model.TenderFee)</div></div>
+                <div><div class="ep-caption">Est. value</div><div class="ep-facts2__v">@(Model.EstimatedValue is decimal v ? DisplayFormat.Rand(v) : "Not published")</div></div>
+                <div><div class="ep-caption">Evaluation</div><div class="ep-facts2__v">@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20") price and preference</div></div>
+            </div>
+
+            <section class="ep-card">
+                <h2 class="ep-card__title">Scope</h2>
+                <p class="ep-prose">@Model.Description</p>
+            </section>
+
+            <section class="ep-card">
+                <h2 class="ep-card__title">Pre-qualification criteria</h2>
+                <div class="ep-q__note">These are gates, not preferences. All bidders are held to them equally.</div>
+                <div class="ep-crit">
+                    <div class="ep-crit__row@(Model.MinimumBbbeeLevel is null ? " ep-crit__row--neutral" : bbbeeOk ? "" : " ep-crit__row--fail")">
+                        <span class="ep-crit__mark">@(Model.MinimumBbbeeLevel is null ? "·" : bbbeeOk ? "✓" : "✗")</span>
+                        <div>
+                            <div class="ep-crit__label">@(Model.MinimumBbbeeLevel is BbbeeLevel min ? $"{EligibilityRules.Describe(min)} or better" : "No minimum B-BBEE level")</div>
+                            <div class="ep-crit__yours">Your company: @(Model.CompanyLevel is BbbeeLevel mine ? EligibilityRules.Describe(mine) : "not added yet")</div>
+                        </div>
+                    </div>
+                    <div class="ep-crit__row ep-crit__row--neutral">
+                        <span class="ep-crit__mark">·</span>
+                        <div>
+                            <div class="ep-crit__label">Registered on the Central Supplier Database</div>
+                            <div class="ep-crit__yours">Your company: @(Model.CompanyCsd ?? "not added yet") · declared when you apply</div>
+                        </div>
+                    </div>
+                    <div class="ep-crit__row ep-crit__row--neutral">
+                        <span class="ep-crit__mark">·</span>
+                        <div>
+                            <div class="ep-crit__label">Valid SARS tax compliance status</div>
+                            <div class="ep-crit__yours">Declared when you apply</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ep-card">
+                <h2 class="ep-card__title">Required documents (@Model.Requirements.Count)</h2>
+                <div class="ep-q__note">Each one is uploaded as a PDF (max 5 MB) when you apply.</div>
+                <ul class="ep-bullets">
+                    @foreach (var requirement in Model.Requirements)
+                    {
+                        <li>@requirement</li>
+                    }
+                </ul>
+            </section>
+        </div>
+
+        <aside class="ep-tender-page__side" aria-label="Apply">
+            <div class="@eligCss">
+                <span class="ep-elig__dot"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" aria-hidden="true"><path d="@eligIcon" /></svg></span>
+                <div>
+                    <div class="ep-elig__heading">@eligHeading</div>
+                    <div class="ep-elig__detail">@e.Reason</div>
+                    @if (Model.CompanyName is not null)
+                    {
+                        <div class="ep-elig__detail">Checked against: @Model.CompanyName</div>
+                    }
+                </div>
+            </div>
+
+            @if (Model.ApplicationId is int applicationId)
+            {
+                var submitted = Model.ApplicationStatus is not (SubmissionStatus.Draft or SubmissionStatus.AwaitingPayment);
+                <div class="ep-card">
+                    <h2 class="ep-card__title">@(submitted ? "You have applied" : "Your application is in progress")</h2>
+                    <p class="ep-card__text">@(submitted ? "Your application has been submitted to " + Model.OrganisationName + "." : Model.ApplicationStatus == SubmissionStatus.AwaitingPayment ? "The tender fee has not been paid yet, so the organisation cannot see it." : "Continue where you left off.")</p>
+                    <a class="ep-btn ep-btn--primary ep-btn--tall ep-mt-14" asp-controller="Applications" asp-action="@(submitted ? "Confirmation" : "Step")" asp-route-id="@applicationId" asp-route-n="@(submitted ? null : "1")">@(submitted ? "View confirmation" : "Continue application")</a>
+                </div>
+            }
+            else if (!Model.IsOpen)
+            {
+                <div class="ep-blocked">
+                    <div class="ep-blocked__title">This tender has closed</div>
+                    <div class="ep-blocked__text">Applications closed on @DisplayFormat.DateTime(Model.ClosingDateUtc). No applications can be started.</div>
+                </div>
+            }
+            else if (e.Outcome == EligibilityOutcome.Unknown)
+            {
+                <a class="ep-btn ep-btn--primary ep-btn--tall" asp-controller="Company" asp-action="Create">Add your company to apply</a>
+            }
+            else if (e.Outcome == EligibilityOutcome.NotEligible)
+            {
+                <div class="ep-blocked">
+                    <div class="ep-blocked__title">You do not meet the minimum requirement</div>
+                    <div class="ep-blocked__text">@e.Reason</div>
+                    <div class="ep-blocked__small">No application can be started or paid for. The criteria apply equally to every bidder.</div>
+                    <a class="ep-btn ep-btn--outline-accent ep-mt-14" asp-controller="Dashboard" asp-action="Index">View tenders you qualify for</a>
+                </div>
+            }
+            else
+            {
+                <form asp-controller="Applications" asp-action="Start" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="ep-btn ep-btn--primary ep-btn--tall">Apply for this tender</button>
+                </form>
+                <div class="ep-note">You will answer the SBD questions, upload the @Model.Requirements.Count required documents@(Model.TenderFee == 0 ? " (there is no tender fee)" : $" and pay the {DisplayFormat.Fee(Model.TenderFee)} tender fee"). @DisplayFormat.ClosesIn(Model.ClosingDateUtc, DateTime.UtcNow).</div>
+            }
+        </aside>
+    </div>
+</div>

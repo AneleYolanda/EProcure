@@ -1,5 +1,5 @@
 @*
-    One tender in the feed (design "sFeed" card). Not a link yet: the tender detail page is Step 5.
+    One tender in the feed (design "sFeed" card); the whole card links to the tender page.
     Eligibility badge: "You qualify" (green) / "Not eligible" (amber), from EligibilityRules.
 *@
 @model TenderCardViewModel
@@ -12,7 +12,7 @@
         _ => ("ep-badge", "Check eligibility")
     };
 }
-<article class="ep-tender-card" aria-labelledby="tender-@Model.Id">
+<a class="ep-tender-card" asp-area="Supplier" asp-controller="Tenders" asp-action="Details" asp-route-id="@Model.Id" aria-labelledby="tender-@Model.Id">
     <div class="ep-tender-card__top">
         <span class="ep-tender-card__ref">@Model.ReferenceNumber</span>
         <span class="@badgeCss" title="@Model.Eligibility.Reason">@badgeText</span>
@@ -37,4 +37,4 @@
         </div>
         <div class="ep-tender-card__days">@DisplayFormat.ClosesIn(Model.ClosingDateUtc, now)</div>
     </div>
-</article>
+</a>

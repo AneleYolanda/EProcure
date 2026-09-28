@@ -37,18 +37,29 @@ public class Submission
     public SubmissionStatus Status { get; set; } = SubmissionStatus.Draft;
 
     // ---- Standard Bidding Document (SBD) based declarations ----
+    // NULL means "not answered yet". A declaration must be an explicit answer, never a default "No";
+    // the application cannot be submitted until every one of these has a value.
     /// <summary>Registered on the National Treasury Central Supplier Database.</summary>
-    public bool IsCsdRegistered { get; set; }
+    public bool? IsCsdRegistered { get; set; }
     /// <summary>SARS tax compliance status is compliant.</summary>
-    public bool IsTaxCompliant { get; set; }
-    /// <summary>B-BBEE level the bidder claims on THIS bid (copied from Company at submission time).</summary>
+    public bool? IsTaxCompliant { get; set; }
+    /// <summary>B-BBEE level the bidder claims on THIS bid (copied from Company when the application starts).</summary>
     public BbbeeLevel DeclaredBbbeeLevel { get; set; }
     /// <summary>SBD 4: bidder has a relationship with persons in the service of the state / the organisation (must be declared).</summary>
-    public bool HasDeclaredInterest { get; set; }
+    public bool? HasDeclaredInterest { get; set; }
     /// <summary>SBD 8 (past supply chain practices): NOT listed on the Database of Restricted Suppliers / Register for Tender Defaulters.</summary>
-    public bool ConfirmsNotRestricted { get; set; }
+    public bool? ConfirmsNotRestricted { get; set; }
     /// <summary>SBD 9: certificate of independent bid determination (no collusion).</summary>
-    public bool ConfirmsIndependentBid { get; set; }
+    public bool? ConfirmsIndependentBid { get; set; }
+
+    /// <summary>SBD 4: name and nature of the relationship, required when HasDeclaredInterest is true.</summary>
+    public string? InterestDetails { get; set; }
+
+    /// <summary>SBD 8: explanation, required when the bidder says it IS on a restricted list (ConfirmsNotRestricted = false).</summary>
+    public string? RestrictionDetails { get; set; }
+
+    /// <summary>When the supplier ticked the final "the information is true and correct" declaration.</summary>
+    public DateTime? DeclaredAtUtc { get; set; }
 
     // ---- Tender fee payment (reference only; never card data) ----
     public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;

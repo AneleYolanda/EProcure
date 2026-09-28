@@ -1,6 +1,6 @@
 # eProcure: Data Model
 
-Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the first migration) , [`schema/AddDesignFields.sql`](schema/AddDesignFields.sql) and [`schema/AddTenderPublishingFields.sql`](schema/AddTenderPublishingFields.sql).
+Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the first migration) , [`schema/AddDesignFields.sql`](schema/AddDesignFields.sql) , [`schema/AddTenderPublishingFields.sql`](schema/AddTenderPublishingFields.sql) and [`schema/AddSubmissionDeclarations.sql`](schema/AddSubmissionDeclarations.sql).
 
 ## Migration history
 
@@ -9,6 +9,7 @@ Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql)
 | `InitialCreate` | All tables, keys, indexes; seeds 2 organisations and 3 roles. |
 | `AddDesignFields` | `Tenders.EstimatedValue` (decimal(18,2), optional), `Companies.EnterpriseSize` (text: EME / QSE / Generic; existing rows set to Generic), `Submissions.ReferenceNumber` (nvarchar(20), unique where not NULL, assigned when payment succeeds), RBIDZ branding re-seeded to the design (#0F1B33 / #1CA3EC, `rbidz-logo.png`). |
 | `AddTenderPublishingFields` | `Tenders.PointSystem` (text: EightyTwenty / NinetyTen; existing rows set to EightyTwenty), `Tenders.CancelledAtUtc`, `Tenders.CancellationReason` (nvarchar(1000)). A cancelled tender is never deleted; it keeps its reason. |
+| `AddSubmissionDeclarations` | SBD answers on `Submissions` become nullable (NULL = not answered yet; a declaration is never a default "No"); new `InterestDetails`, `RestrictionDetails` (nvarchar(1000)) and `DeclaredAtUtc`. |
 
 ## Entity-relationship diagram
 

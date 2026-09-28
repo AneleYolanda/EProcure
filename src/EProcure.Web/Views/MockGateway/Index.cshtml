@@ -1,0 +1,35 @@
+@* The pretend payment provider's page. Deliberately NOT styled like eProcure, so it is obvious the
+   supplier has "left" for the provider, and clearly marked as a demo. No card fields exist. *@
+@model EProcure.Web.Services.External.MockPaymentGateway.MockPayment
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo payment gateway</title>
+    <link rel="stylesheet" href="~/css/eprocure.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="ep-mockgw">
+        <div class="ep-mockgw__box">
+            <div class="ep-mockgw__banner">DEMO PAYMENT GATEWAY · NO REAL MONEY</div>
+            <div class="ep-mockgw__body">
+                <h1 class="ep-mockgw__title">Pay tender fee</h1>
+                <div class="ep-mockgw__row"><span>Description</span><strong>@Model.Description</strong></div>
+                <div class="ep-mockgw__row"><span>Amount</span><strong>@EProcure.Web.Infrastructure.DisplayFormat.Fee(Model.Amount)</strong></div>
+                <div class="ep-mockgw__row"><span>Method chosen</span><strong>@(Model.Method switch { "eft" => "Instant EFT", "transfer" => "Manual bank transfer", _ => "Card" })</strong></div>
+                <div class="ep-mockgw__row"><span>Reference</span><strong>@Model.Reference</strong></div>
+                <p class="ep-mockgw__note">This page stands in for a real provider such as PayFast or Ozow. A real provider would ask for card or bank details here, on its own website. eProcure never sees them. Choose the outcome to test:</p>
+                <form method="post" action="/mock-gateway/@Model.Reference/complete" class="ep-mockgw__buttons">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" name="succeeded" value="true" class="ep-mockgw__ok">Simulate successful payment</button>
+                    <button type="submit" name="succeeded" value="false" class="ep-mockgw__fail">Simulate failed payment</button>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

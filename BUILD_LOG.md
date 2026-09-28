@@ -353,3 +353,56 @@ feat: supplier side as a responsive web app on tablets and computers
 ```
 feat: supplier company profile with eligibility checks
 ```
+
+---
+
+## Steps 5 and 6: tender page for suppliers, and applying with document uploads (2026-09-28)
+
+### Added
+- **Migration `AddSubmissionDeclarations`** (`docs/schema/AddSubmissionDeclarations.sql`). In Development the app now
+  applies pending migrations at start-up (`Database.MigrateAsync`); production uses the SQL scripts.
+- **External services behind interfaces, chosen in `appsettings.json` "ExternalServices"**: `IFileStorage` →
+  `LocalFileStorage`; `IPaymentGateway` → `MockPaymentGateway` (+ `MockGatewayController`, the demo provider page);
+  `IOtpSender` → `MockOtpSender`. `Uploads:MaxFileSizeBytes` = 5 MB.
+- `Infrastructure/PdfValidator` (DECISIONS D33), `Services/ApplicationService` (all rules; D32 to D35).
+- **Step 5** `Supplier/TendersController.Details` (design "sDetail"): organisation, eligibility banner, key facts, scope,
+  pre-qualification against the supplier's company, required documents, and the right action (Apply / Continue /
+  Add your company / Not eligible / Closed). Feed cards now link here.
+- **Step 6** `Supplier/ApplicationsController` + views (design "sApply", "sGate", "sPay", "sConfirm"):
+  1 Bidding as, 2 Compliance, 3 SBD 4/8/9 declarations, 4 one PDF upload per checklist item (replace / remove),
+  5 review + declaration; then payment (fee > 0) or straight submission (no fee); confirmation with reference
+  `EP-{year}-{000000}`. Status history and audit on every change.
+- `.gitignore` repaired: an earlier edit had written literal "\n" characters, so `App_Data/uploads/` was NOT ignored.
+
+### Verified in the browser (Visual Studio run, 1200x760), as the test supplier (Level 2) on RBIDZ/2026/014 (R500)
+- Tender page: qualifies banner, facts, ✓ on B-BBEE Level 4, 5 required documents, "Apply for this tender".
+- Step 2 with no answers: "Answer both questions." Step 3 with SBD 4 = Yes and no details: "Give the name of the person...".
+- Uploads: a text file renamed .pdf rejected ("not a valid PDF"); a .docx rejected ("Only PDF files"); a 5.5 MB file
+  rejected ("larger than 5 MB"); 4 real PDFs accepted and listed with name, size and time; files stored under
+  `App_Data/uploads/2026/09/` with random names.
+- Review with 1 document missing: listed, button disabled; forcing the submit request anyway is refused by the server;
+  submitting without the declaration tick is refused.
+- Payment: "Simulate failed payment" → back to the payment page, "did not go through... nothing was charged";
+  a forged return link with a made-up reference → "That payment does not belong to this application";
+  "Simulate successful payment" → "Payment verified. Application submitted.", reference EP-2026-000002, 5 documents.
+- After submission: the wizard redirects to the confirmation (locked); pressing Apply again reopens the same
+  application (no duplicate).
+- Hard stop: the Level 1 tender → "This tender requires B-BBEE Level 1 or better. Your company is B-BBEE Level 2",
+  with 7 qualifying tenders offered.
+- RBIDZ admin dashboard: "Applications received 2" (paid only); register shows "2 bids" on RBIDZ/2026/014.
+- Two small fixes made after this run and not yet re-checked in the browser: answers are kept when a step shows an
+  error, and the question text sits inside its card (was drawn on the card's border).
+
+### Manual tests
+1. As a supplier, open a tender from the feed: organisation name, eligibility banner, checklist.
+2. Apply. In step 4 upload a Word file: refused. Upload a PDF over 5 MB: refused. Upload PDFs for every item.
+3. Review: remove one document first and see it listed as missing; the button stays disabled.
+4. Tick the declaration and continue. On the demo gateway choose "failed", then pay again and choose "successful".
+5. Confirmation shows the EP- reference. As the organisation's admin, the dashboard counts the application.
+6. Try to apply for a tender above your B-BBEE level: the hard-stop page, nothing created.
+7. Apply for a free tender (e.g. RBIDZ/2026/015): after Review it is submitted straight away, no payment.
+
+### Commit message
+```
+feat: tender page for suppliers and application wizard with PDF uploads and payment
+```

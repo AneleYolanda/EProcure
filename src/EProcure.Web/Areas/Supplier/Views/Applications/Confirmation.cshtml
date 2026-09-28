@@ -1,0 +1,24 @@
+@* Design screen "sConfirm". *@
+@model ConfirmationViewModel
+@{
+    ViewData["Title"] = "Application submitted";
+    ViewData["Tab"] = "tenders";
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+}
+<div class="ep-screen__body">
+    <div class="ep-confirm__icon ep-mt-18">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F7B5A" stroke-width="2" aria-hidden="true"><path d="M5 13l4 4L19 7" /></svg>
+    </div>
+    <h1 class="ep-otp__title">@(Model.FeePaid ? "Payment verified. Application submitted." : "Application submitted.")</h1>
+    <p class="ep-otp__text">Your bid, with its @Model.DocumentCount @(Model.DocumentCount == 1 ? "document" : "documents"), is now with @Model.OrganisationName and locked. No other bidder can see it.</p>
+
+    <div class="ep-confirm__table">
+        <div class="ep-confirm__row ep-confirm__row--block"><div class="ep-caption">Reference number</div><div class="ep-confirm__ref">@Model.ReferenceNumber</div></div>
+        <div class="ep-confirm__row"><span>Tender</span><span>@Model.TenderReference</span></div>
+        <div class="ep-confirm__row"><span>Bidding company</span><span>@Model.CompanyName</span></div>
+        <div class="ep-confirm__row"><span>Fee paid</span><span>@(Model.FeePaid ? DisplayFormat.Fee(Model.AmountPaid) : "No tender fee")</span></div>
+    </div>
+
+    <div class="ep-note">Evaluators open bids after the closing date. The evaluation committee, not eProcure, decides the outcome; you will see status changes on this application.</div>
+    <a class="ep-btn ep-btn--primary ep-btn--tall" asp-controller="Dashboard" asp-action="Index">Back to tenders</a>
+</div>

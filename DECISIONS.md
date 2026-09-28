@@ -447,3 +447,50 @@ characters. Registration and CSD numbers are unique (pre-check with a friendly m
 guarantee). Once a company has applications its CIPC and CSD numbers are locked, so bids already made cannot
 change owner. The prototype's banking reference and company document vault are not collected: bank details are not
 needed to bid (POPIA: minimum necessary) and documents are uploaded per application (Step 6).
+
+---
+
+## D32. Application wizard saved on the server as a Draft
+
+**What:** Pressing "Apply" creates a Draft submission straight away; each of the 5 steps saves to it. The supplier can
+leave and continue later. The organisation's tenant filter hides Draft and AwaitingPayment submissions, so nothing is
+visible to the organisation until the application is Submitted.
+
+**Why:** Uploads must be stored somewhere as they happen, and a supplier filling in a tender over several sittings is
+normal. Keeping drafts invisible to the organisation (and out of its audit view: draft audit rows have no organisation id)
+means starting an application reveals nothing.
+
+---
+
+## D33. Uploaded documents: three checks, stored outside the website, fingerprinted
+
+**What:** A file is accepted only if the name ends in .pdf, the browser says application/pdf, AND the content starts
+with the PDF signature `%PDF-`; maximum 5 MB (configurable). Files go to `App_Data/uploads/{yyyy}/{MM}/{random}.pdf`
+via `IFileStorage`; the original name is display-only; a SHA-256 hash is stored. `App_Data/uploads/` is git-ignored.
+
+**Why:** Names and content types can be faked; only the content check stops a renamed executable. Storing outside
+wwwroot means no file can be fetched by URL; downloads will go through a checked controller action (Step 7). The hash
+proves later that a document was not changed after submission.
+
+---
+
+## D34. Payments: verify with the provider, never trust the browser
+
+**What:** `IPaymentGateway` (MockPaymentGateway now). The supplier is sent to the provider's page; when they come back,
+eProcure calls `VerifyAsync` and only marks the fee paid if the provider confirms it AND the amount equals the tender fee.
+Only the provider's reference is stored. The mock gateway is a separate, clearly labelled demo page with
+"Simulate successful / failed payment", and returns 404 when a real provider is configured.
+
+**Why:** Anyone can type a "payment succeeded" link into a browser (tested: a forged reference is refused). No card
+data ever touches eProcure, which keeps it out of PCI-DSS scope and matches POPIA's minimum-data rule.
+
+---
+
+## D35. SBD answers are recorded, not judged
+
+**What:** A "No" to CSD registration or tax compliance, or "Yes" to SBD 4/8, is recorded (with the required details) and
+shown with a warning; it does not stop the application. Only the B-BBEE pre-qualification gate is a hard stop.
+
+**Why:** "Digitise, do not automate decisions." Whether a declared interest or a listing disqualifies a bid is for the
+evaluation committee. The B-BBEE minimum is different: it is a published pre-qualification criterion applied identically
+to every bidder, so the system enforces it.
