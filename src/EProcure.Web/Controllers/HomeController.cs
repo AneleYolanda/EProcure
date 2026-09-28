@@ -24,7 +24,7 @@ public class HomeController : Controller
         // Show splash page for anonymous users
         if (!(User?.Identity?.IsAuthenticated ?? false))
         {
-            return View();
+            return View("Splash");
         }
 
         var now = DateTime.UtcNow;

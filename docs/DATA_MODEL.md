@@ -1,6 +1,13 @@
 # eProcure: Data Model
 
-Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the migration).
+Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql) (idempotent script of the first migration) and [`schema/AddDesignFields.sql`](schema/AddDesignFields.sql).
+
+## Migration history
+
+| Migration | What it changed |
+|---|---|
+| `InitialCreate` | All tables, keys, indexes; seeds 2 organisations and 3 roles. |
+| `AddDesignFields` | `Tenders.EstimatedValue` (decimal(18,2), optional), `Companies.EnterpriseSize` (text: EME / QSE / Generic; existing rows set to Generic), `Submissions.ReferenceNumber` (nvarchar(20), unique where not NULL, assigned when payment succeeds), RBIDZ branding re-seeded to the design (#0F1B33 / #1CA3EC, `rbidz-logo.png`). |
 
 ## Entity-relationship diagram
 
@@ -73,6 +80,7 @@ erDiagram
 | `Organisations(Code)` | Organisation codes are unique. |
 | `Tenders(OrganisationId, ReferenceNumber)` | A bid number is unique **within** an organisation. |
 | `Submissions(TenderId, CompanyId)` | No duplicate applications. |
+| `Submissions(ReferenceNumber)` (filtered: NOT NULL) | Each paid application has its own reference. |
 | `Companies(RegistrationNumber)`, `Companies(CsdNumber)` | A legal entity is registered once. |
 | `SupplierProfiles(UserId)` | One profile per supplier login. |
 | `AwardRecords(TenderId)` | One award per tender (MVP). |
@@ -83,10 +91,10 @@ erDiagram
 | Table | Personal information held | Purpose | Who can access |
 |---|---|---|---|
 | Organisations | None (organisational data) | Tenant branding/config | Everyone (public branding) |
-| Users | Full name, email, phone (optional), password **hash** only | Authentication, accountability | The user; platform operator |
+| Users | Full name, email, **cellphone number** (suppliers: required and verified by OTP), password **hash** only | Authentication, OTP verification, accountability | The user; platform operator |
 | Roles / UserRoles | Role membership | Authorisation | Platform operator |
-| SupplierProfiles | Job title, contact number, POPIA consent time | Contacting the bidder; OTP | The supplier; organisations only via a submission to *their* tender |
-| Companies | Juristic-person data (reg no., tax PIN, CSD no., B-BBEE level) | Bid eligibility | The supplier; organisations only via a submission to *their* tender |
+| SupplierProfiles | Job title, **cellphone number** (collected at registration), POPIA consent time | Contacting the bidder; OTP | The supplier; organisations only via a submission to *their* tender |
+| Companies | Juristic-person data (reg no., tax PIN, CSD no., B-BBEE level, enterprise size) | Bid eligibility | The supplier; organisations only via a submission to *their* tender |
 | Tenders / TenderRequirements | None (internal creator reference) | Publishing tenders | Public when published; drafts only the owning org |
 | Submissions | Link between company, user and tender; SBD declarations; **payment reference only, never card data** | Evaluating bids | The submitting supplier; owning organisation after payment |
 | UploadedDocuments | Metadata; PDFs may contain directors' ID copies etc. | Evaluating bids | Same as the parent submission |

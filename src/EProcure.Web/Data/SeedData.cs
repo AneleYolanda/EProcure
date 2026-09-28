@@ -27,9 +27,9 @@ public static class SeedData
                 Id = RbidzId,
                 Name = "Richards Bay Industrial Development Zone",
                 Code = "RBIDZ",
-                LogoPath = "/img/orgs/rbidz.svg",
-                PrimaryColour = "#0B2545", // navy
-                AccentColour = "#C9A227",  // gold
+                LogoPath = "/img/orgs/rbidz-logo.png",
+                PrimaryColour = "#0F1B33",
+                AccentColour = "#1CA3EC",
                 DefaultPointSystem = PreferencePointSystem.NinetyTen,
                 IsActive = true,
                 CreatedAtUtc = SeededAt

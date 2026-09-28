@@ -51,15 +51,16 @@ public class DemoDataSeeder
         var rbidz = await db.Organisations.SingleAsync(o => o.Id == SeedData.RbidzId, cancellationToken);
         var mvlm = await db.Organisations.SingleAsync(o => o.Id == SeedData.MzansiValleyId, cancellationToken);
 
-        var rbidzAdmin = await EnsureUserAsync(userManager, "admin@rbidz.demo", "RBIDZ Administrator", AppRoles.OrgAdmin, rbidz.Id, password);
-        await EnsureUserAsync(userManager, "evaluator@rbidz.demo", "RBIDZ Evaluator", AppRoles.Evaluator, rbidz.Id, password);
-        var mvlmAdmin = await EnsureUserAsync(userManager, "admin@mvlm.demo", "MVLM Administrator", AppRoles.OrgAdmin, mvlm.Id, password);
+        // Fictitious demo numbers. They are marked as already verified so demo users skip the OTP step.
+        var rbidzAdmin = await EnsureUserAsync(userManager, "admin@rbidz.demo", "RBIDZ Administrator", AppRoles.OrgAdmin, rbidz.Id, password, "+27820000001");
+        await EnsureUserAsync(userManager, "evaluator@rbidz.demo", "RBIDZ Evaluator", AppRoles.Evaluator, rbidz.Id, password, "+27820000002");
+        var mvlmAdmin = await EnsureUserAsync(userManager, "admin@mvlm.demo", "MVLM Administrator", AppRoles.OrgAdmin, mvlm.Id, password, "+27820000003");
 
-        var supplier1 = await EnsureUserAsync(userManager, "supplier1@demo.co.za", "Supplier One", AppRoles.Supplier, null, password);
-        var supplier2 = await EnsureUserAsync(userManager, "supplier2@demo.co.za", "Supplier Two", AppRoles.Supplier, null, password);
+        var supplier1 = await EnsureUserAsync(userManager, "supplier1@demo.co.za", "Supplier One", AppRoles.Supplier, null, password, "+27820000004");
+        var supplier2 = await EnsureUserAsync(userManager, "supplier2@demo.co.za", "Supplier Two", AppRoles.Supplier, null, password, "+27820000005");
 
-        await EnsureSupplierProfileAsync(db, supplier1, "Umhlathi Civils (Pty) Ltd", "2018/123456/07", "MAAA1234567", BbbeeLevel.Level1, "Construction", cancellationToken);
-        await EnsureSupplierProfileAsync(db, supplier2, "Khanya Office Supplies CC", "2015/654321/23", "MAAA7654321", BbbeeLevel.Level6, "Goods & Supplies", cancellationToken);
+        await EnsureSupplierProfileAsync(db, supplier1, "Umhlathi Civils (Pty) Ltd", "2018/123456/07", "MAAA1234567", BbbeeLevel.Level1, EnterpriseSize.QSE, "Construction", cancellationToken);
+        await EnsureSupplierProfileAsync(db, supplier2, "Khanya Office Supplies CC", "2015/654321/23", "MAAA7654321", BbbeeLevel.Level6, EnterpriseSize.EME, "Goods & Supplies", cancellationToken);
 
         await EnsureTendersAsync(db, rbidz, rbidzAdmin, new[]
         {
@@ -76,6 +77,8 @@ public class DemoDataSeeder
             TenderSeed.Published("Cleaning and hygiene services for municipal offices", "MVLM/2026/008", "Cleaning & Hygiene", 0m, null, 28, new[] { "CIPC registration certificate", "CSD summary report", "SBD 4 Declaration of Interest", "SBD 6.1" })
         }, cancellationToken);
 
+        await EnsureEstimatedValuesAsync(db, cancellationToken);
+
         _logger.LogInformation("Development demo data is ready.");
     }
 
@@ -85,7 +88,8 @@ public class DemoDataSeeder
         string fullName,
         string role,
         int? organisationId,
-        string password)
+        string password,
+        string phoneNumber)
     {
         var user = await userManager.FindByEmailAsync(email);
         if (user is null)
@@ -97,6 +101,8 @@ public class DemoDataSeeder
                 EmailConfirmed = true,
                 FullName = fullName,
                 OrganisationId = organisationId,
+                PhoneNumber = phoneNumber,
+                PhoneNumberConfirmed = true,
                 CreatedAtUtc = DateTime.UtcNow
             };
             var result = await userManager.CreateAsync(user, password);
@@ -104,6 +110,14 @@ public class DemoDataSeeder
             {
                 throw new InvalidOperationException($"Could not create demo user {email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
+        }
+        else if (!user.PhoneNumberConfirmed)
+        {
+            // Demo users created before phone verification existed: give them a verified number
+            // so the EnsurePhoneVerifiedFilter does not lock them out.
+            user.PhoneNumber ??= phoneNumber;
+            user.PhoneNumberConfirmed = true;
+            await userManager.UpdateAsync(user);
         }
 
         if (!await userManager.IsInRoleAsync(user, role))
@@ -125,13 +139,22 @@ public class DemoDataSeeder
         string registrationNumber,
         string csdNumber,
         BbbeeLevel bbbeeLevel,
+        EnterpriseSize enterpriseSize,
         string sector,
         CancellationToken cancellationToken)
     {
+        var company = await db.Companies.SingleOrDefaultAsync(c => c.RegistrationNumber == registrationNumber, cancellationToken);
+
+        // Companies seeded before AddDesignFields got the column default "Generic"; set the intended size.
+        if (company is not null && company.EnterpriseSize != enterpriseSize)
+        {
+            company.EnterpriseSize = enterpriseSize;
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         var profile = await db.SupplierProfiles.SingleOrDefaultAsync(p => p.UserId == user.Id, cancellationToken);
         if (profile is not null) return;
 
-        var company = await db.Companies.SingleOrDefaultAsync(c => c.RegistrationNumber == registrationNumber, cancellationToken);
         if (company is null)
         {
             company = new Company
@@ -141,6 +164,7 @@ public class DemoDataSeeder
                 TaxPin = $"DEMO-{registrationNumber.Replace("/", string.Empty)}",
                 CsdNumber = csdNumber,
                 BbbeeLevel = bbbeeLevel,
+                EnterpriseSize = enterpriseSize,
                 Sector = sector,
                 CreatedAtUtc = DateTime.UtcNow
             };
@@ -193,6 +217,36 @@ public class DemoDataSeeder
             db.Tenders.Add(tender);
         }
 
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Demo estimated contract values, keyed by tender reference. Only fills values that are still empty,
+    /// so it is safe to run on every start and never overwrites a value an admin has entered.
+    /// </summary>
+    private static async Task EnsureEstimatedValuesAsync(EProcureDbContext db, CancellationToken cancellationToken)
+    {
+        var values = new Dictionary<string, decimal>
+        {
+            ["RBIDZ/2026/014"] = 14_900_000m,
+            ["RBIDZ/2026/015"] = 1_250_000m,
+            ["RBIDZ/2026/016"] = 8_600_000m,
+            ["RBIDZ/2026/017"] = 2_400_000m,
+            ["RBIDZ/2026/018"] = 950_000m,
+            ["MVLM/2026/007"] = 24_000_000m,
+            ["MVLM/2026/008"] = 3_100_000m
+        };
+
+        var references = values.Keys.ToList();
+        var tenders = await db.Tenders
+            .Where(t => t.EstimatedValue == null && references.Contains(t.ReferenceNumber))
+            .ToListAsync(cancellationToken);
+        if (tenders.Count == 0) return;
+
+        foreach (var tender in tenders)
+        {
+            tender.EstimatedValue = values[tender.ReferenceNumber];
+        }
         await db.SaveChangesAsync(cancellationToken);
     }
 

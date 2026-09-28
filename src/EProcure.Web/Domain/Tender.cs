@@ -29,6 +29,11 @@ public class Tender
     public decimal TenderFee { get; set; }
 
     /// <summary>
+    /// Estimated project/contract value in Rand. Optional; shown on tender details.
+    /// </summary>
+    public decimal? EstimatedValue { get; set; }
+
+    /// <summary>
     /// Prequalification: the WORST B-BBEE level still allowed to apply. NULL = no requirement.
     /// E.g. Level4 means Levels 1-4 may apply; 5-8 and NonCompliant are blocked (hard stop).
     /// </summary>

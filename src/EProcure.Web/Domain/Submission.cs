@@ -21,6 +21,11 @@ public class Submission
     public int TenderId { get; set; }
     public Tender Tender { get; set; } = null!;
 
+    /// <summary>
+    /// Application reference number in format EP-{yyyy}-{000000}. Unique, assigned on payment success.
+    /// </summary>
+    public string? ReferenceNumber { get; set; }
+
     /// <summary>The bidding legal entity.</summary>
     public int CompanyId { get; set; }
     public Company Company { get; set; } = null!;

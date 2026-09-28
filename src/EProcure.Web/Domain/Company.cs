@@ -26,6 +26,11 @@ public class Company
 
     public BbbeeLevel BbbeeLevel { get; set; } = BbbeeLevel.NonCompliant;
 
+    /// <summary>
+    /// Enterprise size for B-BBEE purposes and tender eligibility (badge on supplier profile).
+    /// </summary>
+    public EnterpriseSize EnterpriseSize { get; set; } = EnterpriseSize.Generic;
+
     public string Sector { get; set; } = string.Empty;
 
     public DateTime CreatedAtUtc { get; set; }

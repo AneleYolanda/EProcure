@@ -114,3 +114,48 @@ feat: solution skeleton, multi-tenant data model and initial migration
 feat: authentication, roles, tenant claim, branded layouts, and demo data
 ```
 ```
+
+---
+
+## Design phase, part 1: design assets, phone OTP, AddDesignFields (2026-09-28)
+
+### What happened (honest record)
+- `f38842f` added the prototype sources (`docs/design/`), `DESIGN_SPEC.md`, local fonts, the RBIDZ logo and splash
+  photo, and a starter `eprocure.css`. **Its commit message overstates it**: no screens were restyled in that commit.
+- `c3b93c6`…`374593f` added a splash view, starter partials and a VerifyPhone *stub*.
+- `af18460` completed phone OTP registration (see below).
+- The screens are **not yet** a pixel match with the prototypes. That restyle is the next piece of work.
+
+### Added in this part
+- **Phone OTP on registration**: POPIA consent enforced server-side; SA cellphone validated and stored as +27…;
+  code generated with Identity's phone token provider and sent through `IOtpSender` (`MockOtpSender` shows it on
+  screen in Development); `VerifyPhone` + `ResendCode`; `EnsurePhoneVerifiedFilter` keeps unverified suppliers out
+  of the Supplier area.
+- **Migration `AddDesignFields`** (`docs/schema/AddDesignFields.sql`): `Tenders.EstimatedValue`,
+  `Companies.EnterpriseSize` (existing rows default to `Generic`; the generated default `""` was hand-edited because it
+  is not a valid enum name), `Submissions.ReferenceNumber` (unique where not NULL), RBIDZ branding re-seeded to
+  `#0F1B33` / `#1CA3EC` / `rbidz-logo.png`.
+- **DemoDataSeeder**: demo users get fictitious verified phone numbers (also back-filled for existing users),
+  companies get an enterprise size, tenders get estimated values (only fills empty values).
+- **Fix**: anonymous visitors to `/` crashed with a NullReferenceException (the controller returned the home view
+  without a model); they now get the splash view.
+
+### Environment note
+Windows **Smart App Control** blocked the freshly built `EProcure.Web.dll` ("An Application Control policy has blocked
+this file"), which stopped `dotnet ef` and the agent. It was turned off by the developer on 2026-09-28.
+
+### Manual tests
+1. Open `/` while signed out → splash page, "Continue" goes to login (no error page).
+2. Register a new supplier without ticking POPIA consent → field error, no account created.
+3. Register with an invalid cellphone (e.g. `12345`) → field error.
+4. Register correctly → redirected to Verify phone, yellow DEMO MODE box shows a 6-digit code.
+5. Enter a wrong code → "That code is incorrect or has expired." Enter the right code → supplier dashboard.
+6. Register another supplier, skip verification, open `/Supplier/Dashboard` → redirected to Verify phone.
+7. Sign in as `supplier1@demo.co.za` → goes straight to the dashboard (demo users are pre-verified).
+8. SQL: `SELECT Code, PrimaryColour, AccentColour, LogoPath FROM Organisations` → RBIDZ `#0F1B33` / `#1CA3EC` / `/img/orgs/rbidz-logo.png`.
+9. SQL: `SELECT Name, EnterpriseSize FROM Companies` → QSE and EME; `SELECT ReferenceNumber, EstimatedValue FROM Tenders` → all filled.
+
+### Commit message
+```
+feat: AddDesignFields migration, demo data for design fields, splash crash fix
+```

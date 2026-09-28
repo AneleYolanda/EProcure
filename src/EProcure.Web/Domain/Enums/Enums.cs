@@ -59,3 +59,11 @@ public enum PaymentStatus
     Paid = 3,
     Failed = 4
 }
+
+public enum EnterpriseSize
+{
+    EME = 1,      // Exempted Micro Enterprise
+    QSE = 2,      // Qualifying Small Enterprise
+    Generic = 3   // Default / Other
+}
+
