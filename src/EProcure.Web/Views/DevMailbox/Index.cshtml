@@ -22,6 +22,18 @@
         <button type="submit" class="ep-btn ep-btn--secondary">Run scheduled emails now</button>
         <p class="ep-card__text ep-mt-14">Closing-date reminders and "tender closed" notices are normally sent by a background job every 15 minutes. This button runs it at once.</p>
     </form>
+    @if (ViewData["SentLog"] is List<string> log && log.Count > 0)
+    {
+        <details class="ep-card ep-mt-14">
+            <summary class="ep-card__title">Send-once log (latest @log.Count)</summary>
+            <ul class="ep-bullets">
+                @foreach (var entry in log)
+                {
+                    <li>@entry</li>
+                }
+            </ul>
+        </details>
+    }
 
     @foreach (var sent in Model)
     {

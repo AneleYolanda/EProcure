@@ -17,7 +17,8 @@ public class ReminderOptions
     public int ClosedNoticeMaxAgeDays { get; set; } = 7;
 }
 
-public record ReminderRunResult(int ClosingReminders, int ClosedNotices);
+/// <summary>What a run did, including what it skipped because it was already sent (shown by the demo "run now" button).</summary>
+public record ReminderRunResult(int ClosingReminders, int ClosedNotices, int ClosedTendersFound = 0, int AlreadySent = 0);
 
 /// <summary>
 /// The scheduled emails, run every few minutes by ReminderWorker (or on demand in Development):
@@ -81,6 +82,7 @@ public class ReminderService
             })
             .ToListAsync(ct);
         var notices = 0;
+        var alreadySent = 0;
         foreach (var item in closed)
         {
             if (await ClaimAsync(db, ClosedNoticeKey(item.Tender.Id), nowUtc, ct))
@@ -88,11 +90,12 @@ public class ReminderService
                 await notifications.TenderClosedAsync(item.Tender, item.Bids, ct);
                 notices++;
             }
+            else alreadySent++;
         }
 
         if (reminders + notices > 0)
             _logger.LogInformation("Scheduled emails: {Reminders} closing reminder(s), {Notices} tender-closed notice(s).", reminders, notices);
-        return new ReminderRunResult(reminders, notices);
+        return new ReminderRunResult(reminders, notices, closed.Count, alreadySent);
     }
 
     /// <summary>Records the key; false when it was already sent (the unique index is the final guarantee).</summary>

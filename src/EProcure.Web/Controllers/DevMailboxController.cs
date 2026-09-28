@@ -1,6 +1,7 @@
 using EProcure.Web.Services.External;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EProcure.Web.Controllers;
 
@@ -23,9 +24,11 @@ public class DevMailboxController : Controller
     }
 
     [HttpGet("")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         if (!_environment.IsDevelopment() || _email is not MockEmailSender mock) return NotFound();
+        ViewData["SentLog"] = await HttpContext.RequestServices.GetRequiredService<Data.EProcureDbContext>().SentNotifications
+            .OrderByDescending(n => n.Id).Take(20).Select(n => n.Key + " · " + n.SentAtUtc.ToString("dd MMM HH:mm") + " UTC").ToListAsync();
         return View(mock.Sent);
     }
 
@@ -36,7 +39,7 @@ public class DevMailboxController : Controller
         if (!_environment.IsDevelopment() || _email is not MockEmailSender) return NotFound();
         var result = await reminders.RunAsync(DateTime.UtcNow, ct);
         TempData["Flash"] = $"Scheduled emails run: {result.ClosingReminders} closing reminder(s) and {result.ClosedNotices} tender-closed notice(s) sent. " +
-                            "Each is sent only once.";
+                            $"{result.ClosedTendersFound} tender(s) closed in the last days; {result.AlreadySent} of them were announced before. Each email is sent only once.";
         return Redirect("/dev/mailbox");
     }
 }
