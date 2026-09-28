@@ -548,3 +548,28 @@ docs: demo script and setup guide; feat: security headers and friendly error pag
 ```
 fix: readable white text on buttons (WCAG AA) with a darker shade of each brand colour
 ```
+
+---
+
+## Step 11: Link contrast (WCAG AA)
+
+### What was built
+- Links, text buttons ("Register"), the outline button, the "closes in" label, the active phone tab and the SBD form
+  labels use `--ep-accent-strong` as their text colour (the "e" of the logo and decorative icons stay bright).
+- A page-wide contrast scan found one link still short: "privacy notice" on the Register page, which sits on the
+  light grey consent box (4.39:1). The shade is now calculated against the darkest light surface text sits on
+  (`#E3F1FB`) instead of white: `BrandColours.ReadableShade`. New values: blue `#1472A5`, MVLM coral `#BB4726`.
+- Tests updated: the shade is checked against white, both greys and the pale-blue surface. 84 of 84 pass.
+
+### Verified in the browser (Visual Studio run)
+- Contrast scan of every text element on: admin dashboard, tender register, create tender, tender details,
+  application details, audit trail; supplier feed, tender page, applications, application details, declarations,
+  profile; sign-in, register; MVLM portal sign-in. No link, button or accent-coloured text is below 4.5:1.
+- MVLM portal: `--org-accent-strong` written by the layout, sign-in button in MVLM's own darker coral.
+- Remaining below 4.5:1: the design's light grey secondary text `#8C9CAB` (column headings, field hints, fact
+  labels, 2.7-2.8:1) and the logo's "e" (logos are exempt). Not changed; see DECISIONS D42.
+
+### Commit message
+```
+fix: accent shade readable on light grey surfaces too; contrast verified on every page
+```

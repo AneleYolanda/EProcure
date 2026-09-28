@@ -16,10 +16,10 @@
   --ep-accent: #1CA3EC;
   --ep-accent-hover: #1587C7;
   --ep-accent-soft: #7FD0F7;
-  /* Same hue, dark enough for 4.5:1 against white (WCAG AA): white text on it (buttons, selected chips) and
+  /* Same hue, dark enough for 4.5:1 (WCAG AA) against white and the light grey / pale-blue surfaces: white text on it (buttons, chips) and
      it as text on white (links, text buttons). Decorative uses keep --ep-accent. DECISIONS D42. */
-  --ep-accent-strong: #157CB3;
-  --ep-accent-strong-hover: #12699A;
+  --ep-accent-strong: #1472A5;
+  --ep-accent-strong-hover: #126491;
   --ep-ink: #1B2A4A;
   --ep-navy: #0F1B33;
   --ep-muted: #5A6B7B;
@@ -367,7 +367,7 @@ a.ep-tender-card:hover { border-color: color-mix(in srgb, var(--ep-accent) 40%, 
    --org-primary / --org-accent are written by the layout from the organisation row
    (validated as #RRGGBB). Inside the console the org accent replaces the eProcure accent. */
 .ep-admin-body { background: #F4F7FA; color: var(--ep-ink); }
-.ep-console { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #157CB3); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); --ep-accent-hover: color-mix(in srgb, var(--ep-accent) 85%, #000); display: flex; min-height: 100vh; }
+.ep-console { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #1472A5); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); --ep-accent-hover: color-mix(in srgb, var(--ep-accent) 85%, #000); display: flex; min-height: 100vh; }
 .ep-sidebar { width: 246px; flex: none; background: var(--org-primary, #0F1B33); display: flex; flex-direction: column; padding: 20px 0; position: sticky; top: 0; height: 100vh; z-index: 50; }
 .ep-sidebar__brand { padding: 0 18px 18px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
 .ep-logo-circle { flex: none; border-radius: 99px; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -575,7 +575,7 @@ a.ep-action:hover { background: #F7FAFC; }
 .ep-chevron { flex: none; color: var(--ep-chevron); }
 
 /* ---------- 13. Admin splash and login ---------- */
-.ep-portal { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #157CB3); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); min-height: 100vh; display: flex; }
+.ep-portal { --ep-accent: var(--org-accent, #1CA3EC); --ep-accent-strong: var(--org-accent-strong, #1472A5); --ep-accent-strong-hover: color-mix(in srgb, var(--ep-accent-strong) 88%, #000); min-height: 100vh; display: flex; }
 .ep-portal__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--ep-accent) 1px, transparent 1px), linear-gradient(90deg, var(--ep-accent) 1px, transparent 1px); }
 .ep-portal-splash { position: relative; flex: 1; background: var(--org-primary, #0F1B33); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
 .ep-portal-splash .ep-portal__grid { opacity: .14; background-size: 64px 64px; }

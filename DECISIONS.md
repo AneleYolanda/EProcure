@@ -580,9 +580,10 @@ blocks whose values are validated as `#RRGGBB` (BrandColours.Safe).
 
 **What:** A second colour token, `--ep-accent-strong`, is used wherever WHITE TEXT sits on the brand colour: primary
 buttons, the web nav's Register button, the portal sign-in button, selected filter chips, answer and radio pills, page
-numbers and step numbers. It is the same hue, darkened only as much as needed for 4.5:1 contrast with white (WCAG AA):
-eProcure blue `#1CA3EC` (2.8:1) becomes `#157CB3` (4.6:1); MVLM coral `#E4572E` (3.4:1) becomes `#CB4D29` (4.5:1).
-For organisations the shade is calculated on the server (`BrandColours.ReadableWithWhiteText`) from their stored
+numbers and step numbers. It is the same hue, darkened only as much as needed for 4.5:1 (WCAG AA) against the darkest
+light surface text sits on (the pale-blue info box `#E3F1FB`), so it also passes on white and on the light greys:
+eProcure blue `#1CA3EC` (2.8:1 on white) becomes `#1472A5` (5.3:1); MVLM coral `#E4572E` (3.4:1) becomes `#BB4726` (5.2:1).
+For organisations the shade is calculated on the server (`BrandColours.ReadableShade`) from their stored
 colour, so a new organisation with any brand colour gets readable buttons automatically. Decorative uses (lines,
 progress bars, dots, focus rings, borders) keep the original bright colour.
 
@@ -593,3 +594,6 @@ vision; a darker button keeps the design's look while making every button label 
 tender cards, the active phone tab and the small SBD form labels use the same darker shade as TEXT on white (contrast is
 symmetric, so one token serves both). Kept bright on purpose: the "e" of the eProcure wordmark (logos are exempt from
 WCAG contrast) and decorative icons that carry no text.
+
+**Still below AA (not changed):** the design's light grey secondary text `#8C9CAB` (column headings, field hints, fact
+labels) is about 2.8:1 on white. Darkening it to about `#6B7C8D` would pass; left as designed until requested.
