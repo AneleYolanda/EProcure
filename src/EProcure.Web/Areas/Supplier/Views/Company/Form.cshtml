@@ -1,6 +1,7 @@
 @* Design screen "sAddCo" (Add a company), also used for Edit. The prototype's banking reference and
    company-documents rows are left out: bank details are not needed for bidding (POPIA: collect the
-   minimum) and documents are uploaded per application. CSD number is added (the SBD checks need it). *@
+   minimum); per-tender documents are uploaded with each application, and the track record (past work) has its
+   own page, Company/TrackRecord, which follows this one at registration. CSD number is added (the SBD checks need it). *@
 @model CompanyFormViewModel
 @{
     var isEdit = ViewData["IsEdit"] as bool? == true;
@@ -9,7 +10,7 @@
     ViewData["Title"] = isEdit ? "Edit company" : "Add your company";
     ViewData["Tab"] = "profile";
     ViewData["BackUrl"] = Url.Action("Index");
-    ViewData["TopBarMeta"] = welcome ? "Step 2 of 2" : null;
+    ViewData["TopBarMeta"] = welcome ? "Step 2 of 3" : null;
     ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
 }
 <partial name="~/Views/Shared/Partials/_TopBar.cshtml" />

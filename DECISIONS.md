@@ -640,7 +640,7 @@ cannot evaluate (policies `BecOnly` / `OrgAdminOnly`), matching the separate BEC
 
 **Simplifications (documented, not hidden):** one consolidated BEC evaluation per bid (not one score per committee
 member); no functionality stage (tenders without a functionality threshold); specific goal = B-BBEE level only. An organ of
-state with other specific goals, or a functionality stage, would extend `EvaluationRules` and the capture form.
+state with other specific goals, or a functionality stage, would extend `EvaluationRules` and the capture form. (Functionality was added later: D53.)
 
 ---
 
@@ -746,3 +746,41 @@ records who approved it.
 
 **Why:** A common SCM internal control: no single official can put a tender in front of the market alone. Optional, so a
 small organisation with one SCM Officer is not blocked.
+
+---
+
+## D52. Track record lives on the company profile, and the committee sees it as it stood at closing
+
+**What:** Suppliers upload proof of past work (reference letters, completion certificates, company profile) on the
+company profile: as step 3 of 3 at registration ("Skip for now" is allowed) or later from Company, Track record. Each
+document has a kind, a description of the work, the client, the year and an optional contract value, and is checked like
+a bid PDF (PdfValidator, 5 MB, SHA-256). A profile holds at most 20 documents. The BEC sees, on each bid, the documents
+the company held at the tender's closing date (`CompanyDocument.HeldAt`): uploaded before it and not removed before it.
+"Remove" only sets `RemovedAtUtc`; the file is kept because a bid that closed earlier may rely on it. Staff can open a
+track record only through a submitted bid to their own tender (query filter), only after closing, and every download is
+audited.
+
+**Why:** The committee judges experience, and suppliers should not have to upload the same letters for every tender
+(the "document reuse" gap). Keying the evidence to the closing date gives each bid a fixed record without copying files.
+
+**Not done:** verifying that a reference letter is genuine (the committee still phones references); document expiry.
+
+---
+
+## D53. Functionality is an optional qualifying stage set per tender; ratings are typed, percentages are calculated
+
+**What:** When creating a tender the SCM Officer may tick "Evaluate functionality first", set a minimum percentage (70 is
+suggested) and up to 6 criteria whose weights must add up to exactly 100 (a suggested set is prefilled: experience and
+track record 40, methodology 30, key personnel 30). The criteria are shown to bidders and locked on publication. For a
+responsive bid the BEC rates every criterion from 0 (not addressed) to 5 (excellent); eProcure calculates the score as
+the sum of weight x rating / 5. A bid below the minimum is not scored on price and preference, does not set the lowest
+acceptable price, needs no price, and is told its functionality score when the tender is decided. Functionality points
+are NOT added to the 80/20 or 90/10 total (Preferential Procurement Regulations, 2022). Ratings are stored per criterion
+(`FunctionalityRatings`) so the BAC and an auditor can see how the percentage was reached.
+
+**Why:** Mirrors how SA tenders are evaluated in practice (functionality gate, then price and preference) and keeps the
+principle of D42: people judge, the system does the arithmetic.
+
+**Not chosen:** automatic 80/20 or 90/10 from the estimated value; the SCM Officer chooses, as agreed with the product
+owner. Per-member scoring (each BEC member scores, then averages) is left for later: one consolidated BEC rating per
+criterion is captured, as on a consensus scoresheet.

@@ -1,0 +1,105 @@
+@* The company's track record: proof of past work, uploaded once and part of every bid. Straight after registration
+   this is "Step 3 of 3" and can be skipped. Committees see the documents held at a tender's closing date. *@
+@model TrackRecordPageViewModel
+@using EProcure.Web.Domain.Enums
+@{
+    ViewData["Title"] = "Track record";
+    ViewData["Tab"] = "profile";
+    ViewData["BackUrl"] = Url.Action("Index");
+    ViewData["TopBarMeta"] = Model.Welcome ? "Step 3 of 3" : null;
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+    var f = Model.Form;
+    var kinds = new[] { CompanyDocumentKind.ReferenceLetter, CompanyDocumentKind.CompletionCertificate, CompanyDocumentKind.CompanyProfile, CompanyDocumentKind.Other };
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<div class="ep-screen__body">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+
+    <p class="ep-card__text">
+        Evaluation committees look at what your company has done before. Upload reference letters from clients, completion certificates and your company profile
+        once, here; they go with every bid you submit. The committee sees the documents on your profile at the tender's closing date.
+    </p>
+
+    @if (Model.Documents.Count > 0)
+    {
+        <section aria-labelledby="track-list">
+            <h2 class="ep-card__title" id="track-list">On your profile (@Model.Documents.Count)</h2>
+            @foreach (var d in Model.Documents)
+            {
+                <div class="ep-trackrow">
+                    <div class="ep-trackrow__body">
+                        <span class="ep-docrow__name">@d.Title</span>
+                        <span class="ep-docrow__meta">@TrackRecordService.Label(d.Kind)@(TrackRecordService.Describe(d) is { Length: > 0 } more ? " · " + more : "")</span>
+                        <span class="ep-docrow__meta"><a asp-action="TrackRecordFile" asp-route-id="@d.Id">@d.OriginalFileName</a> · @Math.Max(1, d.SizeBytes / 1024) KB</span>
+                    </div>
+                    <form asp-action="RemoveTrackRecord" method="post">
+                        <input type="hidden" name="documentId" value="@d.Id" />
+                        <button type="submit" class="ep-textbtn ep-textbtn--muted">Remove</button>
+                    </form>
+                </div>
+            }
+        </section>
+    }
+
+    <form asp-action="AddTrackRecord" asp-route-welcome="@(Model.Welcome ? "true" : null)" method="post" enctype="multipart/form-data" class="ep-card" novalidate>
+        <h2 class="ep-card__title">Add a document</h2>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <label class="ep-field">WHAT IS IT?
+            <select class="ep-input" name="Form.Kind">
+                <option value="">Choose</option>
+                @foreach (var kind in kinds)
+                {
+                    <option value="@kind" selected="@(f.Kind == kind)">@TrackRecordService.Label(kind)</option>
+                }
+            </select>
+            <span asp-validation-for="Form.Kind"></span>
+        </label>
+
+        <label class="ep-field">THE WORK
+            <input class="ep-input" name="Form.Title" value="@f.Title" maxlength="200" placeholder="e.g. Resurfacing of 12 km of municipal roads" />
+            <span asp-validation-for="Form.Title"></span>
+        </label>
+
+        <label class="ep-field">CLIENT
+            <input class="ep-input" name="Form.ClientName" value="@f.ClientName" maxlength="200" placeholder="Who the work was for" />
+            <span asp-validation-for="Form.ClientName"></span>
+        </label>
+
+        <div class="ep-field-row">
+            <label class="ep-field">YEAR COMPLETED
+                <input class="ep-input" name="Form.YearCompleted" value="@f.YearCompleted" type="number" min="1950" step="1" inputmode="numeric" placeholder="Optional" />
+                <span asp-validation-for="Form.YearCompleted"></span>
+            </label>
+            <label class="ep-field">CONTRACT VALUE (R)
+                <input class="ep-input" name="Form.ContractValue" value="@f.ContractValue" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional" />
+                <span asp-validation-for="Form.ContractValue"></span>
+            </label>
+        </div>
+
+        <label class="ep-field">PDF (MAX 5 MB)
+            <input type="file" name="file" accept="application/pdf,.pdf" />
+            @Html.ValidationMessage("File")
+        </label>
+
+        <button type="submit" class="ep-btn ep-btn--secondary ep-mt-8">Upload</button>
+    </form>
+
+    <div class="ep-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+        <span>Only committees of organisations you bid to can open these documents, and only after the tender has closed.</span>
+    </div>
+
+    @if (Model.Welcome)
+    {
+        <a class="ep-btn ep-btn--primary" asp-controller="Dashboard" asp-action="Index">@(Model.Documents.Count > 0 ? "Finish" : "Skip for now")</a>
+    }
+    else
+    {
+        <a class="ep-btn ep-btn--primary" asp-action="Index">Done</a>
+    }
+</div>

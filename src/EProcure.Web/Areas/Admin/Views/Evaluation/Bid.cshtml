@@ -42,6 +42,30 @@
                     }
                 </ul>
             </section>
+
+            @if (Model.Stage != EvaluationStage.NotClosed)
+            {
+                <section class="ep-section">
+                    <h3 class="ep-section__title">Track record (@Model.TrackRecord.Count)</h3>
+                    <div class="ep-section__sub">From the bidder's company profile, as it stood at the closing date. @(Model.FunctionalityThreshold is null ? "" : "Use it for the experience criteria.")</div>
+                    @if (Model.TrackRecord.Count == 0)
+                    {
+                        <div class="ep-section__sub ep-mt-14">The bidder had no track-record documents on its profile at the closing date.</div>
+                    }
+                    <ul class="ep-doclist">
+                        @foreach (var d in Model.TrackRecord)
+                        {
+                            <li>
+                                <span class="ep-grow">
+                                    <span class="ep-docrow__name">@d.Title</span>
+                                    <span class="ep-docrow__meta">@d.Kind@(d.Details.Length > 0 ? " · " + d.Details : "") · @d.FileName</span>
+                                </span>
+                                <a class="ep-abtn" asp-controller="Submissions" asp-action="TrackRecordFile" asp-route-id="@d.Id" asp-route-submissionId="@Model.SubmissionId">Download PDF</a>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
         </div>
 
         <aside class="ep-detail__side">
@@ -56,9 +80,32 @@
                             <label class="ep-radio-pill"><input type="radio" asp-for="Form.IsResponsive" value="false" /><span>Not responsive</span></label>
                         </div>
                         <span asp-validation-for="Form.IsResponsive"></span>
+                        @if (Model.FunctionalityThreshold is int threshold)
+                        {
+                            <fieldset class="ep-fieldset ep-mt-14">
+                                <legend class="ep-afield">FUNCTIONALITY (RESPONSIVE BIDS) · MINIMUM @threshold%</legend>
+                                @foreach (var (criterionId, name, weight) in Model.Criteria)
+                                {
+                                    var current = f.Ratings.GetValueOrDefault(criterionId);
+                                    <label class="ep-rating">
+                                        <span class="ep-rating__name">@name</span>
+                                        <span class="ep-rating__meta">Weight @weight</span>
+                                        <select class="ep-ainput" name="Form.Ratings[@criterionId]">
+                                            <option value="">Rate 0 to 5</option>
+                                            @for (var r = 0; r <= EvaluationRules.MaxRating; r++)
+                                            {
+                                                <option value="@r" selected="@(current == r)">@r · @EvaluationRules.RatingLabel(r)</option>
+                                            }
+                                        </select>
+                                    </label>
+                                }
+                                @Html.ValidationMessage("Form.Ratings")
+                                <span class="ep-afield__hint">Score = sum of weight × rating ÷ 5. Below @threshold% the bid is not evaluated on price, and the price is not needed.</span>
+                            </fieldset>
+                        }
                         <label class="ep-afield ep-mt-14">BID PRICE INCL. VAT (FROM THE PRICING SCHEDULE)
                             <input class="ep-ainput" asp-for="Form.BidPrice" type="number" step="0.01" min="0.01" inputmode="decimal" placeholder="e.g. 1240000.00" />
-                            <span class="ep-afield__hint">Needed for a responsive bid.</span>
+                            <span class="ep-afield__hint">Needed for a responsive bid@(Model.FunctionalityThreshold is null ? "" : " that meets the functionality minimum").</span>
                             <span asp-validation-for="Form.BidPrice"></span>
                         </label>
                         <label class="ep-afield ep-mt-14">REASON IT IS NOT RESPONSIVE
@@ -86,9 +133,19 @@
                     {
                         <div class="ep-kvs">
                             <div class="ep-kv"><span class="ep-kv__k">Responsive</span><span class="ep-kv__v">@(responsive ? "Yes" : "No")</span></div>
-                            @if (responsive)
+                            @if (responsive && Model.FunctionalityScore is decimal functionality)
                             {
-                                <div class="ep-kv"><span class="ep-kv__k">Bid price</span><span class="ep-kv__v">@DisplayFormat.Money(f.BidPrice!.Value)</span></div>
+                                var passed = EvaluationRules.MeetsThreshold(functionality, Model.FunctionalityThreshold ?? 0);
+                                <div class="ep-kv"><span class="ep-kv__k">Functionality</span><span class="ep-kv__v">@DisplayFormat.Points(functionality)% (minimum @Model.FunctionalityThreshold%) · @(passed ? "meets it" : "below it: not scored on price")</span></div>
+                                @foreach (var (criterionId, name, weight) in Model.Criteria)
+                                {
+                                    var rating = f.Ratings.GetValueOrDefault(criterionId);
+                                    <div class="ep-kv"><span class="ep-kv__k">@name (@weight)</span><span class="ep-kv__v">@rating · @EvaluationRules.RatingLabel(rating ?? -1)</span></div>
+                                }
+                            }
+                            @if (responsive && f.BidPrice is decimal price)
+                            {
+                                <div class="ep-kv"><span class="ep-kv__k">Bid price</span><span class="ep-kv__v">@DisplayFormat.Money(price)</span></div>
                             }
                             else
                             {

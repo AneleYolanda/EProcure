@@ -25,11 +25,14 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Tender> Tenders => Set<Tender>();
     public DbSet<TenderRequirement> TenderRequirements => Set<TenderRequirement>();
+    public DbSet<TenderFunctionalityCriterion> TenderFunctionalityCriteria => Set<TenderFunctionalityCriterion>();
     public DbSet<Submission> Submissions => Set<Submission>();
     public DbSet<UploadedDocument> UploadedDocuments => Set<UploadedDocument>();
     public DbSet<SubmissionStatusHistory> SubmissionStatusHistory => Set<SubmissionStatusHistory>();
     public DbSet<AwardRecord> AwardRecords => Set<AwardRecord>();
     public DbSet<BidEvaluation> BidEvaluations => Set<BidEvaluation>();
+    public DbSet<FunctionalityRating> FunctionalityRatings => Set<FunctionalityRating>();
+    public DbSet<CompanyDocument> CompanyDocuments => Set<CompanyDocument>();
     public DbSet<SentNotification> SentNotifications => Set<SentNotification>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
@@ -69,6 +72,9 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
         builder.Entity<TenderRequirement>().HasQueryFilter(r =>
             !IsOrgScoped || r.Tender.OrganisationId == CurrentOrgId);
 
+        builder.Entity<TenderFunctionalityCriterion>().HasQueryFilter(c =>
+            !IsOrgScoped || c.Tender.OrganisationId == CurrentOrgId);
+
         builder.Entity<AwardRecord>().HasQueryFilter(a =>
             !IsOrgScoped || a.Tender.OrganisationId == CurrentOrgId);
 
@@ -100,6 +106,21 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
             (e.Submission.Tender.OrganisationId == CurrentOrgId
              && e.Submission.Status != SubmissionStatus.Draft
              && e.Submission.Status != SubmissionStatus.AwaitingPayment));
+
+        builder.Entity<FunctionalityRating>().HasQueryFilter(r =>
+            !IsOrgScoped ||
+            (r.BidEvaluation.Submission.Tender.OrganisationId == CurrentOrgId
+             && r.BidEvaluation.Submission.Status != SubmissionStatus.Draft
+             && r.BidEvaluation.Submission.Status != SubmissionStatus.AwaitingPayment));
+
+        // Track-record documents belong to a company, not an organisation. Staff can reach them only if that company
+        // has a submitted bid to one of their own tenders (the "held at the closing date" and "sealed until closing"
+        // rules are applied on top, where the documents are shown).
+        builder.Entity<CompanyDocument>().HasQueryFilter(d =>
+            !IsOrgScoped ||
+            d.Company.Submissions.Any(s => s.Tender.OrganisationId == CurrentOrgId
+                                           && s.Status != SubmissionStatus.Draft
+                                           && s.Status != SubmissionStatus.AwaitingPayment));
 
         // AuditEntry.OrganisationId is nullable (platform events such as supplier sign-ins have none).
         // EF compares nullables with C# rules, where NULL == NULL is true, so without the explicit

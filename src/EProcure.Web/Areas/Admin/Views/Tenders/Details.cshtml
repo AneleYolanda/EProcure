@@ -45,7 +45,7 @@
                     <div class="ep-fact"><div class="ep-fact__k">Closing (SAST)</div><div class="ep-fact__v">@DisplayFormat.DateTime(Model.ClosingDateUtc)</div></div>
                     <div class="ep-fact"><div class="ep-fact__k">Tender fee</div><div class="ep-fact__v">@DisplayFormat.Fee(Model.TenderFee)</div></div>
                     <div class="ep-fact"><div class="ep-fact__k">Est. value</div><div class="ep-fact__v">@(Model.EstimatedValue is decimal v ? DisplayFormat.Rand(v) : "Not shown")</div></div>
-                    <div class="ep-fact"><div class="ep-fact__k">Evaluation</div><div class="ep-fact__v">@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20")</div></div>
+                    <div class="ep-fact"><div class="ep-fact__k">Evaluation</div><div class="ep-fact__v">@(Model.FunctionalityThreshold is int t ? $"Func. {t}% + " : "")@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20")</div></div>
                 </div>
             </section>
 
@@ -70,6 +70,24 @@
                     <li>Valid SARS tax compliance status (declared by every bidder)</li>
                     <li>@(Model.MinimumBbbeeLevel is BbbeeLevel level ? $"{EligibilityRules.Describe(level)} or better" : "No minimum B-BBEE level")</li>
                 </ul>
+            </section>
+
+            <section class="ep-section">
+                <h3 class="ep-section__title">Evaluation method</h3>
+                @if (Model.FunctionalityThreshold is int threshold)
+                {
+                    <div class="ep-section__sub">1. Functionality: each criterion is rated 0 to 5 by the BEC. Bids scoring below <strong>@threshold%</strong> are not evaluated further. 2. Price and preference (@EvaluationRules.Describe(Model.PointSystem)) for the bids that pass.</div>
+                    <div class="ep-kvs ep-kvs--stacked">
+                        @foreach (var (name, weight) in Model.FunctionalityCriteria)
+                        {
+                            <div class="ep-kv"><span class="ep-kv__k">Weight @weight</span><span class="ep-kv__v">@name</span></div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="ep-section__sub">Price and preference (@EvaluationRules.Describe(Model.PointSystem)) only. No functionality stage.</div>
+                }
             </section>
 
             <section class="ep-section">

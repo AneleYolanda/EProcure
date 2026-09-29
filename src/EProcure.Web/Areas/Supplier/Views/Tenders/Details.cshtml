@@ -58,7 +58,7 @@
                 <div><div class="ep-caption">Closing</div><div class="ep-facts2__v">@DisplayFormat.DateTime(Model.ClosingDateUtc)</div></div>
                 <div><div class="ep-caption">Tender fee</div><div class="ep-facts2__v">@DisplayFormat.Fee(Model.TenderFee)</div></div>
                 <div><div class="ep-caption">Est. value</div><div class="ep-facts2__v">@(Model.EstimatedValue is decimal v ? DisplayFormat.Rand(v) : "Not published")</div></div>
-                <div><div class="ep-caption">Evaluation</div><div class="ep-facts2__v">@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20") price and preference</div></div>
+                <div><div class="ep-caption">Evaluation</div><div class="ep-facts2__v">@(Model.FunctionalityThreshold is null ? "" : "Functionality, then ")@(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20") price and preference</div></div>
             </div>
 
             <section class="ep-card">
@@ -93,6 +93,28 @@
                     </div>
                 </div>
             </section>
+
+            @if (Model.FunctionalityThreshold is int threshold)
+            {
+                <section class="ep-card">
+                    <h2 class="ep-card__title">Functionality: minimum @threshold%</h2>
+                    <div class="ep-q__note">The committee first rates your bid on these criteria (0 to 5 each). Bids scoring below @threshold% are not evaluated on price and preference.</div>
+                    <div class="ep-kvs">
+                        @foreach (var (name, weight) in Model.FunctionalityCriteria)
+                        {
+                            <div class="ep-kv"><span class="ep-kv__k">@name</span><span class="ep-kv__v">@weight%</span></div>
+                        }
+                    </div>
+                    <p class="ep-card__text ep-mt-14">
+                        Your track record (reference letters, completion certificates) comes from your company profile, as it stands at the closing date.
+                        @if (Model.TrackRecordCount is int count)
+                        {
+                            <text>You have @count document@(count == 1 ? "" : "s") there. </text>
+                            <a asp-controller="Company" asp-action="TrackRecord">Manage your track record</a>
+                        }
+                    </p>
+                </section>
+            }
 
             <section class="ep-card">
                 <h2 class="ep-card__title">Required documents (@Model.Requirements.Count)</h2>

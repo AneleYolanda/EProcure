@@ -1,6 +1,7 @@
 using EProcure.Web.Domain;
 using EProcure.Web.Infrastructure.Filters;
 using EProcure.Web.Services;
+using EProcure.Web.Services.External;
 using EProcure.Web.ViewModels.Supplier;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,11 +20,15 @@ namespace EProcure.Web.Areas.Supplier;
 public class CompanyController : Controller
 {
     private readonly ICompanyService _companies;
+    private readonly ITrackRecordService _trackRecord;
+    private readonly IFileStorage _files;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public CompanyController(ICompanyService companies, UserManager<ApplicationUser> userManager)
+    public CompanyController(ICompanyService companies, ITrackRecordService trackRecord, IFileStorage files, UserManager<ApplicationUser> userManager)
     {
         _companies = companies;
+        _trackRecord = trackRecord;
+        _files = files;
         _userManager = userManager;
     }
 
@@ -31,6 +36,7 @@ public class CompanyController : Controller
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var company = await _companies.GetForUserAsync(_userManager.GetUserId(User)!, ct);
+        ViewData["TrackRecordCount"] = (await _trackRecord.ListOwnAsync(_userManager.GetUserId(User)!, ct)).Count;
         return View(company);
     }
 
@@ -48,7 +54,9 @@ public class CompanyController : Controller
     public async Task<IActionResult> Create(CompanyFormViewModel form, bool welcome, CancellationToken ct)
     {
         ViewData["Welcome"] = welcome;
-        return await SaveAsync(form, "Company saved. Tenders now show whether you qualify.", ct);
+        var saved = await SaveAsync(form, "Company saved. Tenders now show whether you qualify.", ct);
+        // Registration continues with the track record (step 3 of 3), which can also be done later.
+        return welcome && saved is RedirectToActionResult ? RedirectToAction(nameof(TrackRecord), new { welcome = true }) : saved;
     }
 
     // GET /Supplier/Company/Edit
@@ -77,6 +85,57 @@ public class CompanyController : Controller
         ViewData["IsEdit"] = true;
         return await SaveAsync(form, "Company details updated.", ct);
     }
+
+    // ---- Track record: past work, reference letters, company profile (uploaded once, part of every bid) ----
+
+    // GET /Supplier/Company/TrackRecord   (?welcome=true straight after adding the company: "Step 3 of 3")
+    public async Task<IActionResult> TrackRecord(bool welcome, CancellationToken ct)
+    {
+        if (await _companies.GetForUserAsync(_userManager.GetUserId(User)!, ct) is null)
+            return RedirectToAction(nameof(Create));
+        return View(await TrackRecordPageAsync(welcome, new TrackRecordFormViewModel(), ct));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTrackRecord(TrackRecordFormViewModel form, IFormFile? file, bool welcome, CancellationToken ct)
+    {
+        var result = await _trackRecord.AddAsync(_userManager.GetUserId(User)!,
+            new TrackRecordInput(form.Kind, form.Title, form.ClientName, form.YearCompleted, form.ContractValue), file, ct);
+        if (!result.Succeeded)
+        {
+            foreach (var (field, message) in result.Errors)
+                ModelState.AddModelError(field is "" or "File" ? field : "Form." + field, message); // the PDF is posted outside the form model
+            return View(nameof(TrackRecord), await TrackRecordPageAsync(welcome, form, ct));
+        }
+
+        TempData["Flash"] = "Added to your track record. Committees see it with every bid you submit.";
+        return RedirectToAction(nameof(TrackRecord), new { welcome = welcome ? true : (bool?)null });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveTrackRecord(int documentId, CancellationToken ct)
+    {
+        var result = await _trackRecord.RemoveAsync(_userManager.GetUserId(User)!, documentId, ct);
+        if (result.NotFound) return NotFound();
+        TempData["Flash"] = "Removed from your track record. Bids for tenders that have already closed keep it.";
+        return RedirectToAction(nameof(TrackRecord));
+    }
+
+    // GET /Supplier/Company/TrackRecordFile/7   The supplier's own document only.
+    public async Task<IActionResult> TrackRecordFile(int id, CancellationToken ct)
+    {
+        var document = await _trackRecord.FindOwnAsync(_userManager.GetUserId(User)!, id, ct);
+        if (document is null) return NotFound();
+        var stream = await _files.OpenReadAsync(document.StorageKey, ct);
+        return stream is null ? NotFound() : File(stream, "application/pdf", document.OriginalFileName);
+    }
+
+    private async Task<TrackRecordPageViewModel> TrackRecordPageAsync(bool welcome, TrackRecordFormViewModel form, CancellationToken ct) => new()
+    {
+        Welcome = welcome,
+        Documents = await _trackRecord.ListOwnAsync(_userManager.GetUserId(User)!, ct),
+        Form = form
+    };
 
     private async Task<IActionResult> SaveAsync(CompanyFormViewModel form, string successMessage, CancellationToken ct)
     {

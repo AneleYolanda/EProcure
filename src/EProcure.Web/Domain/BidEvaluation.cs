@@ -25,7 +25,16 @@ public class BidEvaluation
     /// <summary>Required when not responsive. The bidder is told this reason when the tender is decided.</summary>
     public string? NonResponsiveReason { get; set; }
 
-    /// <summary>Total bid price including VAT, as stated in the bidder's pricing schedule. Required when responsive.</summary>
+    /// <summary>
+    /// Functionality percentage calculated from <see cref="FunctionalityRatings"/> when the evaluation is saved.
+    /// NULL when the tender has no functionality stage or the bid is not responsive.
+    /// </summary>
+    public decimal? FunctionalityScore { get; set; }
+
+    /// <summary>The BEC's 0-5 rating per functionality criterion.</summary>
+    public ICollection<FunctionalityRating> FunctionalityRatings { get; set; } = new List<FunctionalityRating>();
+
+    /// <summary>Total bid price including VAT, as stated in the bidder's pricing schedule. Required for a responsive bid that passes functionality.</summary>
     public decimal? BidPrice { get; set; }
 
     /// <summary>Committee notes for the record (not shown to the bidder).</summary>

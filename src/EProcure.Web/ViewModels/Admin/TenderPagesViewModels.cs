@@ -31,6 +31,8 @@ public class TenderDetailsViewModel
     public decimal? EstimatedValue { get; set; }
     public BbbeeLevel? MinimumBbbeeLevel { get; set; }
     public PreferencePointSystem PointSystem { get; set; }
+    public int? FunctionalityThreshold { get; set; }
+    public IReadOnlyList<(string Name, int Weight)> FunctionalityCriteria { get; set; } = Array.Empty<(string, int)>();
     public string CreatedBy { get; set; } = string.Empty;
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? PublishedAtUtc { get; set; }

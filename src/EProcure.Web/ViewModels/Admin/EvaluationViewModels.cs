@@ -56,6 +56,16 @@ public class EvaluateBidViewModel
     public BbbeeLevel DeclaredLevel { get; set; }
     public IReadOnlyList<string> RedFlags { get; set; } = Array.Empty<string>();
     public IReadOnlyList<(int Id, string Requirement, string FileName)> Documents { get; set; } = Array.Empty<(int, string, string)>();
+
+    /// <summary>The bidder's track record as held at the closing date (empty while sealed).</summary>
+    public IReadOnlyList<TrackRecordRow> TrackRecord { get; set; } = Array.Empty<TrackRecordRow>();
+
+    /// <summary>Functionality stage: NULL threshold = none. Criteria in the tender's order.</summary>
+    public int? FunctionalityThreshold { get; set; }
+    public IReadOnlyList<(int Id, string Name, int Weight)> Criteria { get; set; } = Array.Empty<(int, string, int)>();
+    public decimal? FunctionalityScore { get; set; }
+
+    public record TrackRecordRow(int Id, string Title, string Kind, string Details, string FileName, DateTime UploadedAtUtc);
     public string? EvaluatedBy { get; set; }
     public DateTime? EvaluatedAtUtc { get; set; }
     public bool CanEdit { get; set; }
@@ -65,6 +75,9 @@ public class EvaluateBidViewModel
 public class EvaluateBidForm
 {
     public bool? IsResponsive { get; set; }
+
+    /// <summary>Criterion id -> rating 0-5 (tenders with a functionality stage only).</summary>
+    public Dictionary<int, int?> Ratings { get; set; } = new();
     public string? NonResponsiveReason { get; set; }
     public decimal? BidPrice { get; set; }
     public string? Notes { get; set; }

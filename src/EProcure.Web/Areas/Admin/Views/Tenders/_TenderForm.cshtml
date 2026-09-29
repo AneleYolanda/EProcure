@@ -105,7 +105,7 @@
 
             <section class="ep-section" id="evaluation" aria-labelledby="eval-title">
                 <h2 class="ep-section__title" id="eval-title">3. Evaluation method</h2>
-                <div class="ep-section__sub">Recorded for the evaluation committee. eProcure does not score bids or choose a winner.</div>
+                <div class="ep-section__sub">Shown to bidders with the tender. After closing, the BEC's inputs are scored with this method; the BAC decides the award.</div>
                 <fieldset class="ep-options ep-fieldset">
                     <legend class="ep-visually-hidden">Preference point system</legend>
                     <label class="ep-option">
@@ -122,6 +122,36 @@
                             <span class="ep-option__meta">90 points for price, 10 for specific goals. Usually for contracts above R50 million.</span>
                         </span>
                     </label>
+                </fieldset>
+
+                <fieldset class="ep-fieldset ep-functionality ep-mt-18">
+                    <legend class="ep-section__title ep-functionality__legend">Functionality (optional)</legend>
+                    <label class="ep-confirm">
+                        <input type="checkbox" name="UseFunctionality" value="true" @Checked(Model.UseFunctionality) />
+                        <span><strong>Evaluate functionality first.</strong> The BEC rates each criterion from 0 (not addressed) to 5 (excellent). Bids below the minimum score are not evaluated on price and preference. Functionality points are not added to the @(Model.PointSystem == PreferencePointSystem.NinetyTen ? "90/10" : "80/20") total.</span>
+                    </label>
+                    <input type="hidden" name="UseFunctionality" value="false" />
+                    <div class="ep-form-grid">
+                        <label class="ep-afield" asp-for="FunctionalityThreshold">MINIMUM FUNCTIONALITY SCORE (%)
+                            <input class="ep-ainput" asp-for="FunctionalityThreshold" type="number" min="1" max="100" step="1" inputmode="numeric" />
+                            <span class="ep-afield__hint">Bids must score at least this percentage. 70 is common.</span>
+                            <span asp-validation-for="FunctionalityThreshold"></span>
+                        </label>
+                    </div>
+                    <div class="ep-fn-rows" data-ep-weights>
+                        <div class="ep-fn-row ep-fn-row--head" aria-hidden="true"><span>CRITERION</span><span>WEIGHT</span></div>
+                        @for (var i = 0; i < TenderFormViewModel.MaxCriteria; i++)
+                        {
+                            var row = i < Model.FunctionalityCriteria.Count ? Model.FunctionalityCriteria[i] : new TenderFormViewModel.CriterionInput();
+                            <div class="ep-fn-row">
+                                <input class="ep-ainput" name="FunctionalityCriteria[@i].Name" value="@row.Name" maxlength="200" aria-label="Criterion @(i + 1)" placeholder="@(i < 3 ? "" : "Optional")" />
+                                <input class="ep-ainput" name="FunctionalityCriteria[@i].Weight" value="@row.Weight" type="number" min="1" max="100" step="1" inputmode="numeric" aria-label="Weight of criterion @(i + 1)" data-ep-weight />
+                            </div>
+                        }
+                        <div class="ep-afield__hint">Weights must add up to 100. <span data-ep-weight-total></span></div>
+                    </div>
+                    <span asp-validation-for="FunctionalityCriteria" class="ep-field-error"></span>
+                    <div class="ep-afield__hint ep-mt-8">Bidders' track records (reference letters, completion certificates) are on their company profiles and are shown to the BEC with each bid.</div>
                 </fieldset>
             </section>
 

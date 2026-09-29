@@ -36,6 +36,7 @@ public class TendersController : Controller
         var tender = await _db.Tenders.AsNoTracking()
             .Include(t => t.Organisation)
             .Include(t => t.Requirements)
+            .Include(t => t.FunctionalityCriteria)
             .SingleOrDefaultAsync(t => t.Id == id && (t.Status == TenderStatus.Published || t.Status == TenderStatus.Awarded), ct);
         if (tender is null) return NotFound();
 
@@ -70,6 +71,9 @@ public class TendersController : Controller
             EstimatedValue = tender.EstimatedValue,
             PointSystem = tender.PointSystem,
             MinimumBbbeeLevel = tender.MinimumBbbeeLevel,
+            FunctionalityThreshold = tender.FunctionalityThreshold,
+            FunctionalityCriteria = tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).Select(c => (c.Name, c.Weight)).ToList(),
+            TrackRecordCount = company is null ? null : await _db.CompanyDocuments.CountAsync(d => d.CompanyId == company.Id && d.RemovedAtUtc == null, ct),
             Requirements = tender.Requirements.OrderBy(r => r.SortOrder).Select(r => r.Name).ToList(),
             IsOpen = tender.ClosingDateUtc > DateTime.UtcNow,
             CompanyName = company?.Name,

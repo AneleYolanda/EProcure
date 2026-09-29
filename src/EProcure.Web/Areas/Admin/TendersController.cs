@@ -86,6 +86,8 @@ public class TendersController : Controller
         {
             PointSystem = organisation?.DefaultPointSystem ?? PreferencePointSystem.EightyTwenty,
             ClosingDateLocal = threeWeeks,
+            FunctionalityThreshold = 70,
+            FunctionalityCriteria = TenderFormViewModel.SuggestedCriteria(),
             SelectedDocuments = TenderCatalog.DefaultDocuments.ToList()
         });
     }
@@ -107,7 +109,8 @@ public class TendersController : Controller
     [Authorize(Policy = "OrgAdminOnly")]
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
-        var tender = await _db.Tenders.AsNoTracking().Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        var tender = await _db.Tenders.AsNoTracking().Include(t => t.Requirements).Include(t => t.FunctionalityCriteria)
+            .SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return NotFound();
         if (tender.Status != TenderStatus.Draft)
         {
@@ -128,6 +131,11 @@ public class TendersController : Controller
             EstimatedValue = tender.EstimatedValue,
             MinimumBbbeeLevel = tender.MinimumBbbeeLevel,
             PointSystem = tender.PointSystem,
+            UseFunctionality = tender.FunctionalityThreshold is not null,
+            FunctionalityThreshold = tender.FunctionalityThreshold ?? 70,
+            FunctionalityCriteria = tender.FunctionalityThreshold is null
+                ? TenderFormViewModel.SuggestedCriteria()
+                : tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).Select(c => new TenderFormViewModel.CriterionInput { Name = c.Name, Weight = c.Weight }).ToList(),
             SelectedDocuments = names.Where(n => TenderCatalog.StandardDocuments.Contains(n)).ToList(),
             OtherDocuments = string.Join("\n", names.Where(n => !TenderCatalog.StandardDocuments.Contains(n)))
         });
@@ -259,6 +267,7 @@ public class TendersController : Controller
         var tender = await _db.Tenders.AsNoTracking()
             .Include(t => t.Requirements)
             .Include(t => t.CreatedByUser)
+            .Include(t => t.FunctionalityCriteria)
             .Include(t => t.ApprovalRequestedByUser)
             .Include(t => t.ApprovedByUser)
             .SingleOrDefaultAsync(t => t.Id == id, ct);
@@ -288,6 +297,8 @@ public class TendersController : Controller
             EstimatedValue = tender.EstimatedValue,
             MinimumBbbeeLevel = tender.MinimumBbbeeLevel,
             PointSystem = tender.PointSystem,
+            FunctionalityThreshold = tender.FunctionalityThreshold,
+            FunctionalityCriteria = tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).Select(c => (c.Name, c.Weight)).ToList(),
             CreatedBy = tender.CreatedByUser.FullName,
             CreatedAtUtc = tender.CreatedAtUtc,
             PublishedAtUtc = tender.PublishedAtUtc,

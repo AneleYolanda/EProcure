@@ -89,6 +89,7 @@ builder.Services.AddScoped<EnsurePhoneVerifiedFilter>();
 builder.Services.AddScoped<DemoDataSeeder>();
 builder.Services.AddScoped<ITenderService, TenderService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ITrackRecordService, TrackRecordService>();
 builder.Services.AddScoped<IEvaluationService, EvaluationService>();
 builder.Services.AddScoped<ILinkBuilder, LinkBuilder>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

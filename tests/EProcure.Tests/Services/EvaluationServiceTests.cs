@@ -387,4 +387,105 @@ public sealed class EvaluationServiceTests : IDisposable
         Assert.Null(sheet.Recommended);
         Assert.True((await service.CaptureAsync(t.Siyakha, Responsive(1_426_000m), _evaluator, _ct)).Succeeded);
     }
+
+    // ------------------------------------------------------------------ functionality stage
+
+    /// <summary>The three-bid tender with functionality: experience 60, methodology 40, minimum 70%.</summary>
+    private ((int Tender, int Umhlathi, int Khanya, int Siyakha) Bids, int Experience, int Method) WithFunctionality()
+    {
+        var t = ClosedTenderWithThreeBids();
+        var ids = _db.AddFunctionality(t.Tender, 70, ("Experience", 60), ("Methodology", 40));
+        return (t, ids[0], ids[1]);
+    }
+
+    private static BidEvaluationInput Rated(decimal? price, int experience, int method, int experienceId, int methodId) =>
+        new(true, null, price, null, new Dictionary<int, int?> { [experienceId] = experience, [methodId] = method });
+
+    [Fact]
+    public async Task With_a_functionality_stage_every_criterion_must_be_rated()
+    {
+        var (t, experience, _) = WithFunctionality();
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+
+        var result = await service.CaptureAsync(t.Khanya,
+            new BidEvaluationInput(true, null, 1_150_000m, null, new Dictionary<int, int?> { [experience] = 4 }), _evaluator, _ct);
+
+        Assert.Equal("Ratings", result.Errors.Single().Field);
+        Assert.Contains("Methodology", result.Errors.Single().Message);
+    }
+
+    [Fact]
+    public async Task A_bid_below_the_threshold_needs_no_price_is_not_ranked_and_is_told_its_score()
+    {
+        var (t, experience, method) = WithFunctionality();
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+
+        // Khanya is the cheapest but scores 60 x 2/5 + 40 x 3/5 = 24 + 24 = 48% (< 70%): no price needed.
+        Assert.True((await service.CaptureAsync(t.Khanya, Rated(null, 2, 3, experience, method), _evaluator, _ct)).Succeeded);
+        Assert.True((await service.CaptureAsync(t.Umhlathi, Rated(1_380_000m, 4, 4, experience, method), _evaluator, _ct)).Succeeded); // 80%
+        Assert.True((await service.CaptureAsync(t.Siyakha, Rated(1_240_000m, 5, 3, experience, method), _evaluator, _ct)).Succeeded);  // 84%
+
+        var sheet = (await service.GetScoresheetAsync(t.Tender, _ct))!;
+        var khanya = sheet.Bids.Single(b => b.SubmissionId == t.Khanya);
+        Assert.Equal(48m, khanya.Evaluation!.FunctionalityScore);
+        Assert.True(sheet.FailedFunctionality(khanya));
+        Assert.Null(khanya.Score.Rank);
+        Assert.Null(khanya.Evaluation.BidPrice);
+        // Siyakha now has the lowest ACCEPTABLE price, so it gets the full 80 price points (+18 for Level 2).
+        Assert.Equal(98m, sheet.TopRanked!.Score.TotalPoints);
+        Assert.Equal(t.Siyakha, sheet.TopRanked.SubmissionId);
+
+        Assert.True((await service.SubmitRecommendationAsync(t.Tender, t.Siyakha, null, _evaluator, _ct)).Succeeded);
+        Assert.True((await service.AwardAsync(t.Tender, Award(t.Siyakha), _scmOfficer, _ct)).Succeeded);
+        var note = await context.SubmissionStatusHistory.Where(h => h.SubmissionId == t.Khanya).OrderBy(h => h.Id).Select(h => h.Note).ToListAsync();
+        Assert.Contains("48.00% for functionality, below the minimum of 70%", note.Last());
+    }
+
+    [Fact]
+    public async Task Saving_again_replaces_the_ratings()
+    {
+        var (t, experience, method) = WithFunctionality();
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+
+        await service.CaptureAsync(t.Khanya, Rated(null, 1, 1, experience, method), _evaluator, _ct);
+        Assert.True((await service.CaptureAsync(t.Khanya, Rated(1_150_000m, 5, 4, experience, method), _evaluator, _ct)).Succeeded);
+
+        var evaluation = await context.BidEvaluations.Include(e => e.FunctionalityRatings).SingleAsync(e => e.SubmissionId == t.Khanya);
+        Assert.Equal(new[] { 5, 4 }, evaluation.FunctionalityRatings.OrderBy(r => r.TenderFunctionalityCriterionId).Select(r => r.Rating));
+        Assert.Equal(92m, evaluation.FunctionalityScore); // 60 + 32
+        Assert.Equal(1_150_000m, evaluation.BidPrice);
+        Assert.Equal(2, await context.FunctionalityRatings.CountAsync());
+    }
+
+    [Fact]
+    public async Task A_non_responsive_bid_is_not_rated()
+    {
+        var (t, _, _) = WithFunctionality();
+        var (service, context) = As(TestDb.Rbidz);
+        await using var _ = context;
+
+        Assert.True((await service.CaptureAsync(t.Khanya, new BidEvaluationInput(false, "SBD 4 not signed", null, null), _evaluator, _ct)).Succeeded);
+
+        var evaluation = await context.BidEvaluations.Include(e => e.FunctionalityRatings).SingleAsync(e => e.SubmissionId == t.Khanya);
+        Assert.Null(evaluation.FunctionalityScore);
+        Assert.Empty(evaluation.FunctionalityRatings);
+    }
+
+    [Fact]
+    public async Task Another_organisation_cannot_see_the_ratings()
+    {
+        var (t, experience, method) = WithFunctionality();
+        var (service, context) = As(TestDb.Rbidz);
+        await using (context)
+        {
+            await service.CaptureAsync(t.Siyakha, Rated(1_240_000m, 5, 3, experience, method), _evaluator, _ct);
+        }
+
+        await using var mvlm = _db.Context(TestTenant.Org(TestDb.Mvlm));
+        Assert.Equal(0, await mvlm.FunctionalityRatings.CountAsync());
+        Assert.Equal(0, await mvlm.TenderFunctionalityCriteria.CountAsync());
+    }
 }

@@ -1,5 +1,5 @@
-@* Design screen "sProfile": the company card. One company per supplier in the MVP
-   (the design's "+ Add another company" and document vault are out of scope). *@
+@* Design screen "sProfile": the company card and the track record. One company per supplier in the MVP
+   (the design's "+ Add another company" is out of scope; the track record is a first version of its document vault). *@
 @model Company?
 @{
     ViewData["Title"] = "Company";
@@ -44,9 +44,20 @@
             <a class="ep-btn ep-btn--secondary ep-mt-14" asp-action="Edit">Edit company details</a>
         </section>
 
+        <section class="ep-card" aria-labelledby="track-title">
+            <h2 class="ep-card__title" id="track-title">Track record</h2>
+            @{ var trackCount = ViewData["TrackRecordCount"] as int? ?? 0; }
+            <p class="ep-card__text">
+                @(trackCount == 0
+                    ? "No documents yet. Committees look at the work you have done before: add reference letters, completion certificates or your company profile once, and they go with every bid."
+                    : $"{trackCount} document{(trackCount == 1 ? "" : "s")} on your profile. They go with every bid you submit.")
+            </p>
+            <a class="ep-btn ep-btn--secondary ep-mt-14" asp-action="TrackRecord">@(trackCount == 0 ? "Add your track record" : "Manage track record")</a>
+        </section>
+
         <div class="ep-note">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3zM14 3v4h4" /></svg>
-            <span>Supporting documents (CIPC certificate, tax compliance, B-BBEE certificate) are uploaded as PDFs with each application, following that tender's checklist.</span>
+            <span>Each tender's own checklist (CIPC certificate, tax compliance, B-BBEE certificate, pricing schedule) is uploaded as PDFs with the application.</span>
         </div>
 
         <a class="ep-btn ep-btn--primary" asp-controller="Dashboard" asp-action="Index">View tenders you qualify for</a>

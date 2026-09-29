@@ -42,3 +42,22 @@ public class CompanyFormViewModel
     [Display(Name = "Industry / sector")]
     public string Sector { get; set; } = string.Empty;
 }
+
+/// <summary>The track-record page: what is on the profile, and the form to add one more document.</summary>
+public class TrackRecordPageViewModel
+{
+    /// <summary>Straight after registration ("Step 3 of 3", with "Finish" instead of "Back").</summary>
+    public bool Welcome { get; set; }
+    public IReadOnlyList<EProcure.Web.Domain.CompanyDocument> Documents { get; set; } = Array.Empty<EProcure.Web.Domain.CompanyDocument>();
+    public TrackRecordFormViewModel Form { get; set; } = new();
+}
+
+/// <summary>One piece of past work (the PDF is posted separately as "file"). Validated in TrackRecordService.</summary>
+public class TrackRecordFormViewModel
+{
+    public CompanyDocumentKind? Kind { get; set; }
+    public string? Title { get; set; }
+    public string? ClientName { get; set; }
+    public int? YearCompleted { get; set; }
+    public decimal? ContractValue { get; set; }
+}

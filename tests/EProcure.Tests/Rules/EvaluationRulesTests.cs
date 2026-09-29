@@ -132,4 +132,51 @@ public class EvaluationRulesTests
 
         Assert.Null(Assert.Single(lines).Rank);
     }
+
+    // ------------------------------------------------------------------ functionality
+
+    [Fact]
+    public void Functionality_is_the_weighted_rating_as_a_percentage()
+    {
+        // 40 x 4/5 + 30 x 3/5 + 30 x 5/5 = 32 + 18 + 30 = 80
+        Assert.Equal(80m, EvaluationRules.FunctionalityScore(new[] { (40, 4), (30, 3), (30, 5) }));
+        Assert.Equal(100m, EvaluationRules.FunctionalityScore(new[] { (60, 5), (40, 5) }));
+        Assert.Equal(0m, EvaluationRules.FunctionalityScore(new[] { (100, 0) }));
+        // 33 x 2/5 = 13.2; 67 x 3/5 = 40.2 -> 53.4
+        Assert.Equal(53.4m, EvaluationRules.FunctionalityScore(new[] { (33, 2), (67, 3) }));
+    }
+
+    [Fact]
+    public void Ratings_outside_zero_to_five_are_refused()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => EvaluationRules.FunctionalityScore(new[] { (100, 6) }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => EvaluationRules.FunctionalityScore(new[] { (100, -1) }));
+    }
+
+    [Theory]
+    [InlineData(70, 70, true)]    // exactly the threshold meets it
+    [InlineData(69.99, 70, false)]
+    [InlineData(100, 70, true)]
+    public void The_threshold_is_a_minimum(double score, int threshold, bool meets)
+    {
+        Assert.Equal(meets, EvaluationRules.MeetsThreshold((decimal)score, threshold));
+    }
+
+    [Fact]
+    public void A_bid_below_the_functionality_threshold_is_not_scored_and_does_not_set_the_lowest_price()
+    {
+        var lines = EvaluationRules.Score(new[]
+        {
+            new BidInput(1, true, true, 100m, BbbeeLevel.Level1, PassedFunctionality: false), // cheapest, but failed functionality
+            new BidInput(2, true, true, 110m, BbbeeLevel.Level1),
+            new BidInput(3, true, true, 121m, BbbeeLevel.Level1)
+        }, EightyTwenty);
+
+        var failed = lines.Single(l => l.SubmissionId == 1);
+        Assert.Null(failed.Rank);
+        Assert.Null(failed.TotalPoints);
+        // 110 is now the lowest acceptable price: it gets the full 80 price points.
+        Assert.Equal(80m, lines.Single(l => l.SubmissionId == 2).PricePoints);
+        Assert.Equal(1, lines.Single(l => l.SubmissionId == 2).Rank);
+    }
 }

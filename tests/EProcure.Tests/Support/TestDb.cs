@@ -165,5 +165,40 @@ public sealed class TestDb : IDisposable
         return submission.Id;
     }
 
+    /// <summary>Gives a tender a functionality stage. Returns the criterion ids in order.</summary>
+    public int[] AddFunctionality(int tenderId, int threshold, params (string Name, int Weight)[] criteria)
+    {
+        using var db = Marketplace();
+        var tender = db.Tenders.Single(t => t.Id == tenderId);
+        tender.FunctionalityThreshold = threshold;
+        var rows = criteria.Select((c, i) => new TenderFunctionalityCriterion { TenderId = tenderId, Name = c.Name, Weight = c.Weight, SortOrder = i + 1 }).ToList();
+        db.TenderFunctionalityCriteria.AddRange(rows);
+        db.SaveChanges();
+        return rows.Select(r => r.Id).ToArray();
+    }
+
+    /// <summary>A track-record document on a company profile, uploaded (and optionally removed) at the given moments.</summary>
+    public int AddCompanyDocument(int companyId, string userId, DateTime uploadedAtUtc, DateTime? removedAtUtc = null, string title = "Past project")
+    {
+        using var db = Marketplace();
+        var document = new CompanyDocument
+        {
+            CompanyId = companyId,
+            Kind = CompanyDocumentKind.ReferenceLetter,
+            Title = title,
+            ClientName = "A client",
+            OriginalFileName = "reference.pdf",
+            StorageKey = Guid.NewGuid().ToString("N"),
+            SizeBytes = 10,
+            Sha256 = new string('b', 64),
+            UploadedByUserId = userId,
+            UploadedAtUtc = uploadedAtUtc,
+            RemovedAtUtc = removedAtUtc
+        };
+        db.CompanyDocuments.Add(document);
+        db.SaveChanges();
+        return document.Id;
+    }
+
     public static DateTime InDays(double days) => DateTime.UtcNow.AddDays(days);
 }

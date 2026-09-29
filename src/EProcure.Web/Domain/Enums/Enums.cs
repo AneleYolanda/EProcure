@@ -67,3 +67,12 @@ public enum EnterpriseSize
     Generic = 3   // Default / Other
 }
 
+
+/// <summary>What a track-record document proves (shown to the evaluation committee).</summary>
+public enum CompanyDocumentKind
+{
+    ReferenceLetter = 1,       // a client's letter confirming the work and its quality
+    CompletionCertificate = 2, // certificate of practical / final completion
+    CompanyProfile = 3,        // the company's own profile or portfolio
+    Other = 4
+}

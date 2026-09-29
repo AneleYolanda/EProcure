@@ -22,12 +22,14 @@ namespace EProcure.Web.Areas.Admin;
 public class EvaluationController : Controller
 {
     private readonly IEvaluationService _evaluation;
+    private readonly ITrackRecordService _trackRecord;
     private readonly EProcureDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public EvaluationController(IEvaluationService evaluation, EProcureDbContext db, UserManager<ApplicationUser> userManager)
+    public EvaluationController(IEvaluationService evaluation, ITrackRecordService trackRecord, EProcureDbContext db, UserManager<ApplicationUser> userManager)
     {
         _evaluation = evaluation;
+        _trackRecord = trackRecord;
         _db = db;
         _userManager = userManager;
     }
@@ -64,7 +66,7 @@ public class EvaluationController : Controller
     [Authorize(Policy = "BecOnly")]
     public async Task<IActionResult> Bid(int id, EvaluateBidForm form, CancellationToken ct)
     {
-        var result = await _evaluation.CaptureAsync(id, new BidEvaluationInput(form.IsResponsive, form.NonResponsiveReason, form.BidPrice, form.Notes),
+        var result = await _evaluation.CaptureAsync(id, new BidEvaluationInput(form.IsResponsive, form.NonResponsiveReason, form.BidPrice, form.Notes, form.Ratings),
             _userManager.GetUserId(User)!, ct);
         if (result.NotFound) return NotFound();
         if (!result.Succeeded)
@@ -152,14 +154,19 @@ public class EvaluationController : Controller
     {
         var s = await _db.Submissions.AsNoTracking()
             .Include(x => x.Tender).ThenInclude(t => t.Requirements)
+            .Include(x => x.Tender).ThenInclude(t => t.FunctionalityCriteria)
             .Include(x => x.Company)
             .Include(x => x.Documents)
             .Include(x => x.Evaluation).ThenInclude(e => e!.EvaluatedByUser)
+            .Include(x => x.Evaluation).ThenInclude(e => e!.FunctionalityRatings)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(x => x.Id == submissionId, ct);
         if (s is null) return null;
 
         var stage = EvaluationService.StageOf(s.Tender, DateTime.UtcNow);
         var names = s.Tender.Requirements.ToDictionary(r => r.Id, r => r.Name);
+        var sealedBid = stage == EvaluationStage.NotClosed;
+        IReadOnlyList<CompanyDocument> trackRecord = sealedBid ? Array.Empty<CompanyDocument>() : await _trackRecord.HeldAtAsync(s.CompanyId, s.Tender.ClosingDateUtc, ct);
         return new EvaluateBidViewModel
         {
             SubmissionId = s.Id,
@@ -175,6 +182,11 @@ public class EvaluationController : Controller
             Documents = stage == EvaluationStage.NotClosed ? Array.Empty<(int, string, string)>()
                 : s.Documents.OrderBy(d => d.UploadedAtUtc)
                     .Select(d => (d.Id, d.TenderRequirementId is int r && names.TryGetValue(r, out var n) ? n : "Supporting document", d.OriginalFileName)).ToList(),
+            TrackRecord = trackRecord.Select(d => new EvaluateBidViewModel.TrackRecordRow(d.Id, d.Title, TrackRecordService.Label(d.Kind),
+                TrackRecordService.Describe(d), d.OriginalFileName, d.UploadedAtUtc)).ToList(),
+            FunctionalityThreshold = s.Tender.FunctionalityThreshold,
+            Criteria = s.Tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).Select(c => (c.Id, c.Name, c.Weight)).ToList(),
+            FunctionalityScore = s.Evaluation?.FunctionalityScore,
             EvaluatedBy = s.Evaluation?.EvaluatedByUser.FullName,
             EvaluatedAtUtc = s.Evaluation?.EvaluatedAtUtc,
             CanEdit = stage == EvaluationStage.Evaluating && User.IsInRole(AppRoles.Evaluator),
@@ -183,7 +195,8 @@ public class EvaluationController : Controller
                 IsResponsive = s.Evaluation?.IsResponsive,
                 NonResponsiveReason = s.Evaluation?.NonResponsiveReason,
                 BidPrice = s.Evaluation?.BidPrice,
-                Notes = s.Evaluation?.Notes
+                Notes = s.Evaluation?.Notes,
+                Ratings = s.Evaluation?.FunctionalityRatings.ToDictionary(r => r.TenderFunctionalityCriterionId, r => (int?)r.Rating) ?? new()
             }
         };
     }

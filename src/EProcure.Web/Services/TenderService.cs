@@ -74,6 +74,7 @@ public class TenderService : ITenderService
 
         var result = new ServiceResult();
         var requirements = Validate(form, result);
+        var criteria = ValidateFunctionality(form, result);
         if (await ReferenceTakenAsync(form.ReferenceNumber, excludeId: null, ct))
             result.With(nameof(form.ReferenceNumber), "Your organisation already has a tender with this reference.");
         if (!result.Succeeded) return result;
@@ -85,7 +86,7 @@ public class TenderService : ITenderService
             CreatedAtUtc = DateTime.UtcNow,
             Status = TenderStatus.Draft
         };
-        Apply(form, tender, requirements);
+        Apply(form, tender, requirements, criteria);
         _db.Tenders.Add(tender);
 
         if (!await TrySaveAsync(result, ct)) return result;
@@ -95,7 +96,7 @@ public class TenderService : ITenderService
 
     public async Task<ServiceResult> UpdateDraftAsync(int id, TenderFormViewModel form, CancellationToken ct)
     {
-        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        var tender = await _db.Tenders.Include(t => t.Requirements).Include(t => t.FunctionalityCriteria).SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return ServiceResult.Missing();
 
         var result = new ServiceResult();
@@ -105,6 +106,7 @@ public class TenderService : ITenderService
             return result.With(string.Empty, "This draft is waiting for approval and is locked, so the approver sees exactly what will be published. Withdraw the request to edit it.");
 
         var requirements = Validate(form, result);
+        var criteria = ValidateFunctionality(form, result);
         if (await ReferenceTakenAsync(form.ReferenceNumber, excludeId: id, ct))
             result.With(nameof(form.ReferenceNumber), "Your organisation already has a tender with this reference.");
         if (!result.Succeeded) return result;
@@ -112,7 +114,9 @@ public class TenderService : ITenderService
         // The checklist is replaced as a whole. Safe because a draft cannot have submissions yet.
         _db.TenderRequirements.RemoveRange(tender.Requirements);
         tender.Requirements.Clear();
-        Apply(form, tender, requirements);
+        _db.TenderFunctionalityCriteria.RemoveRange(tender.FunctionalityCriteria);
+        tender.FunctionalityCriteria.Clear();
+        Apply(form, tender, requirements, criteria);
 
         if (!await TrySaveAsync(result, ct)) return result;
         await _audit.LogAsync("Tender.Updated", "Tender", tender.Id.ToString(), tender.OrganisationId, tender.ReferenceNumber);
@@ -121,7 +125,7 @@ public class TenderService : ITenderService
 
     public async Task<ServiceResult> PublishAsync(int id, CancellationToken ct)
     {
-        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        var tender = await _db.Tenders.Include(t => t.Requirements).Include(t => t.FunctionalityCriteria).SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return ServiceResult.Missing();
 
         if (await RequiresApprovalAsync(ct))
@@ -172,7 +176,7 @@ public class TenderService : ITenderService
 
     public async Task<ServiceResult> RequestApprovalAsync(int id, string userId, CancellationToken ct)
     {
-        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        var tender = await _db.Tenders.Include(t => t.Requirements).Include(t => t.FunctionalityCriteria).SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return ServiceResult.Missing();
 
         var result = new ServiceResult();
@@ -197,7 +201,7 @@ public class TenderService : ITenderService
     /// <summary>A SECOND SCM Officer approves: the tender is published at once (the checks run again).</summary>
     public async Task<ServiceResult> ApproveAsync(int id, string userId, CancellationToken ct)
     {
-        var tender = await _db.Tenders.Include(t => t.Requirements).SingleOrDefaultAsync(t => t.Id == id, ct);
+        var tender = await _db.Tenders.Include(t => t.Requirements).Include(t => t.FunctionalityCriteria).SingleOrDefaultAsync(t => t.Id == id, ct);
         if (tender is null) return ServiceResult.Missing();
 
         var result = new ServiceResult();
@@ -305,11 +309,49 @@ public class TenderService : ITenderService
                 tender.MinimumBbbeeLevel is BbbeeLevel level
                     ? $"Bidders need {EligibilityRules.Describe(level)} or better; weaker levels are blocked"
                     : "No minimum B-BBEE level: any level may apply",
+                true),
+            new("Evaluation method is set",
+                tender.FunctionalityThreshold is int threshold
+                    ? $"Functionality first ({tender.FunctionalityCriteria.Count} criteria, minimum {threshold}%), then {EvaluationRules.Describe(tender.PointSystem)} price and preference"
+                    : $"{EvaluationRules.Describe(tender.PointSystem)} price and preference, no functionality stage",
                 true)
         };
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /// <summary>
+    /// The functionality stage as entered: NULL when it is not used, otherwise the cleaned criteria (empty rows dropped).
+    /// Rules: 1 to 6 criteria, each named and weighted 1-100, weights adding up to exactly 100, threshold 1-100.
+    /// </summary>
+    public static List<(string Name, int Weight)>? ValidateFunctionality(TenderFormViewModel form, ServiceResult result)
+    {
+        if (!form.UseFunctionality) return null;
+
+        var rows = form.FunctionalityCriteria
+            .Select(c => (Name: c.Name?.Trim() ?? string.Empty, c.Weight))
+            .Where(c => c.Name.Length > 0 || c.Weight is not null)
+            .ToList();
+        const string field = nameof(form.FunctionalityCriteria);
+        if (form.FunctionalityThreshold is not (>= 1 and <= 100))
+            result.With(nameof(form.FunctionalityThreshold), "Enter the minimum functionality score as a percentage from 1 to 100 (70 is common).");
+        if (rows.Count == 0)
+            result.With(field, "Add at least one functionality criterion with its weight, or untick functionality.");
+        else if (rows.Count > TenderFormViewModel.MaxCriteria)
+            result.With(field, $"A tender can have at most {TenderFormViewModel.MaxCriteria} functionality criteria.");
+        else if (rows.Any(r => r.Name.Length == 0))
+            result.With(field, "Every weighted row needs a criterion name.");
+        else if (rows.Any(r => r.Name.Length > 200))
+            result.With(field, "Each criterion name must be 200 characters or fewer.");
+        else if (rows.Any(r => r.Weight is not (>= 1 and <= 100)))
+            result.With(field, "Give every criterion a weight from 1 to 100.");
+        else if (rows.Sum(r => r.Weight!.Value) != 100)
+            result.With(field, $"The weights must add up to 100. They now add up to {rows.Sum(r => r.Weight!.Value)}.");
+        else if (rows.Select(r => r.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() != rows.Count)
+            result.With(field, "Each criterion must have a different name.");
+
+        return rows.Where(r => r.Weight is not null).Select(r => (r.Name, r.Weight!.Value)).ToList();
+    }
 
     /// <summary>Server-side checks that DataAnnotations cannot express. Returns the cleaned checklist.</summary>
     private static List<string> Validate(TenderFormViewModel form, ServiceResult result)
@@ -342,7 +384,7 @@ public class TenderService : ITenderService
         return ticked.Concat(typed).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private static void Apply(TenderFormViewModel form, Tender tender, List<string> requirements)
+    private static void Apply(TenderFormViewModel form, Tender tender, List<string> requirements, List<(string Name, int Weight)>? criteria)
     {
         tender.Title = form.Title.Trim();
         tender.ReferenceNumber = form.ReferenceNumber.Trim();
@@ -356,6 +398,13 @@ public class TenderService : ITenderService
         for (var i = 0; i < requirements.Count; i++)
         {
             tender.Requirements.Add(new TenderRequirement { Name = requirements[i], IsMandatory = true, SortOrder = i + 1 });
+        }
+
+        // No criteria means no functionality stage: the threshold is only kept together with its criteria.
+        tender.FunctionalityThreshold = criteria is null ? null : form.FunctionalityThreshold;
+        for (var i = 0; i < (criteria?.Count ?? 0); i++)
+        {
+            tender.FunctionalityCriteria.Add(new TenderFunctionalityCriterion { Name = criteria![i].Name, Weight = criteria[i].Weight, SortOrder = i + 1 });
         }
     }
 

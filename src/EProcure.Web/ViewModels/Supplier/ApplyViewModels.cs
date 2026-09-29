@@ -19,6 +19,11 @@ public class SupplierTenderViewModel
     public decimal? EstimatedValue { get; set; }
     public PreferencePointSystem PointSystem { get; set; }
     public BbbeeLevel? MinimumBbbeeLevel { get; set; }
+    public int? FunctionalityThreshold { get; set; }
+    public IReadOnlyList<(string Name, int Weight)> FunctionalityCriteria { get; set; } = Array.Empty<(string, int)>();
+
+    /// <summary>How many track-record documents the supplier's company has on its profile (NULL: no company yet).</summary>
+    public int? TrackRecordCount { get; set; }
     public IReadOnlyList<string> Requirements { get; set; } = Array.Empty<string>();
     public bool IsOpen { get; set; }
 

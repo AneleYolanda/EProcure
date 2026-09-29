@@ -37,4 +37,7 @@ public class Company
 
     public ICollection<SupplierProfile> Profiles { get; set; } = new List<SupplierProfile>();
     public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
+
+    /// <summary>Track record: past work, reference letters, company profile (uploaded once, used by every bid).</summary>
+    public ICollection<CompanyDocument> Documents { get; set; } = new List<CompanyDocument>();
 }

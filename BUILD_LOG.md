@@ -701,3 +701,37 @@ feat: password reset, email notifications, staff management and bid withdrawal
 ```
 feat: closing-date reminders and tender-closed notices; approval queue with second-officer approval
 ```
+
+## Step 15: Track record and the functionality stage
+
+### What was built
+- Track record on the company profile (D52): `CompanyDocuments` (kind, work, client, year, value, PDF checked like bid
+  documents; "remove" keeps the file). Registration is now 3 steps: account, company, track record (skippable).
+  The BEC sees, on each bid, the documents held at the closing date; staff downloads go through the bid and are audited.
+- Functionality stage per tender (D53): tick box, minimum %, up to 6 weighted criteria (weights must total 100, with
+  a running total); shown to bidders; BEC rates 0-5 per criterion; percentage calculated; bids below the minimum are not
+  scored on price and preference and are told their score after the award. 80/20 or 90/10 stays a manual choice.
+- Demo: track records for the demo suppliers (fictional clients marked "(sample)") and closed tender `RBIDZ/2026/012`
+  with functionality (50/30/20, minimum 70%).
+- Migration `AddTrackRecordAndFunctionality` (+ SQL script). Tests: 24 new (178 in total).
+
+### Verified in the browser (Visual Studio run)
+- Supplier (new test account): registration shows "Step 2 of 3" then "Step 3 of 3 Track record"; a reference letter
+  without a client is refused with the values kept; a fake PDF is refused (the message was not shown at first: the
+  error was filed under the wrong field name; fixed and re-checked); a real PDF is listed with client, year and value;
+  "Skip for now" becomes "Finish"; own download works; other companies' documents and the staff route are refused;
+  remove hides it and keeps the file. The 012 bidder page shows "Functionality, then 80/20", the criteria and 70%.
+- SCM Officer: new tender form has the suggested criteria and "Now: 100 (correct)"; a total of 90 is refused ("They now
+  add up to 90"); saved with 100; the tender page and publish checks show the method; Edit reloads it. The test tender
+  was cancelled with a note.
+- BEC (test member invited under Roles and users, invitation accepted from the demo mailbox): 012 bid pages list the
+  track record as at closing; saving with one criterion unrated is refused and names it; Siyakha 5/4/4 (90%) at
+  R1 240 000 ranks first on 98.00; Khanya 2/4/2 (52%) shows "Below functionality" with no price; a track-record file
+  downloads, and the same file through another bidder's bid is 404.
+- Found in the data: an earlier Umhlathi entry on 012 of R120 000 000 (probably meant R1 200 000) scores 0 price
+  points, as the formula requires. 012 was left unsubmitted for demos.
+
+### Commit message
+```
+feat: supplier track record (also at registration) and an optional functionality stage in evaluation
+```

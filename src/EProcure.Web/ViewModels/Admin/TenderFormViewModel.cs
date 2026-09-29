@@ -46,6 +46,32 @@ public class TenderFormViewModel
     [Display(Name = "Preference point system")]
     public PreferencePointSystem PointSystem { get; set; } = PreferencePointSystem.EightyTwenty;
 
+    /// <summary>Evaluate functionality (track record, methodology, ...) as a qualifying stage before price and preference.</summary>
+    public bool UseFunctionality { get; set; }
+
+    /// <summary>Minimum functionality percentage to be evaluated further. Used only when UseFunctionality is ticked.</summary>
+    [Display(Name = "Functionality threshold")]
+    public int? FunctionalityThreshold { get; set; }
+
+    /// <summary>Up to <see cref="MaxCriteria"/> rows; empty rows are ignored. Weights must add up to 100.</summary>
+    public List<CriterionInput> FunctionalityCriteria { get; set; } = new();
+
+    public const int MaxCriteria = 6;
+
+    public class CriterionInput
+    {
+        public string? Name { get; set; }
+        public int? Weight { get; set; }
+    }
+
+    /// <summary>A common starting point, offered on a new tender (the SCM Officer changes it to fit the work).</summary>
+    public static List<CriterionInput> SuggestedCriteria() => new()
+    {
+        new() { Name = "Relevant experience and track record (reference letters, completed projects)", Weight = 40 },
+        new() { Name = "Methodology and project plan", Weight = 30 },
+        new() { Name = "Qualifications and experience of key personnel", Weight = 30 }
+    };
+
     /// <summary>Standard documents ticked in the Documents step.</summary>
     public List<string> SelectedDocuments { get; set; } = new();
 

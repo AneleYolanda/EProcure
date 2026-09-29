@@ -112,6 +112,33 @@ public class SubmissionsController : Controller
         return File(stream, "application/pdf", document.OriginalFileName);
     }
 
+    // GET /Admin/Submissions/TrackRecordFile/7?submissionId=12   One document from the bidder's track record.
+    // Reached through a bid the organisation can see (tenant filter), after closing, and only if the company held the
+    // document at that tender's closing date, which is exactly the list the BEC page shows.
+    public async Task<IActionResult> TrackRecordFile(int id, int submissionId, CancellationToken ct)
+    {
+        var bid = await _db.Submissions.AsNoTracking()
+            .Where(s => s.Id == submissionId)
+            .Select(s => new { s.CompanyId, s.ReferenceNumber, s.Tender.OrganisationId, s.Tender.ClosingDateUtc })
+            .SingleOrDefaultAsync(ct);
+        if (bid is null) return NotFound();
+        if (EvaluationService.IsSealed(bid.ClosingDateUtc, DateTime.UtcNow))
+        {
+            await _audit.LogAsync("Document.SealedRefused", "Submission", submissionId.ToString(), bid.OrganisationId, bid.ReferenceNumber);
+            TempData["FlashError"] = $"Bids are sealed until the closing date ({DisplayFormat.DateTime(bid.ClosingDateUtc)}).";
+            return RedirectToAction(nameof(Details), new { id = submissionId });
+        }
+
+        var document = await _db.CompanyDocuments.AsNoTracking().SingleOrDefaultAsync(d => d.Id == id && d.CompanyId == bid.CompanyId, ct);
+        if (document is null || !document.HeldAt(bid.ClosingDateUtc)) return NotFound();
+
+        var stream = await _files.OpenReadAsync(document.StorageKey, ct);
+        if (stream is null) return NotFound();
+        await _audit.LogAsync("Document.Downloaded", "Submission", submissionId.ToString(), bid.OrganisationId,
+            $"{bid.ReferenceNumber}: track record, {document.OriginalFileName}");
+        return File(stream, "application/pdf", document.OriginalFileName);
+    }
+
     // Status changes are no longer made by hand here: they follow the evaluation and the BAC's award decision
     // (EvaluationController), so a bid's status always matches the recorded evaluation (DECISIONS D43).
 

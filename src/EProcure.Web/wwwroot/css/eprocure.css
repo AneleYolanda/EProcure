@@ -876,3 +876,17 @@ textarea.ep-input--area { height: auto; padding: 11px 13px; line-height: 1.5; re
   .ep-register__row--approvals > :nth-child(4) { display: none; }
   .ep-register__row--approvals > :nth-child(5) { grid-area: badge; }
 }
+
+/* ---------- 16. Functionality criteria (tender form), ratings (BEC) and track record (supplier) ---------- */
+.ep-functionality { border-top: 1px solid var(--ep-line); padding-top: 18px; }
+.ep-functionality__legend { float: left; width: 100%; margin-bottom: 4px; }
+.ep-fn-rows { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.ep-fn-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 10px; align-items: center; }
+.ep-fn-row--head { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; color: var(--ep-subtle); }
+.ep-rating { margin-top: 14px; }
+.ep-rating__name { display: block; font-size: 12.5px; font-weight: 600; color: var(--ep-ink); }
+.ep-rating__meta { display: block; font-size: 11.5px; color: var(--ep-muted); margin-top: 2px; }
+.ep-rating .ep-ainput { margin-top: 6px; }
+.ep-trackrow { background: #fff; border: 1px solid var(--ep-line); border-radius: 11px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.ep-trackrow + .ep-trackrow { margin-top: 10px; }
+.ep-trackrow__body { flex: 1; min-width: 0; }

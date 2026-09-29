@@ -47,6 +47,19 @@
     });
   });
 
+  // 5. Tender form: running total of the functionality weights (they must add up to 100; the server checks it too).
+  var weights = document.querySelector("[data-ep-weights]");
+  if (weights) {
+    var totalEl = weights.querySelector("[data-ep-weight-total]");
+    var update = function () {
+      var total = 0;
+      weights.querySelectorAll("[data-ep-weight]").forEach(function (input) { total += parseInt(input.value || "0", 10) || 0; });
+      if (totalEl) totalEl.textContent = "Now: " + total + (total === 100 ? " (correct)" : "");
+    };
+    weights.addEventListener("input", update);
+    update();
+  }
+
   // 4. Admin sign-in (Development only): clicking a demo account card fills in its email address.
   document.querySelectorAll("[data-ep-fill-email]").forEach(function (card) {
     card.addEventListener("click", function () {

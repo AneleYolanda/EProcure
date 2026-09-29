@@ -85,6 +85,26 @@ public class DemoDataSeeder
         await EnsureSupplierProfileAsync(db, supplier3, "Siyakha Business Solutions (Pty) Ltd", "2019/246810/07", "MAAA2468101", BbbeeLevel.Level2, EnterpriseSize.QSE, "Professional Services", cancellationToken);
         await EnsureEvaluationDemoAsync(db, rbidz, rbidzAdmin, new[] { supplier1, supplier2, supplier3 }, cancellationToken);
 
+        // Track records (past work) for the demo suppliers, and a closed tender with a functionality stage.
+        await EnsureTrackRecordDemoAsync(db, supplier1, new (string, string?, int?, decimal?)[]
+        {
+            ("Rehabilitation of 8 km of access roads", "Ilanga District Municipality (sample)", 2024, 3_400_000m),
+            ("Stormwater upgrade, Alton industrial area", "Nsele Local Municipality (sample)", 2023, 1_900_000m)
+        }, cancellationToken);
+        await EnsureTrackRecordDemoAsync(db, supplier3, new (string, string?, int?, decimal?)[]
+        {
+            ("Managed print services for head office (24 months)", "Lwandle Port Services (sample)", 2025, 1_100_000m),
+            ("Scanning and digitisation of 40 000 personnel files", "Mfolozi Health District (sample)", 2024, 650_000m)
+        }, cancellationToken);
+        await EnsureTrackRecordDemoAsync(db, supplier2, new (string, string?, int?, decimal?)[] { ("Company profile 2026", null, null, null) }, cancellationToken);
+        await EnsureEvaluationDemoAsync(db, rbidz, rbidzAdmin, new[] { supplier1, supplier2, supplier3 }, cancellationToken,
+            "RBIDZ/2026/012", "Records digitisation and managed scanning services (24 months)", 70, new[]
+            {
+                ("Relevant experience and track record (reference letters, completed projects)", 50),
+                ("Methodology and project plan", 30),
+                ("Qualifications and experience of key personnel", 20)
+            });
+
         _logger.LogInformation("Development demo data is ready.");
     }
 
@@ -93,11 +113,12 @@ public class DemoDataSeeder
     /// award can be demonstrated at once. Each bid's pricing schedule PDF states its price, which the BEC member
     /// reads and captures (80/20): Umhlathi R1 380 000 (Level 1), Khanya R1 150 000 (Level 6, lowest price),
     /// Siyakha R1 240 000 (Level 2). Siyakha ranks first once preference points are added.
+    /// Called twice: RBIDZ/2026/011 (price and preference only) and RBIDZ/2026/012 (with a functionality stage first).
     /// </summary>
     private async Task EnsureEvaluationDemoAsync(EProcureDbContext db, Organisation organisation, ApplicationUser createdBy,
-        ApplicationUser[] bidders, CancellationToken cancellationToken)
+        ApplicationUser[] bidders, CancellationToken cancellationToken, string reference = "RBIDZ/2026/011",
+        string title = "Printing and document management services (36 months)", int? threshold = null, (string Name, int Weight)[]? criteria = null)
     {
-        const string reference = "RBIDZ/2026/011";
         if (await db.Tenders.AnyAsync(t => t.OrganisationId == organisation.Id && t.ReferenceNumber == reference, cancellationToken)) return;
 
         var files = _services.GetRequiredService<Services.External.IFileStorage>();
@@ -106,10 +127,10 @@ public class DemoDataSeeder
         var tender = new Tender
         {
             OrganisationId = organisation.Id,
-            Title = "Printing and document management services (36 months)",
+            Title = title,
             ReferenceNumber = reference,
             Category = "Professional Services",
-            Description = "Demo tender that has already closed, for demonstrating bid opening, evaluation by the BEC and the BAC award. Managed printing, scanning and records digitisation for the RBIDZ offices over 36 months.",
+            Description = "Demo tender that has already closed, for demonstrating bid opening, evaluation by the BEC and the BAC award. Managed printing, scanning and records digitisation for the RBIDZ offices.",
             ClosingDateUtc = closing,
             TenderFee = 0m,
             EstimatedValue = 1_400_000m,
@@ -118,6 +139,9 @@ public class DemoDataSeeder
             CreatedByUserId = createdBy.Id,
             CreatedAtUtc = closing.AddDays(-30),
             PublishedAtUtc = closing.AddDays(-30),
+            FunctionalityThreshold = threshold,
+            FunctionalityCriteria = (criteria ?? Array.Empty<(string Name, int Weight)>())
+                .Select((c, index) => new TenderFunctionalityCriterion { Name = c.Name, Weight = c.Weight, SortOrder = index + 1 }).ToList(),
             Requirements = requirementNames.Select((name, index) => new TenderRequirement { Name = name, IsMandatory = true, SortOrder = index + 1 }).ToList()
         };
         db.Tenders.Add(tender);
@@ -175,6 +199,44 @@ public class DemoDataSeeder
             submission.ReferenceNumber = $"EP-{submittedAt:yyyy}-{submission.Id:D6}";
             await db.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Track-record documents for a demo supplier (only if the company has none yet), uploaded 60 days ago so they
+    /// count for the closed demo tenders. Reference letters when a client is given, otherwise a company profile.
+    /// Client names are fictional ("(sample)").
+    /// </summary>
+    private async Task EnsureTrackRecordDemoAsync(EProcureDbContext db, ApplicationUser supplier,
+        (string Title, string? Client, int? Year, decimal? Value)[] items, CancellationToken cancellationToken)
+    {
+        var company = await db.SupplierProfiles.Where(p => p.UserId == supplier.Id).Select(p => p.Company!).SingleAsync(cancellationToken);
+        if (await db.CompanyDocuments.AnyAsync(d => d.CompanyId == company.Id, cancellationToken)) return;
+
+        var files = _services.GetRequiredService<Services.External.IFileStorage>();
+        foreach (var item in items)
+        {
+            var kind = item.Client is null ? CompanyDocumentKind.CompanyProfile : CompanyDocumentKind.ReferenceLetter;
+            var bytes = DemoPdf(item.Client is null
+                ? $"Company profile - {company.Name} - services, staff and experience"
+                : $"Reference letter - {item.Client} confirms that {company.Name} completed: {item.Title} ({item.Year})");
+            db.CompanyDocuments.Add(new CompanyDocument
+            {
+                CompanyId = company.Id,
+                Kind = kind,
+                Title = item.Title,
+                ClientName = item.Client,
+                YearCompleted = item.Year,
+                ContractValue = item.Value,
+                OriginalFileName = kind == CompanyDocumentKind.CompanyProfile ? "Company-profile.pdf" : "Reference-letter.pdf",
+                StorageKey = await files.SaveAsync(new MemoryStream(bytes), ".pdf", cancellationToken),
+                ContentType = "application/pdf",
+                SizeBytes = bytes.Length,
+                Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant(),
+                UploadedByUserId = supplier.Id,
+                UploadedAtUtc = DateTime.UtcNow.AddDays(-60)
+            });
+        }
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>A minimal one-page PDF showing one line of text (for demo bid documents).</summary>

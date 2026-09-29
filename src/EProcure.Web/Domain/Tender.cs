@@ -45,6 +45,12 @@ public class Tender
     /// </summary>
     public PreferencePointSystem PointSystem { get; set; } = PreferencePointSystem.EightyTwenty;
 
+    /// <summary>
+    /// Functionality stage: the minimum percentage (1 to 100) a bid must score on the functionality criteria to be
+    /// evaluated on price and preference. NULL = no functionality stage (the tender has no criteria).
+    /// </summary>
+    public int? FunctionalityThreshold { get; set; }
+
     public TenderStatus Status { get; set; } = TenderStatus.Draft;
 
     /// <summary>When and why the tender was cancelled (both required when Status = Cancelled).</summary>
@@ -87,6 +93,11 @@ public class Tender
 
     /// <summary>The required-documents checklist.</summary>
     public ICollection<TenderRequirement> Requirements { get; set; } = new List<TenderRequirement>();
+
+    /// <summary>Functionality criteria and their weights (empty when there is no functionality stage).</summary>
+    public ICollection<TenderFunctionalityCriterion> FunctionalityCriteria { get; set; } = new List<TenderFunctionalityCriterion>();
+
+    public bool HasFunctionalityStage => FunctionalityThreshold is not null;
     public ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     public AwardRecord? Award { get; set; }
 }

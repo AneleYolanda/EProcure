@@ -40,6 +40,9 @@ The connection string is in `src/EProcure.Web/appsettings.Development.json` (Loc
 
 **Evaluation demo tender:** `RBIDZ/2026/011` (printing and document management) closed three days before the database
 was created and already has three bids, one from each demo supplier, so evaluation and award can be shown at once.
+**Functionality demo tender:** `RBIDZ/2026/012` (records digitisation) closed at the same time with the same three bidders,
+but is evaluated on functionality first (experience 50, methodology 30, key personnel 20; minimum 70%). The demo
+suppliers already have track records: Umhlathi and Siyakha two reference letters each, Khanya only a company profile.
 
 **Fresh demo:** to start again from clean demo data, stop the app, delete the `EProcure` database (Visual Studio:
 **View > SQL Server Object Explorer > (localdb)\MSSQLLocalDB > Databases > EProcure > Delete**, tick "Close existing
@@ -67,6 +70,8 @@ signed in at the same time.
 5. Open `/`, **Register**, fill in the form and accept the POPIA notice.
 6. Phone verification: the demo shows the one-time code on screen (no SMS is sent). Enter it.
 7. **Company profile**: CIPC number `2021/123456/07`, CSD `MAAA0012345`, tax PIN, **B-BBEE Level 2**.
+   Step 3 of 3, **Track record**: choose *Reference letter*, describe the work and the client, upload
+   `sample-document.pdf`. (It can also be skipped and done later from Company.)
 8. Tender feed: the new tender shows **You qualify**. Open it and **Apply**.
 9. Step 2 compliance, step 3 SBD 4/8/9 declarations (try **Yes** without details: it asks for them).
 10. Step 4 documents: upload `not-really-a-pdf.pdf` and see it **rejected** (the content is checked, not only the
@@ -130,6 +135,18 @@ signed in at the same time.
     scheduled emails now**: the supplier gets "Not submitted yet". When a tender closes, its SCM Officers and BEC members
     are told. Each email is sent only once (see the send-once log).
 
+**J. Track record and functionality**
+30. As `admin@rbidz.demo`: **New tender**, section 3 **Evaluation method**: tick **Evaluate functionality first**. A
+    suggested set of criteria is filled in; change a weight so they no longer add up to 100 and save: refused. Set them
+    back (the running total shows "(correct)") and save. The tender page and, once published, the bidder's page show the
+    criteria and the minimum.
+31. As `evaluator@rbidz.demo`: **BEC scoring**, **RBIDZ/2026/012**. Open a bid: its **Track record** (as held at the
+    closing date) is listed under the bid documents. Rate each criterion 0 to 5, for example Khanya (company profile
+    only) 2, 2, 2 = **40%**: below 70%, so no price is needed and it is not scored. Rate Siyakha 5, 4, 4 (**90%**,
+    price **1240000**) and Umhlathi 4, 3, 4 (**74%**, price **1380000**).
+32. The scoresheet marks Khanya **Below functionality**; Siyakha now has the lowest acceptable price and scores
+    **98.00** (80 + 18). After the award, Khanya is told its functionality score and the minimum.
+
 ---
 
 ## 3. Run the tests
@@ -139,9 +156,9 @@ dotnet test
 ```
 
 No database server needed: each test builds the real EF Core model (same query filters and unique indexes) on an
-in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 154 tests cover tenant isolation, the B-BBEE
+in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 178 tests cover tenant isolation, the B-BBEE
 hard stop, one application per company, closing dates, PDF-only uploads, declarations, payment verification, the
-PPPFA points arithmetic, sealed bids, the BEC and BAC workflow, bid withdrawal, publication approval, the scheduled
+PPPFA points arithmetic, the functionality stage and track record, sealed bids, the BEC and BAC workflow, bid withdrawal, publication approval, the scheduled
 emails, staff management (with real
 ASP.NET Core Identity), password and invitation links, and the emails.
 
@@ -168,6 +185,8 @@ ASP.NET Core Identity), password and invitation links, and the emails.
 | Email | Confirmations, outcomes, withdrawal, "BAC decision needed", invitations and password changes; an email is a copy, never the record. D46 |
 | Bid withdrawal | Before closing, with resubmission and no second fee; withdrawn bids are never evaluated. D49 |
 | Approval and reminders | Optional second-SCM-Officer approval before publishing; closing-date reminders and "tender closed" notices, each sent once. D50, D51 |
+| Track record | Past work uploaded once on the company profile (also at registration); the BEC sees what the company held at the closing date. D52 |
+| Functionality | Optional per tender: weighted criteria and a minimum set by the SCM Officer; the BEC rates 0-5, the percentage is calculated; bids below it are not scored on price. 80/20 or 90/10 stays the SCM Officer's choice. D53 |
 
 ## 5. Mocked services and known limits
 
@@ -178,7 +197,8 @@ ASP.NET Core Identity), password and invitation links, and the emails.
   app restarts (start the payment again).
 - Scheduled emails run inside the web app every 15 minutes; with several servers, move them to a dedicated worker.
   Evaluation simplifications (one consolidated
-  BEC evaluation per bid, no functionality stage, B-BBEE level as the only specific goal) are listed in DECISIONS D44.
+  BEC evaluation per bid, B-BBEE level as the only specific goal) are listed in DECISIONS D44 and D53. Track-record
+  documents are not verified with the clients (D52).
 - Buttons and links meet WCAG AA contrast: a darker shade of each brand colour is used wherever text and the
   brand colour meet (D42).
 

@@ -16,8 +16,9 @@ public enum EvaluationStage
     Cancelled
 }
 
-/// <summary>The BEC's input for one bid.</summary>
-public record BidEvaluationInput(bool? IsResponsive, string? NonResponsiveReason, decimal? BidPrice, string? Notes);
+/// <summary>The BEC's input for one bid. Ratings: criterion id -> 0-5 rating (only for tenders with a functionality stage).</summary>
+public record BidEvaluationInput(bool? IsResponsive, string? NonResponsiveReason, decimal? BidPrice, string? Notes,
+    IReadOnlyDictionary<int, int?>? Ratings = null);
 
 /// <summary>The BAC decision as captured by the SCM Officer.</summary>
 public record AwardInput(int? SubmissionId, string? CommitteeReference, DateTime? DecisionDateLocal, string? Rationale);
@@ -38,6 +39,10 @@ public class Scoresheet
     public DateTime ClosingDateUtc { get; init; }
     public PreferencePointSystem PointSystem { get; init; }
     public EvaluationStage Stage { get; init; }
+
+    /// <summary>Minimum functionality percentage; NULL when the tender has no functionality stage.</summary>
+    public int? FunctionalityThreshold { get; init; }
+    public IReadOnlyList<TenderFunctionalityCriterion> FunctionalityCriteria { get; init; } = Array.Empty<TenderFunctionalityCriterion>();
     public IReadOnlyList<ScoresheetBid> Bids { get; init; } = Array.Empty<ScoresheetBid>();
     public DateTime? SubmittedAtUtc { get; init; }
     public string? SubmittedBy { get; init; }
@@ -49,6 +54,11 @@ public class Scoresheet
     public bool AllEvaluated => Bids.Count > 0 && EvaluatedCount == Bids.Count;
     public ScoresheetBid? TopRanked => Bids.FirstOrDefault(b => b.Score.Rank == 1);
     public ScoresheetBid? Recommended => Bids.FirstOrDefault(b => b.IsRecommended);
+
+    /// <summary>True if the bid was rated below the functionality threshold (and is therefore not scored).</summary>
+    public bool FailedFunctionality(ScoresheetBid bid) => FunctionalityThreshold is int threshold
+        && bid.Evaluation is { IsResponsive: true, FunctionalityScore: decimal score }
+        && !EvaluationRules.MeetsThreshold(score, threshold);
 }
 
 public record EvaluationListRow(int TenderId, string ReferenceNumber, string Title, DateTime ClosingDateUtc, int Bids, int Evaluated, EvaluationStage Stage);
@@ -68,6 +78,8 @@ public interface IEvaluationService
 ///
 /// Rules, all checked here on every request:
 ///   - bids stay sealed until the closing date: no evaluation (and no opening, see SubmissionsController) before it;
+///   - if the tender has a functionality stage, every criterion of a responsive bid is rated 0-5 and a bid below the
+///     threshold is not scored on price and preference (and is told its functionality score when the tender is decided);
 ///   - every submitted bid must be evaluated before the BEC can submit; the scoresheet is then frozen;
 ///   - recommending anything other than the single highest-ranked bid needs written reasons;
 ///   - only a responsive, scored bid can be awarded; the BAC's reasons, minute reference and date are required;
@@ -182,6 +194,8 @@ public class EvaluationService : IEvaluationService
             ClosingDateUtc = tender.ClosingDateUtc,
             PointSystem = tender.PointSystem,
             Stage = stage,
+            FunctionalityThreshold = tender.FunctionalityThreshold,
+            FunctionalityCriteria = tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).ToList(),
             Bids = bids,
             SubmittedAtUtc = tender.EvaluationSubmittedAtUtc,
             SubmittedBy = tender.EvaluationSubmittedByUserId is null ? null : evaluators.GetValueOrDefault(tender.EvaluationSubmittedByUserId),
@@ -194,8 +208,8 @@ public class EvaluationService : IEvaluationService
     public async Task<ServiceResult> CaptureAsync(int submissionId, BidEvaluationInput input, string userId, CancellationToken ct)
     {
         var submission = await _db.Submissions
-            .Include(s => s.Tender)
-            .Include(s => s.Evaluation)
+            .Include(s => s.Tender).ThenInclude(t => t.FunctionalityCriteria)
+            .Include(s => s.Evaluation).ThenInclude(e => e!.FunctionalityRatings)
             .SingleOrDefaultAsync(s => s.Id == submissionId, ct);
         if (submission is null) return ServiceResult.Missing();
 
@@ -205,24 +219,52 @@ public class EvaluationService : IEvaluationService
         if (submission.Status == SubmissionStatus.Withdrawn)
             return result.With(string.Empty, "This bid was withdrawn by the bidder before the closing date and is not evaluated.");
 
+        var tender = submission.Tender;
+        var criteria = tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).ToList();
         var reason = input.NonResponsiveReason?.Trim();
         var notes = string.IsNullOrWhiteSpace(input.Notes) ? null : input.Notes.Trim();
+        var responsive = input.IsResponsive == true;
+
+        // Functionality (a responsive bid on a tender with a functionality stage): every criterion rated 0-5.
+        decimal? functionality = null;
+        var passes = true;
+        if (responsive && tender.FunctionalityThreshold is int threshold)
+        {
+            var ratings = input.Ratings ?? new Dictionary<int, int?>();
+            var unrated = criteria.Where(c => ratings.GetValueOrDefault(c.Id) is not (>= 0 and <= EvaluationRules.MaxRating)).ToList();
+            if (unrated.Count > 0)
+                result.With("Ratings", $"Rate every functionality criterion from 0 to {EvaluationRules.MaxRating}. Not rated: {string.Join(", ", unrated.Select(c => c.Name))}.");
+            else
+            {
+                functionality = EvaluationRules.FunctionalityScore(criteria.Select(c => (c.Weight, ratings[c.Id]!.Value)));
+                passes = EvaluationRules.MeetsThreshold(functionality.Value, threshold);
+            }
+        }
+
         if (input.IsResponsive is null)
             result.With(nameof(input.IsResponsive), "Record whether the bid is responsive.");
-        else if (input.IsResponsive.Value && (input.BidPrice is null || input.BidPrice <= 0))
+        else if (responsive && passes && (input.BidPrice is null || input.BidPrice <= 0))
             result.With(nameof(input.BidPrice), "Enter the total bid price (incl. VAT) from the bidder's pricing schedule.");
-        else if (input.IsResponsive.Value && input.BidPrice >= 1_000_000_000_000m)
+        else if (responsive && input.BidPrice >= 1_000_000_000_000m)
             result.With(nameof(input.BidPrice), "The bid price is too large. Check the amount.");
-        else if (!input.IsResponsive.Value && (reason is null || reason.Length < 5))
+        else if (!responsive && (reason is null || reason.Length < 5))
             result.With(nameof(input.NonResponsiveReason), "Give the reason the bid is not responsive. The bidder is told this reason.");
         if (reason?.Length > 1000) result.With(nameof(input.NonResponsiveReason), "The reason must be 1000 characters or fewer.");
         if (notes?.Length > 2000) result.With(nameof(input.Notes), "Notes must be 2000 characters or fewer.");
         if (!result.Succeeded) return result;
 
         var evaluation = submission.Evaluation ?? new BidEvaluation { SubmissionId = submission.Id };
-        evaluation.IsResponsive = input.IsResponsive!.Value;
-        evaluation.BidPrice = evaluation.IsResponsive ? Math.Round(input.BidPrice!.Value, 2) : null;
-        evaluation.NonResponsiveReason = evaluation.IsResponsive ? null : reason;
+        evaluation.IsResponsive = responsive;
+        // A bid below the functionality threshold is not evaluated on price, so no price is kept for it.
+        evaluation.BidPrice = responsive && passes ? Math.Round(input.BidPrice!.Value, 2) : null;
+        evaluation.NonResponsiveReason = responsive ? null : reason;
+        evaluation.FunctionalityScore = functionality;
+        evaluation.FunctionalityRatings.Clear();
+        if (functionality is not null)
+        {
+            foreach (var criterion in criteria)
+                evaluation.FunctionalityRatings.Add(new FunctionalityRating { TenderFunctionalityCriterionId = criterion.Id, Rating = input.Ratings![criterion.Id]!.Value });
+        }
         evaluation.Notes = notes;
         evaluation.EvaluatedByUserId = userId;
         evaluation.EvaluatedAtUtc = DateTime.UtcNow;
@@ -234,9 +276,9 @@ public class EvaluationService : IEvaluationService
 
         await _db.SaveChangesAsync(ct);
         await _audit.LogAsync("Evaluation.Captured", "Submission", submission.Id.ToString(), submission.Tender.OrganisationId,
-            evaluation.IsResponsive
-                ? $"{submission.ReferenceNumber}: responsive, price {DisplayFormat.Money(evaluation.BidPrice!.Value)}"
-                : $"{submission.ReferenceNumber}: not responsive ({evaluation.NonResponsiveReason})");
+            !evaluation.IsResponsive ? $"{submission.ReferenceNumber}: not responsive ({evaluation.NonResponsiveReason})"
+            : !passes ? $"{submission.ReferenceNumber}: responsive, functionality {functionality}% below the {tender.FunctionalityThreshold}% threshold (not scored on price)"
+            : $"{submission.ReferenceNumber}: responsive{(functionality is null ? "" : $", functionality {functionality}%")}, price {DisplayFormat.Money(evaluation.BidPrice!.Value)}");
         return ServiceResult.Ok(submission.Id);
     }
 
@@ -255,7 +297,9 @@ public class EvaluationService : IEvaluationService
 
         var scores = LiveScores(tender);
         if (!scores.Any(s => s.Rank is not null))
-            return result.With(string.Empty, "No bid is responsive, so none can be recommended for award. Record this with the SCM Officer (the tender can be cancelled and re-advertised).");
+            return result.With(string.Empty, tender.HasFunctionalityStage
+                ? "No bid is responsive and at or above the functionality threshold, so none can be recommended for award. Record this with the SCM Officer (the tender can be cancelled and re-advertised)."
+                : "No bid is responsive, so none can be recommended for award. Record this with the SCM Officer (the tender can be cancelled and re-advertised).");
 
         var chosen = scores.FirstOrDefault(s => s.SubmissionId == recommendedSubmissionId && s.Rank is not null);
         if (chosen is null)
@@ -381,6 +425,11 @@ public class EvaluationService : IEvaluationService
             {
                 ChangeStatus(bid, SubmissionStatus.Unsuccessful, userId, $"Not awarded: your bid was found non-responsive. Reason: {excluded.NonResponsiveReason}");
             }
+            else if (!PassedFunctionality(tender, bid.Evaluation))
+            {
+                ChangeStatus(bid, SubmissionStatus.Unsuccessful, userId,
+                    $"Not awarded: your bid scored {DisplayFormat.Points(bid.Evaluation?.FunctionalityScore)}% for functionality, below the minimum of {tender.FunctionalityThreshold}%, so it was not evaluated on price and preference.");
+            }
             else
             {
                 ChangeStatus(bid, SubmissionStatus.Unsuccessful, userId,
@@ -415,6 +464,7 @@ public class EvaluationService : IEvaluationService
             // Withdrawn bids are kept on record but are not part of the evaluation.
             .Include(t => t.Submissions.Where(s => s.Status != SubmissionStatus.Withdrawn)).ThenInclude(s => s.Company)
             .Include(t => t.Submissions.Where(s => s.Status != SubmissionStatus.Withdrawn)).ThenInclude(s => s.Evaluation)
+            .Include(t => t.FunctionalityCriteria)
             .AsSplitQuery();
         if (!tracking) query = query.AsNoTracking();
         return query.SingleOrDefaultAsync(t => t.Id == tenderId, ct);
@@ -422,7 +472,13 @@ public class EvaluationService : IEvaluationService
 
     private static IReadOnlyList<ScoreLine> LiveScores(Tender tender) =>
         EvaluationRules.Score(Bids(tender).Select(s => new BidInput(s.Id, s.Evaluation is not null,
-            s.Evaluation?.IsResponsive == true, s.Evaluation?.BidPrice, s.DeclaredBbbeeLevel)), tender.PointSystem);
+            s.Evaluation?.IsResponsive == true, s.Evaluation?.BidPrice, s.DeclaredBbbeeLevel,
+            PassedFunctionality(tender, s.Evaluation))), tender.PointSystem);
+
+    /// <summary>True when the tender has no functionality stage, or the bid was rated at or above its threshold.</summary>
+    public static bool PassedFunctionality(Tender tender, BidEvaluation? evaluation) =>
+        tender.FunctionalityThreshold is not int threshold
+        || (evaluation?.FunctionalityScore is decimal score && EvaluationRules.MeetsThreshold(score, threshold));
 
     /// <summary>The scoresheet as the BEC signed it off (points and ranks stored at submission).</summary>
     private static IReadOnlyList<ScoreLine> FrozenScores(IEnumerable<Submission> submissions)

@@ -7,8 +7,9 @@ namespace EProcure.Web.Data.Configurations;
 // DELETE BEHAVIOUR POLICY
 // Procurement records must be kept (PFMA/MFMA record-keeping, audit by the Auditor-General),
 // so almost every relationship is Restrict: the database refuses to delete a parent that
-// still has children. The one Cascade is Tender -> TenderRequirement (checklist lines have
-// no meaning without their tender and are edited while the tender is a draft).
+// still has children. The Cascades are only for parts that have no meaning on their own and are
+// replaced as a whole: Tender -> TenderRequirement and Tender -> TenderFunctionalityCriterion (edited
+// while the tender is a draft), and BidEvaluation -> FunctionalityRating (re-saved with the evaluation).
 // Restrict everywhere also avoids SQL Server's "multiple cascade paths" error.
 
 public class OrganisationConfiguration : IEntityTypeConfiguration<Organisation>
@@ -140,6 +141,63 @@ public class BidEvaluationConfiguration : IEntityTypeConfiguration<BidEvaluation
         b.Property(e => e.PricePoints).HasPrecision(6, 2);
         b.Property(e => e.PreferencePoints).HasPrecision(6, 2);
         b.Property(e => e.TotalPoints).HasPrecision(6, 2);
+        b.Property(e => e.FunctionalityScore).HasPrecision(5, 2);
+    }
+}
+
+public class TenderFunctionalityCriterionConfiguration : IEntityTypeConfiguration<TenderFunctionalityCriterion>
+{
+    public void Configure(EntityTypeBuilder<TenderFunctionalityCriterion> b)
+    {
+        b.Property(c => c.Name).HasMaxLength(200).IsRequired();
+
+        // Part of the tender's own terms, like the checklist: replaced as a whole while the tender is a draft.
+        b.HasOne(c => c.Tender)
+            .WithMany(t => t.FunctionalityCriteria)
+            .HasForeignKey(c => c.TenderId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class FunctionalityRatingConfiguration : IEntityTypeConfiguration<FunctionalityRating>
+{
+    public void Configure(EntityTypeBuilder<FunctionalityRating> b)
+    {
+        // Ratings are part of the evaluation row and are replaced with it when the BEC saves again.
+        b.HasOne(r => r.BidEvaluation)
+            .WithMany(e => e.FunctionalityRatings)
+            .HasForeignKey(r => r.BidEvaluationId)
+            .OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(r => r.Criterion)
+            .WithMany()
+            .HasForeignKey(r => r.TenderFunctionalityCriterionId)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.HasIndex(r => new { r.BidEvaluationId, r.TenderFunctionalityCriterionId }).IsUnique();
+    }
+}
+
+public class CompanyDocumentConfiguration : IEntityTypeConfiguration<CompanyDocument>
+{
+    public void Configure(EntityTypeBuilder<CompanyDocument> b)
+    {
+        b.Property(d => d.Title).HasMaxLength(200).IsRequired();
+        b.Property(d => d.ClientName).HasMaxLength(200);
+        b.Property(d => d.ContractValue).HasPrecision(18, 2);
+        b.Property(d => d.OriginalFileName).HasMaxLength(255).IsRequired();
+        b.Property(d => d.StorageKey).HasMaxLength(200).IsRequired();
+        b.HasIndex(d => d.StorageKey).IsUnique();
+        b.Property(d => d.ContentType).HasMaxLength(100).IsRequired();
+        b.Property(d => d.Sha256).HasMaxLength(64).IsFixedLength().IsRequired();
+
+        // Never deleted with the company or by the supplier: "remove" only sets RemovedAtUtc (bids may rely on it).
+        b.HasOne(d => d.Company)
+            .WithMany(c => c.Documents)
+            .HasForeignKey(d => d.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(d => d.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UploadedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 

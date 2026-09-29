@@ -152,4 +152,82 @@ public sealed class TenderServiceTests : IDisposable
         Assert.Equal(TenderStatus.Cancelled, tender.Status);
         Assert.Equal("Budget withdrawn", tender.CancellationReason);
     }
+
+    // ------------------------------------------------------------------ functionality stage
+
+    private static TenderFormViewModel WithFunctionality(int? threshold, params (string? Name, int? Weight)[] rows)
+    {
+        var form = Form();
+        form.UseFunctionality = true;
+        form.FunctionalityThreshold = threshold;
+        form.FunctionalityCriteria = rows.Select(r => new TenderFormViewModel.CriterionInput { Name = r.Name, Weight = r.Weight }).ToList();
+        return form;
+    }
+
+    [Fact]
+    public async Task Functionality_criteria_and_threshold_are_saved_with_the_tender()
+    {
+        var user = _db.AddUser(TestDb.Rbidz);
+        var service = ServiceFor(TestTenant.Org(TestDb.Rbidz), out var context);
+        await using var _ = context;
+
+        var result = await service.CreateAsync(WithFunctionality(70, ("Experience", 60), ("Methodology", 40), ("", null)), user, _ct);
+
+        Assert.True(result.Succeeded);
+        var tender = await context.Tenders.Include(t => t.FunctionalityCriteria).SingleAsync(t => t.Id == result.Id);
+        Assert.Equal(70, tender.FunctionalityThreshold);
+        Assert.Equal(new[] { ("Experience", 60), ("Methodology", 40) },
+            tender.FunctionalityCriteria.OrderBy(c => c.SortOrder).Select(c => (c.Name, c.Weight)));
+    }
+
+    [Theory]
+    [InlineData(70, 60, 30, "add up to 100")]
+    [InlineData(null, 60, 40, "")]         // threshold missing: error on the threshold field
+    [InlineData(101, 60, 40, "")]
+    [InlineData(70, 0, 100, "weight from 1 to 100")]
+    public async Task Functionality_is_checked(int? threshold, int first, int second, string message)
+    {
+        var user = _db.AddUser(TestDb.Rbidz);
+        var service = ServiceFor(TestTenant.Org(TestDb.Rbidz), out var context);
+        await using var _ = context;
+
+        var result = await service.CreateAsync(WithFunctionality(threshold, ("Experience", first), ("Methodology", second)), user, _ct);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Errors, e => message.Length == 0 ? e.Field == "FunctionalityThreshold" : e.Message.Contains(message));
+        Assert.Equal(0, await context.Tenders.CountAsync());
+    }
+
+    [Fact]
+    public async Task A_weighted_row_needs_a_name_and_names_must_differ()
+    {
+        var user = _db.AddUser(TestDb.Rbidz);
+        var service = ServiceFor(TestTenant.Org(TestDb.Rbidz), out var context);
+        await using var _ = context;
+
+        var unnamed = await service.CreateAsync(WithFunctionality(70, ("Experience", 60), (" ", 40)), user, _ct);
+        var twice = await service.CreateAsync(WithFunctionality(70, ("Experience", 50), ("experience", 50)), user, _ct);
+
+        Assert.Contains("needs a criterion name", unnamed.Errors.Single().Message);
+        Assert.Contains("different name", twice.Errors.Single().Message);
+    }
+
+    [Fact]
+    public async Task Unticking_functionality_removes_the_stage_from_a_draft()
+    {
+        var user = _db.AddUser(TestDb.Rbidz);
+        var service = ServiceFor(TestTenant.Org(TestDb.Rbidz), out var context);
+        await using var _ = context;
+        var created = await service.CreateAsync(WithFunctionality(70, ("Experience", 100)), user, _ct);
+
+        var form = WithFunctionality(70, ("Experience", 100));
+        form.UseFunctionality = false;
+        Assert.True((await service.UpdateDraftAsync(created.Id, form, _ct)).Succeeded);
+
+        var tender = await context.Tenders.Include(t => t.FunctionalityCriteria).SingleAsync(t => t.Id == created.Id);
+        Assert.Null(tender.FunctionalityThreshold);
+        Assert.Empty(tender.FunctionalityCriteria);
+        await using var everyone = _db.Marketplace();
+        Assert.Equal(0, await everyone.TenderFunctionalityCriteria.CountAsync());
+    }
 }
