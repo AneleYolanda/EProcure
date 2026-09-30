@@ -122,7 +122,7 @@
                 <ul class="ep-bullets">
                     @foreach (var requirement in Model.Requirements)
                     {
-                        <li>@requirement</li>
+                        <li>@requirement@(TenderCatalog.IsProposal(requirement) ? (Model.FunctionalityThreshold is null ? ": your pitch to the committee" : ": your pitch, scored for functionality") : "")</li>
                     }
                 </ul>
             </section>

@@ -890,3 +890,9 @@ textarea.ep-input--area { height: auto; padding: 11px 13px; line-height: 1.5; re
 .ep-trackrow { background: #fff; border: 1px solid var(--ep-line); border-radius: 11px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
 .ep-trackrow + .ep-trackrow { margin-top: 10px; }
 .ep-trackrow__body { flex: 1; min-width: 0; }
+.ep-docrow__hint { color: var(--ep-ink); margin-top: 4px; }
+.ep-docrow__profile { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 1px dashed var(--ep-line); padding-top: 10px; }
+.ep-compliance-row { background: #fff; border: 1px solid var(--ep-line); border-radius: 11px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.ep-compliance-row + .ep-compliance-row { margin-top: 10px; }
+.ep-compliance-row--warn { border-color: #E8C27A; background: #FFFBF2; }
+.ep-compliance-row--bad { border-color: #E3A7A7; background: #FFF6F6; }

@@ -33,6 +33,7 @@ public interface IApplicationService
     Task<ServiceResult> SaveDeclarationsAsync(Submission submission, bool hasInterest, string? interestDetails, bool onRestrictedList, string? restrictionDetails, bool independentBid, CancellationToken ct);
     Task<ServiceResult> UploadAsync(Submission submission, int requirementId, IFormFile file, string userId, CancellationToken ct);
     Task<ServiceResult> RemoveDocumentAsync(Submission submission, int documentId, CancellationToken ct);
+    Task<ServiceResult> UseProfileDocumentAsync(Submission submission, int requirementId, int complianceDocumentId, string userId, CancellationToken ct);
     IReadOnlyList<string> MissingItems(Submission submission);
     Task<ServiceResult> SubmitAsync(Submission submission, bool declared, string userId, CancellationToken ct);
     Task<(ServiceResult Result, string? RedirectUrl)> StartPaymentAsync(Submission submission, string method, string returnUrl, CancellationToken ct);
@@ -219,6 +220,56 @@ public class ApplicationService : IApplicationService
         });
         await _db.SaveChangesAsync(ct);
         await _audit.LogAsync("Document.Uploaded", "Submission", submission.Id.ToString(), null, requirement.Name);
+        return ServiceResult.Ok(submission.Id);
+    }
+
+    /// <summary>
+    /// Attaches a compliance document from the company profile to a checklist item, so the supplier does not upload it again.
+    /// The bid gets its OWN copy of the file (a new stored file with the same fingerprint), so replacing or removing the profile
+    /// document later never changes a bid. Refused if the document has expired, belongs to another company, or does not match
+    /// the checklist item (e.g. a bank letter for the CSD report).
+    /// </summary>
+    public async Task<ServiceResult> UseProfileDocumentAsync(Submission submission, int requirementId, int complianceDocumentId, string userId, CancellationToken ct)
+    {
+        var result = new ServiceResult();
+        if (CheckCanChange(submission, DateTime.UtcNow) is string blocked) return result.With(string.Empty, blocked);
+
+        var requirement = submission.Tender.Requirements.SingleOrDefault(r => r.Id == requirementId);
+        if (requirement is null) return result.With(string.Empty, "That document is not on this tender's checklist.");
+
+        var profileDocument = await _db.ComplianceDocuments.AsNoTracking()
+            .SingleOrDefaultAsync(d => d.Id == complianceDocumentId && d.CompanyId == submission.CompanyId && d.ArchivedAtUtc == null, ct);
+        if (profileDocument is null) return ServiceResult.Missing();
+        var info = ComplianceRules.Info(profileDocument.Type);
+        if (!ComplianceRules.TypesFor(requirement.Name).Contains(profileDocument.Type))
+            return result.With(string.Empty, $"Your {info.Label} cannot be used for \"{requirement.Name}\".");
+        if (ComplianceRules.Status(profileDocument.ExpiresOn, SaTime.ToSast(DateTime.UtcNow)) == ComplianceStatus.Expired)
+            return result.With(string.Empty, $"Your {info.Label} has expired. Upload a current one on your company profile first.");
+
+        await using var source = await _files.OpenReadAsync(profileDocument.StorageKey, ct);
+        if (source is null) return result.With(string.Empty, "The stored file could not be found. Upload the document again on your profile.");
+        await using var copy = new MemoryStream();
+        await source.CopyToAsync(copy, ct);
+        copy.Position = 0;
+
+        foreach (var old in submission.Documents.Where(d => d.TenderRequirementId == requirementId).ToList())
+        {
+            await _files.DeleteAsync(old.StorageKey, ct);
+            _db.UploadedDocuments.Remove(old);
+        }
+        submission.Documents.Add(new UploadedDocument
+        {
+            TenderRequirementId = requirementId,
+            OriginalFileName = profileDocument.OriginalFileName,
+            StorageKey = await _files.SaveAsync(copy, ".pdf", ct),
+            ContentType = "application/pdf",
+            SizeBytes = profileDocument.SizeBytes,
+            Sha256 = profileDocument.Sha256,
+            UploadedByUserId = userId,
+            UploadedAtUtc = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync(ct);
+        await _audit.LogAsync("Document.FromProfile", "Submission", submission.Id.ToString(), null, $"{requirement.Name}: {info.Label}");
         return ServiceResult.Ok(submission.Id);
     }
 

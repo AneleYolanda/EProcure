@@ -20,7 +20,7 @@
     <form action="/dev/mailbox/run-scheduled" method="post" class="ep-mt-14">
         @Html.AntiForgeryToken()
         <button type="submit" class="ep-btn ep-btn--secondary">Run scheduled emails now</button>
-        <p class="ep-card__text ep-mt-14">Closing-date reminders and "tender closed" notices are normally sent by a background job every 15 minutes. This button runs it at once.</p>
+        <p class="ep-card__text ep-mt-14">Closing-date reminders, "tender closed" notices and document-expiry reminders are normally sent by a background job every 15 minutes. This button runs it at once.</p>
     </form>
     @if (ViewData["SentLog"] is List<string> log && log.Count > 0)
     {

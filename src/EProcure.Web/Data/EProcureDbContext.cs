@@ -33,6 +33,7 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
     public DbSet<BidEvaluation> BidEvaluations => Set<BidEvaluation>();
     public DbSet<FunctionalityRating> FunctionalityRatings => Set<FunctionalityRating>();
     public DbSet<CompanyDocument> CompanyDocuments => Set<CompanyDocument>();
+    public DbSet<ComplianceDocument> ComplianceDocuments => Set<ComplianceDocument>();
     public DbSet<SentNotification> SentNotifications => Set<SentNotification>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
@@ -121,6 +122,10 @@ public class EProcureDbContext : IdentityDbContext<ApplicationUser, ApplicationR
             d.Company.Submissions.Any(s => s.Tender.OrganisationId == CurrentOrgId
                                            && s.Status != SubmissionStatus.Draft
                                            && s.Status != SubmissionStatus.AwaitingPayment));
+
+        // Compliance documents are the supplier's own. Organisation staff never read this table: they see the copy attached
+        // to a bid (UploadedDocuments). Fails closed for every organisation-scoped user.
+        builder.Entity<ComplianceDocument>().HasQueryFilter(d => !IsOrgScoped);
 
         // AuditEntry.OrganisationId is nullable (platform events such as supplier sign-ins have none).
         // EF compares nullables with C# rules, where NULL == NULL is true, so without the explicit

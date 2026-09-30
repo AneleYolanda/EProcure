@@ -61,3 +61,21 @@ public class TrackRecordFormViewModel
     public int? YearCompleted { get; set; }
     public decimal? ContractValue { get; set; }
 }
+
+/// <summary>The compliance documents page: every document type with the current document (if any) and the upload form.</summary>
+public class CompliancePageViewModel
+{
+    /// <summary>Straight after registration ("Step 3 of 4", continuing to the track record).</summary>
+    public bool Welcome { get; set; }
+    public DateTime TodaySast { get; set; }
+    public IReadOnlyList<EProcure.Web.Domain.ComplianceDocument> Current { get; set; } = Array.Empty<EProcure.Web.Domain.ComplianceDocument>();
+    public ComplianceFormViewModel Form { get; set; } = new();
+}
+
+/// <summary>One compliance document as posted (the PDF comes separately as "file"). Validated in ComplianceService.</summary>
+public class ComplianceFormViewModel
+{
+    public ComplianceDocumentType? Type { get; set; }
+    public DateTime? IssuedOn { get; set; }
+    public DateTime? ExpiresOn { get; set; }
+}

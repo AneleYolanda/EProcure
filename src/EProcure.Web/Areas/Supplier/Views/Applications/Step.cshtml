@@ -121,6 +121,10 @@
                         <span class="ep-grow">
                             <span class="ep-docrow__name">@item.Name</span>
                             <span class="ep-docrow__meta">@(item.DocumentId is null ? (item.Mandatory ? "Required · not uploaded yet" : "Optional") : $"{item.FileName} · {Math.Max(1, item.SizeBytes / 1024)} KB · uploaded {DisplayFormat.DateTime(item.UploadedAtUtc!.Value)}")</span>
+                            @if (TenderCatalog.IsProposal(item.Name))
+                            {
+                                <span class="ep-docrow__meta ep-docrow__hint">Your pitch to the committee: your understanding of the work, how you will do it, a work plan and timeline, your team and their experience, and why your company should be chosen. The committee scores functionality mainly on this document and your track record.</span>
+                            }
                         </span>
                     </div>
                     <div class="ep-docrow__actions">
@@ -138,8 +142,21 @@
                             </form>
                         }
                     </div>
+                    @if (Model.ProfileOptions.TryGetValue(item.RequirementId, out var options))
+                    {
+                        foreach (var option in options)
+                        {
+                            <form asp-action="UseProfileDocument" asp-route-id="@Model.SubmissionId" method="post" class="ep-docrow__profile">
+                                <input type="hidden" name="requirementId" value="@item.RequirementId" />
+                                <input type="hidden" name="complianceDocumentId" value="@option.DocumentId" />
+                                <span class="ep-grow ep-docrow__meta">Or use your <strong>@option.Label</strong> from your profile · @option.Validity@(option.ExpiresBeforeClosing ? " · expires before this tender closes: consider uploading a newer one" : "")</span>
+                                <button type="submit" class="ep-btn ep-btn--secondary ep-btn--small">Use from profile</button>
+                            </form>
+                        }
+                    }
                 </div>
             }
+            <p class="ep-card__text">Keep your CSD report, tax status, B-BBEE and other documents on your <a asp-controller="Company" asp-action="Compliance">company profile</a> to attach them here in one click.</p>
             <a class="ep-btn ep-btn--primary ep-btn--tall" asp-action="Step" asp-route-id="@Model.SubmissionId" asp-route-n="5">Continue to review</a>
             break;
 

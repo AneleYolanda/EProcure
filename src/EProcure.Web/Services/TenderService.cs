@@ -373,7 +373,10 @@ public class TenderService : ITenderService
         return requirements;
     }
 
-    /// <summary>Ticked standard documents (in catalogue order) followed by typed extras, without duplicates.</summary>
+    /// <summary>
+    /// Ticked standard documents (in catalogue order) followed by typed extras, without duplicates. A tender that evaluates
+    /// functionality always asks for the technical proposal, because that is what the BEC scores.
+    /// </summary>
     public static List<string> BuildRequirements(TenderFormViewModel form)
     {
         var ticked = TenderCatalog.StandardDocuments.Where(d => form.SelectedDocuments.Contains(d));
@@ -381,7 +384,9 @@ public class TenderService : ITenderService
             .Split('\n')
             .Select(line => line.Trim())
             .Where(line => line.Length > 0);
-        return ticked.Concat(typed).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var list = ticked.Concat(typed).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (form.UseFunctionality && !list.Any(TenderCatalog.IsProposal)) list.Add(TenderCatalog.ProposalDocument);
+        return list;
     }
 
     private static void Apply(TenderFormViewModel form, Tender tender, List<string> requirements, List<(string Name, int Weight)>? criteria)

@@ -18,12 +18,14 @@ public class ReminderOptions
 }
 
 /// <summary>What a run did, including what it skipped because it was already sent (shown by the demo "run now" button).</summary>
-public record ReminderRunResult(int ClosingReminders, int ClosedNotices, int ClosedTendersFound = 0, int AlreadySent = 0);
+public record ReminderRunResult(int ClosingReminders, int ClosedNotices, int ClosedTendersFound = 0, int AlreadySent = 0, int DocumentReminders = 0);
 
 /// <summary>
 /// The scheduled emails, run every few minutes by ReminderWorker (or on demand in Development):
 ///   - "not submitted yet": once per unfinished (draft or unpaid) application, when its tender closes within the window;
 ///   - "tender closed": once per tender, to its SCM Officers (with the number of bids) and, if there are bids, its BEC members.
+///   - "document expiring": once per compliance document at 30 days and 7 days before it expires, and once when it has
+///     expired (within a week of expiry), to the supplier's users.
 /// Each email is recorded in SentNotifications under a unique key BEFORE the next one is attempted, so a restart, a
 /// second server or a second run never sends it twice. The job works across all organisations with its own
 /// DbContext (SystemTenantContext), independent of whoever may be signed in.
@@ -46,6 +48,7 @@ public class ReminderService
 
     public static string ClosingReminderKey(int submissionId) => $"closing-reminder:submission:{submissionId}";
     public static string ClosedNoticeKey(int tenderId) => $"tender-closed:tender:{tenderId}";
+    public static string DocumentReminderKey(int documentId, string stage) => $"compliance-{stage}:document:{documentId}";
 
     public async Task<ReminderRunResult> RunAsync(DateTime nowUtc, CancellationToken ct)
     {
@@ -93,9 +96,38 @@ public class ReminderService
             else alreadySent++;
         }
 
-        if (reminders + notices > 0)
-            _logger.LogInformation("Scheduled emails: {Reminders} closing reminder(s), {Notices} tender-closed notice(s).", reminders, notices);
-        return new ReminderRunResult(reminders, notices, closed.Count, alreadySent);
+        // 3. Compliance documents that expire soon or just expired (the current document of each type only).
+        var documentReminders = await RemindExpiringDocumentsAsync(db, notifications, nowUtc, ct);
+
+        if (reminders + notices + documentReminders > 0)
+            _logger.LogInformation("Scheduled emails: {Reminders} closing reminder(s), {Notices} tender-closed notice(s), {Documents} document reminder(s).",
+                reminders, notices, documentReminders);
+        return new ReminderRunResult(reminders, notices, closed.Count, alreadySent, documentReminders);
+    }
+
+    private static async Task<int> RemindExpiringDocumentsAsync(EProcureDbContext db, INotificationService notifications, DateTime nowUtc, CancellationToken ct)
+    {
+        var today = Infrastructure.SaTime.ToSast(nowUtc).Date;
+        var horizon = today.AddDays(ComplianceRules.ReminderDays.Max());
+        var oldestExpired = today.AddDays(-7); // do not email about documents that expired long ago (e.g. after an upgrade)
+        var due = await db.ComplianceDocuments
+            .Where(d => d.ArchivedAtUtc == null && d.ExpiresOn != null && d.ExpiresOn <= horizon && d.ExpiresOn >= oldestExpired)
+            .ToListAsync(ct);
+        var sent = 0;
+        foreach (var document in due)
+        {
+            var daysLeft = ComplianceRules.DaysLeft(document.ExpiresOn!.Value, today);
+            // The most urgent stage reached; earlier stages that were missed are not sent late.
+            var stage = daysLeft < 0 ? "expired" : daysLeft == 0 ? "today" : daysLeft <= 7 ? "7-days" : "30-days";
+            // A document valid for about a month (the 30-day CSD report) gets no 30-day warning: it would arrive on upload.
+            if (stage == "30-days" && ComplianceRules.IsShortLived(document.IssuedOn, document.ExpiresOn.Value)) continue;
+            if (await ClaimAsync(db, DocumentReminderKey(document.Id, stage), nowUtc, ct))
+            {
+                await notifications.ComplianceExpiringAsync(document, daysLeft, ct);
+                sent++;
+            }
+        }
+        return sent;
     }
 
     /// <summary>Records the key; false when it was already sent (the unique index is the final guarantee).</summary>

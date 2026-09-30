@@ -1,6 +1,7 @@
 using EProcure.Web.Data;
 using EProcure.Web.Domain;
 using EProcure.Web.Domain.Enums;
+using EProcure.Web.Infrastructure;
 using EProcure.Web.Infrastructure.Filters;
 using EProcure.Web.Services;
 using EProcure.Web.ViewModels.Supplier;
@@ -42,6 +43,23 @@ public class DashboardController : Controller
             .Where(p => p.UserId == user.Id)
             .Select(p => p.Company)
             .SingleOrDefaultAsync(cancellationToken);
+
+        // A reminder on the feed when compliance documents have expired or expire within 30 days.
+        if (company is not null)
+        {
+            var today = SaTime.ToSast(DateTime.UtcNow).Date;
+            var expiries = await _db.ComplianceDocuments.AsNoTracking()
+                .Where(d => d.CompanyId == company.Id && d.ArchivedAtUtc == null && d.ExpiresOn != null)
+                .Select(d => new { d.ExpiresOn, d.IssuedOn }).ToListAsync(cancellationToken);
+            var expired = expiries.Count(e => ComplianceRules.Status(e.ExpiresOn, today, e.IssuedOn) == ComplianceStatus.Expired);
+            var soon = expiries.Count(e => ComplianceRules.Status(e.ExpiresOn, today, e.IssuedOn) == ComplianceStatus.ExpiringSoon);
+            if (expired + soon > 0)
+                ViewData["ComplianceAlert"] = "Compliance documents: " + string.Join(", ", new[]
+                {
+                    expired > 0 ? $"{expired} expired" : null,
+                    soon > 0 ? $"{soon} expiring within 30 days" : null
+                }.Where(p => p is not null)) + ". Update them so your bids are not held up.";
+        }
 
         var now = DateTime.UtcNow;
 

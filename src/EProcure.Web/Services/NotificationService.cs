@@ -29,6 +29,7 @@ public interface INotificationService
     Task ApprovalDecidedAsync(Tender tender, string requesterId, bool approved, string? note, CancellationToken ct = default);
     Task ClosingReminderAsync(Submission submission, CancellationToken ct = default);
     Task TenderClosedAsync(Tender tender, int bids, CancellationToken ct = default);
+    Task ComplianceExpiringAsync(ComplianceDocument document, int daysLeft, CancellationToken ct = default);
 }
 
 public class NotificationService : INotificationService
@@ -165,6 +166,30 @@ public class NotificationService : INotificationService
                 $"Hello {member.FullName},\n\n{tender.ReferenceNumber} \"{tender.Title}\" has closed with {bidText}. The bids are unsealed and " +
                 "ready for the Bid Evaluation Committee.",
                 "Open the scoresheet", _links.Absolute($"/Admin/Evaluation/Tender/{tender.Id}")), ct);
+        }
+    }
+
+    /// <summary>To every supplier user of the company: a compliance document expires soon, today, or has expired.</summary>
+    public async Task ComplianceExpiringAsync(ComplianceDocument document, int daysLeft, CancellationToken ct = default)
+    {
+        var info = ComplianceRules.Info(document.Type);
+        var day = ComplianceRules.Day(document.ExpiresOn!.Value);
+        var (subject, lead) = daysLeft switch
+        {
+            < 0 => ($"Expired: your {info.Label}", $"your {info.Label} expired on {day}. It can no longer be attached to a bid."),
+            0 => ($"Expires today: your {info.Label}", $"your {info.Label} expires today ({day})."),
+            _ => ($"Expires in {daysLeft} days: your {info.Label}", $"your {info.Label} expires on {day}, in {daysLeft} days.")
+        };
+        var people = await (from p in _db.SupplierProfiles
+                            join u in _db.Users on p.UserId equals u.Id
+                            where p.CompanyId == document.CompanyId && u.Email != null
+                            select new { u.Email, u.FullName }).ToListAsync(ct);
+        foreach (var person in people)
+        {
+            await SendAsync(new EmailMessage(person.Email!, subject,
+                $"Hello {person.FullName},\n\nOn eProcure, {lead} Upload a current one so your bids are not held up.\n\n" +
+                $"How long it is valid: {info.Validity}",
+                "Update your documents", _links.Absolute("/Supplier/Company/Compliance")), ct);
         }
     }
 

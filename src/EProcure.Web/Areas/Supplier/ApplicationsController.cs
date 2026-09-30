@@ -244,6 +244,18 @@ public class ApplicationsController : Controller
     }
 
     [HttpPost]
+    public async Task<IActionResult> UseProfileDocument(int id, int requirementId, int complianceDocumentId, CancellationToken ct)
+    {
+        var submission = await _applications.LoadAsync(id, UserId, ct);
+        if (submission is null) return NotFound();
+        var result = await _applications.UseProfileDocumentAsync(submission, requirementId, complianceDocumentId, UserId, ct);
+        if (result.NotFound) return NotFound();
+        if (!result.Succeeded) return StepWithErrors(submission, 4, result);
+        TempData["Flash"] = "Attached from your profile.";
+        return RedirectToAction(nameof(Step), new { id, n = 4 });
+    }
+
+    [HttpPost]
     public async Task<IActionResult> RemoveDocument(int id, int documentId, CancellationToken ct)
     {
         var submission = await _applications.LoadAsync(id, UserId, ct);
@@ -358,6 +370,29 @@ public class ApplicationsController : Controller
         return View("Step", model);
     }
 
+    /// <summary>For each checklist item: the company's current, unexpired compliance documents that can fill it.</summary>
+    private Dictionary<int, IReadOnlyList<ApplyStepViewModel.ProfileOption>> ProfileOptions(Submission s)
+    {
+        var today = SaTime.ToSast(DateTime.UtcNow);
+        var closingDay = SaTime.ToSast(s.Tender.ClosingDateUtc).Date;
+        var documents = _db.ComplianceDocuments.AsNoTracking()
+            .Where(d => d.CompanyId == s.CompanyId && d.ArchivedAtUtc == null)
+            .ToList()
+            .Where(d => ComplianceRules.Status(d.ExpiresOn, today) != ComplianceStatus.Expired)
+            .ToList();
+        var options = new Dictionary<int, IReadOnlyList<ApplyStepViewModel.ProfileOption>>();
+        foreach (var requirement in s.Tender.Requirements)
+        {
+            var types = ComplianceRules.TypesFor(requirement.Name);
+            var matches = documents.Where(d => types.Contains(d.Type))
+                .Select(d => new ApplyStepViewModel.ProfileOption(d.Id, ComplianceRules.Info(d.Type).Label,
+                    ComplianceRules.Describe(d.ExpiresOn, today), d.ExpiresOn is DateTime last && last < closingDay))
+                .ToList();
+            if (matches.Count > 0) options[requirement.Id] = matches;
+        }
+        return options;
+    }
+
     private ApplyStepViewModel BuildStep(Submission s, int step)
     {
         var company = s.Company;
@@ -367,6 +402,7 @@ public class ApplicationsController : Controller
 
         return new ApplyStepViewModel
         {
+            ProfileOptions = step == 4 ? ProfileOptions(s) : new Dictionary<int, IReadOnlyList<ApplyStepViewModel.ProfileOption>>(),
             SubmissionId = s.Id,
             Step = step,
             TenderId = s.TenderId,

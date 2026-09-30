@@ -70,7 +70,9 @@ signed in at the same time.
 5. Open `/`, **Register**, fill in the form and accept the POPIA notice.
 6. Phone verification: the demo shows the one-time code on screen (no SMS is sent). Enter it.
 7. **Company profile**: CIPC number `2021/123456/07`, CSD `MAAA0012345`, tax PIN, **B-BBEE Level 2**.
-   Step 3 of 3, **Track record**: choose *Reference letter*, describe the work and the client, upload
+   Step 3 of 4, **Compliance documents**: add a CSD report dated today with `sample-document.pdf` (its expiry, 30 days
+   later, is worked out for you); try a bank letter dated 4 months ago: refused as already expired.
+   Step 4 of 4, **Track record**: choose *Reference letter*, describe the work and the client, upload
    `sample-document.pdf`. (It can also be skipped and done later from Company.)
 8. Tender feed: the new tender shows **You qualify**. Open it and **Apply**.
 9. Step 2 compliance, step 3 SBD 4/8/9 declarations (try **Yes** without details: it asks for them).
@@ -147,6 +149,17 @@ signed in at the same time.
 32. The scoresheet marks Khanya **Below functionality**; Siyakha now has the lowest acceptable price and scores
     **98.00** (80 + 18). After the award, Khanya is told its functionality score and the minimum.
 
+**K. Compliance documents and the proposal**
+33. Sign in as `supplier1@demo.co.za`: the tender feed shows **Compliance documents: 1 expired, 1 expiring within 30 days**.
+    **Company > Compliance documents** lists every type with its state (the CSD report expires in 5 days; the bank
+    letter has expired; the CIPC certificate does not expire) and how long each type is valid.
+34. In the demo mailbox press **Run scheduled emails now**: "Expires in N days: your CSD registration report" and "Expired:
+    your Bank confirmation letter" arrive; running it again sends nothing new.
+35. Apply for a tender whose checklist includes the CSD report or B-BBEE document: step 4 offers **Use from profile**; the
+    bid gets its own copy. An expired document is not offered.
+36. As `admin@rbidz.demo`, create a tender with functionality ticked: **Technical proposal (approach, work plan and team)** is
+    added to the checklist automatically. Bidders see what to put in it; the BEC sees it first on each bid, as "the bidder's pitch".
+
 ---
 
 ## 3. Run the tests
@@ -156,9 +169,9 @@ dotnet test
 ```
 
 No database server needed: each test builds the real EF Core model (same query filters and unique indexes) on an
-in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 178 tests cover tenant isolation, the B-BBEE
+in-memory SQLite database. In Visual Studio: **Test > Run All Tests**. 192 tests cover tenant isolation, the B-BBEE
 hard stop, one application per company, closing dates, PDF-only uploads, declarations, payment verification, the
-PPPFA points arithmetic, the functionality stage and track record, sealed bids, the BEC and BAC workflow, bid withdrawal, publication approval, the scheduled
+PPPFA points arithmetic, the functionality stage and track record, compliance document expiry and reminders, sealed bids, the BEC and BAC workflow, bid withdrawal, publication approval, the scheduled
 emails, staff management (with real
 ASP.NET Core Identity), password and invitation links, and the emails.
 

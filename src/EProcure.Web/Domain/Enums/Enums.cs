@@ -76,3 +76,21 @@ public enum CompanyDocumentKind
     CompanyProfile = 3,        // the company's own profile or portfolio
     Other = 4
 }
+
+/// <summary>
+/// The compliance documents a supplier keeps on its profile and reuses in bids. Each has its own validity rule
+/// (Services/ComplianceRules.cs). Stored as text like every enum.
+/// </summary>
+public enum ComplianceDocumentType
+{
+    CsdReport = 1,           // CSD registration summary report
+    TaxCompliance = 2,       // SARS tax compliance status (TCS PIN letter)
+    BbbeeCertificate = 3,    // B-BBEE certificate (SANAS agency or CIPC)
+    BbbeeAffidavit = 4,      // B-BBEE sworn affidavit (EME / QSE)
+    CipcRegistration = 5,    // CIPC registration certificate
+    CertifiedIds = 6,        // certified ID copies of directors / members
+    BankLetter = 7,          // bank confirmation letter
+    CoidaLetter = 8,         // COIDA letter of good standing
+    MunicipalAccount = 9,    // municipal rates statement or clearance
+    CidbRegistration = 10    // CIDB registration certificate
+}

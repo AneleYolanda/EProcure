@@ -1,0 +1,107 @@
+@* The company's compliance documents: one current document per type, its expiry worked out from ComplianceRules, and
+   reminders 30 and 7 days before it expires. Straight after registration this is "Step 3 of 4" and can be skipped. *@
+@model CompliancePageViewModel
+@{
+    ViewData["Title"] = "Compliance documents";
+    ViewData["Tab"] = "profile";
+    ViewData["BackUrl"] = Url.Action("Index");
+    ViewData["TopBarMeta"] = Model.Welcome ? "Step 3 of 4" : null;
+    ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
+    var f = Model.Form;
+    var today = Model.TodaySast;
+}
+<partial name="~/Views/Shared/Partials/_TopBar.cshtml" />
+
+<div class="ep-screen__body">
+    @if (TempData["Flash"] is string flash)
+    {
+        <div class="ep-flash" role="status">@flash</div>
+    }
+
+    <p class="ep-card__text">
+        Keep your compliance documents here once and attach them to any bid in one click. eProcure works out when each one expires
+        and emails you 30 days and 7 days before, so an expired document never costs you a tender.
+    </p>
+
+    <section aria-labelledby="docs-title">
+        <h2 class="ep-card__title" id="docs-title">Your documents</h2>
+        @foreach (var info in ComplianceRules.All)
+        {
+            var doc = Model.Current.FirstOrDefault(d => d.Type == info.Type);
+            var status = doc is null ? (ComplianceStatus?)null : ComplianceRules.Status(doc.ExpiresOn, today, doc.IssuedOn);
+            var css = status switch { ComplianceStatus.Expired => " ep-compliance-row--bad", ComplianceStatus.ExpiringSoon => " ep-compliance-row--warn", _ => "" };
+            <div class="ep-compliance-row@(css)">
+                <div class="ep-trackrow__body">
+                    <span class="ep-docrow__name">@info.Label</span>
+                    @if (doc is null)
+                    {
+                        <span class="ep-docrow__meta">Not on your profile · @info.Validity</span>
+                    }
+                    else
+                    {
+                        <span class="ep-docrow__meta"><strong>@ComplianceRules.Describe(doc.ExpiresOn, today)</strong> · @info.DateLabel @ComplianceRules.Day(doc.IssuedOn)</span>
+                        <span class="ep-docrow__meta"><a asp-action="ComplianceFile" asp-route-id="@doc.Id">@doc.OriginalFileName</a> · @Math.Max(1, doc.SizeBytes / 1024) KB</span>
+                    }
+                </div>
+                @if (doc is not null)
+                {
+                    <form asp-action="RemoveCompliance" method="post">
+                        <input type="hidden" name="documentId" value="@doc.Id" />
+                        <button type="submit" class="ep-textbtn ep-textbtn--muted">Remove</button>
+                    </form>
+                }
+            </div>
+        }
+    </section>
+
+    <form asp-action="AddCompliance" asp-route-welcome="@(Model.Welcome ? "true" : null)" method="post" enctype="multipart/form-data" class="ep-card" novalidate>
+        <h2 class="ep-card__title">Add or replace a document</h2>
+        <p class="ep-card__text">Uploading a newer document of the same type replaces the old one.</p>
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <label class="ep-field">WHICH DOCUMENT?
+            <select class="ep-input" name="Form.Type">
+                <option value="">Choose</option>
+                @foreach (var info in ComplianceRules.All)
+                {
+                    <option value="@info.Type" selected="@(f.Type == info.Type)">@info.Label</option>
+                }
+            </select>
+            <span asp-validation-for="Form.Type"></span>
+        </label>
+
+        <div class="ep-field-row">
+            <label class="ep-field">DATE ON THE DOCUMENT
+                <input class="ep-input" type="date" name="Form.IssuedOn" value="@(f.IssuedOn?.ToString("yyyy-MM-dd"))" max="@today.ToString("yyyy-MM-dd")" />
+                <span class="ep-afield__hint">Issued, report, certified or commissioned date.</span>
+                <span asp-validation-for="Form.IssuedOn"></span>
+            </label>
+            <label class="ep-field">EXPIRY DATE (IF PRINTED)
+                <input class="ep-input" type="date" name="Form.ExpiresOn" value="@(f.ExpiresOn?.ToString("yyyy-MM-dd"))" />
+                <span class="ep-afield__hint">Only for the tax status (TCS PIN), COIDA letter and CIDB certificate. The others are worked out for you.</span>
+                <span asp-validation-for="Form.ExpiresOn"></span>
+            </label>
+        </div>
+
+        <label class="ep-field">PDF (MAX 5 MB)
+            <input type="file" name="file" accept="application/pdf,.pdf" />
+            @Html.ValidationMessage("File")
+        </label>
+
+        <button type="submit" class="ep-btn ep-btn--secondary ep-mt-8">Upload</button>
+    </form>
+
+    <div class="ep-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1CA3EC" stroke-width="1.5" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 018 0v3" /></svg>
+        <span>Only you can see these. An organisation sees a document only when you attach it to a bid for one of its tenders, and only after the tender closes. Certified ID copies contain personal information: upload only what tenders ask for.</span>
+    </div>
+
+    @if (Model.Welcome)
+    {
+        <a class="ep-btn ep-btn--primary" asp-action="TrackRecord" asp-route-welcome="true">@(Model.Current.Count > 0 ? "Continue" : "Skip for now")</a>
+    }
+    else
+    {
+        <a class="ep-btn ep-btn--primary" asp-action="Index">Done</a>
+    }
+</div>

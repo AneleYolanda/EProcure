@@ -1,12 +1,12 @@
 @* The company's track record: proof of past work, uploaded once and part of every bid. Straight after registration
-   this is "Step 3 of 3" and can be skipped. Committees see the documents held at a tender's closing date. *@
+   this is "Step 4 of 4" and can be skipped. Committees see the documents held at a tender's closing date. *@
 @model TrackRecordPageViewModel
 @using EProcure.Web.Domain.Enums
 @{
     ViewData["Title"] = "Track record";
     ViewData["Tab"] = "profile";
     ViewData["BackUrl"] = Url.Action("Index");
-    ViewData["TopBarMeta"] = Model.Welcome ? "Step 3 of 3" : null;
+    ViewData["TopBarMeta"] = Model.Welcome ? "Step 4 of 4" : null;
     ViewData["ScreenClass"] = "ep-screen--page ep-screen--narrow";
     var f = Model.Form;
     var kinds = new[] { CompanyDocumentKind.ReferenceLetter, CompanyDocumentKind.CompletionCertificate, CompanyDocumentKind.CompanyProfile, CompanyDocumentKind.Other };

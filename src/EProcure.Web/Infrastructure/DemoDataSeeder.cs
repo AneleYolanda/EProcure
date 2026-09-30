@@ -97,6 +97,24 @@ public class DemoDataSeeder
             ("Scanning and digitisation of 40 000 personnel files", "Mfolozi Health District (sample)", 2024, 650_000m)
         }, cancellationToken);
         await EnsureTrackRecordDemoAsync(db, supplier2, new (string, string?, int?, decimal?)[] { ("Company profile 2026", null, null, null) }, cancellationToken);
+        // Compliance documents: Umhlathi has a CSD report expiring within 30 days (a reminder is due) and an expired bank
+        // letter; Siyakha is fully up to date. Supplier Two (Khanya) has none, to show the empty state.
+        await EnsureComplianceDemoAsync(db, supplier1, new (ComplianceDocumentType, int, int?)[]
+        {
+            (ComplianceDocumentType.CsdReport, 25, null),         // 30-day rule: 5 days left (7-day reminder due)
+            (ComplianceDocumentType.TaxCompliance, 60, 300),      // expiry printed on the TCS letter
+            (ComplianceDocumentType.BbbeeAffidavit, 90, null),    // 12 months from commissioning
+            (ComplianceDocumentType.CipcRegistration, 900, null), // does not expire
+            (ComplianceDocumentType.BankLetter, 93, null)         // 3-month rule: expired a few days ago
+        }, cancellationToken);
+        await EnsureComplianceDemoAsync(db, supplier3, new (ComplianceDocumentType, int, int?)[]
+        {
+            (ComplianceDocumentType.CsdReport, 5, null),
+            (ComplianceDocumentType.TaxCompliance, 20, 340),
+            (ComplianceDocumentType.BbbeeCertificate, 45, null),
+            (ComplianceDocumentType.CipcRegistration, 1200, null)
+        }, cancellationToken);
+
         await EnsureEvaluationDemoAsync(db, rbidz, rbidzAdmin, new[] { supplier1, supplier2, supplier3 }, cancellationToken,
             "RBIDZ/2026/012", "Records digitisation and managed scanning services (24 months)", 70, new[]
             {
@@ -123,7 +141,8 @@ public class DemoDataSeeder
 
         var files = _services.GetRequiredService<Services.External.IFileStorage>();
         var closing = DateTime.UtcNow.Date.AddDays(-3).AddHours(9); // 11:00 SAST three days ago
-        var requirementNames = new[] { "CSD registration summary", "B-BBEE certificate or sworn affidavit", "Pricing schedule" };
+        var requirementNames = new[] { "CSD registration summary", "B-BBEE certificate or sworn affidavit", "Pricing schedule" }
+            .Concat(criteria is null ? Array.Empty<string>() : new[] { Services.TenderCatalog.ProposalDocument }).ToArray();
         var tender = new Tender
         {
             OrganisationId = organisation.Id,
@@ -234,6 +253,41 @@ public class DemoDataSeeder
                 Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant(),
                 UploadedByUserId = supplier.Id,
                 UploadedAtUtc = DateTime.UtcNow.AddDays(-60)
+            });
+        }
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Compliance documents for a demo supplier (only if the company has none yet), dated so the demo shows every state:
+    /// valid, expiring within 30 days (a reminder is due), and expired. Expiry dates follow ComplianceRules.
+    /// </summary>
+    private async Task EnsureComplianceDemoAsync(EProcureDbContext db, ApplicationUser supplier,
+        (ComplianceDocumentType Type, int DaysAgo, int? PrintedExpiryInDays)[] items, CancellationToken cancellationToken)
+    {
+        var company = await db.SupplierProfiles.Where(p => p.UserId == supplier.Id).Select(p => p.Company!).SingleAsync(cancellationToken);
+        if (await db.ComplianceDocuments.AnyAsync(d => d.CompanyId == company.Id, cancellationToken)) return;
+
+        var files = _services.GetRequiredService<Services.External.IFileStorage>();
+        var today = SaTime.ToSast(DateTime.UtcNow).Date;
+        foreach (var (type, daysAgo, printedExpiry) in items)
+        {
+            var info = Services.ComplianceRules.Info(type);
+            var issued = today.AddDays(-daysAgo);
+            var bytes = DemoPdf($"{info.Label} - {company.Name} - dated {Services.ComplianceRules.Day(issued)}");
+            db.ComplianceDocuments.Add(new ComplianceDocument
+            {
+                CompanyId = company.Id,
+                Type = type,
+                IssuedOn = issued,
+                ExpiresOn = Services.ComplianceRules.ExpiresOn(type, issued, printedExpiry is int days ? today.AddDays(days) : null),
+                OriginalFileName = $"{type}.pdf",
+                StorageKey = await files.SaveAsync(new MemoryStream(bytes), ".pdf", cancellationToken),
+                ContentType = "application/pdf",
+                SizeBytes = bytes.Length,
+                Sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant(),
+                UploadedByUserId = supplier.Id,
+                UploadedAtUtc = DateTime.UtcNow.AddDays(-Math.Min(daysAgo, 30))
             });
         }
         await db.SaveChangesAsync(cancellationToken);

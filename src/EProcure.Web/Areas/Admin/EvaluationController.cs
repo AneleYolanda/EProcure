@@ -180,8 +180,11 @@ public class EvaluationController : Controller
             DeclaredLevel = s.DeclaredBbbeeLevel,
             RedFlags = stage == EvaluationStage.NotClosed ? Array.Empty<string>() : SubmissionStatuses.RedFlags(s),
             Documents = stage == EvaluationStage.NotClosed ? Array.Empty<(int, string, string)>()
-                : s.Documents.OrderBy(d => d.UploadedAtUtc)
-                    .Select(d => (d.Id, d.TenderRequirementId is int r && names.TryGetValue(r, out var n) ? n : "Supporting document", d.OriginalFileName)).ToList(),
+                : s.Documents
+                    .Select(d => (d.Id, Name: d.TenderRequirementId is int r && names.TryGetValue(r, out var n) ? n : "Supporting document", d.OriginalFileName, d.UploadedAtUtc))
+                    // The technical proposal (the bidder's pitch) first: it is what functionality is scored on.
+                    .OrderByDescending(d => TenderCatalog.IsProposal(d.Name)).ThenBy(d => d.UploadedAtUtc)
+                    .Select(d => (d.Id, TenderCatalog.IsProposal(d.Name) ? d.Name + ": the bidder's pitch" : d.Name, d.OriginalFileName)).ToList(),
             TrackRecord = trackRecord.Select(d => new EvaluateBidViewModel.TrackRecordRow(d.Id, d.Title, TrackRecordService.Label(d.Kind),
                 TrackRecordService.Describe(d), d.OriginalFileName, d.UploadedAtUtc)).ToList(),
             FunctionalityThreshold = s.Tender.FunctionalityThreshold,

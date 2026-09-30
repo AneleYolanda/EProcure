@@ -25,9 +25,23 @@ public static class TenderCatalog
         "SBD 8 — Past supply chain practices",
         "SBD 9 — Independent bid determination",
         "Pricing schedule",
+        ProposalDocument,
         "Letter of intent from a financial institution",
-        "Health and safety plan"
+        "Health and safety plan",
+        "Certified ID copies of directors",
+        "Bank confirmation letter",
+        "COIDA letter of good standing",
+        "Municipal rates statement or clearance",
+        "CIDB registration certificate"
     };
+
+    /// <summary>
+    /// The bidder's pitch: how they will do the work, their plan, team and why they should win. It is what the BEC reads to score
+    /// functionality, so it is added to the checklist automatically when a tender evaluates functionality.
+    /// </summary>
+    public const string ProposalDocument = "Technical proposal (approach, work plan and team)";
+
+    public static bool IsProposal(string requirementName) => string.Equals(requirementName, ProposalDocument, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Ticked by default on a new tender.</summary>
     public static readonly string[] DefaultDocuments =

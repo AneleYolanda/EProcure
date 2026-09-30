@@ -39,6 +39,10 @@
         <a class="ep-tabs__tab ep-tabs__tab--active" aria-current="page" asp-area="Supplier" asp-controller="Dashboard" asp-action="Index">All tenders</a>
     </nav>
 </header>
+@if (ViewData["ComplianceAlert"] is string complianceAlert)
+{
+    <div class="ep-flash ep-flash--error" role="status">@complianceAlert <a asp-area="Supplier" asp-controller="Company" asp-action="Compliance">Update documents</a></div>
+}
 
 <nav class="ep-filter-chips" aria-label="Filter by category">
     <a class="ep-filter-chip@(Model.Category is null ? " ep-filter-chip--active" : "")"

@@ -80,6 +80,12 @@ public class ApplyStepViewModel
     public string EligibilityText { get; set; } = string.Empty;
 
     public record ChecklistItem(int RequirementId, string Name, bool Mandatory, int? DocumentId, string? FileName, long SizeBytes, DateTime? UploadedAtUtc);
+
+    /// <summary>Checklist item id -> valid compliance documents on the profile that can be attached instead of uploading.</summary>
+    public IReadOnlyDictionary<int, IReadOnlyList<ProfileOption>> ProfileOptions { get; set; } = new Dictionary<int, IReadOnlyList<ProfileOption>>();
+
+    /// <summary>ExpiresBeforeClosing: still valid now, but not on the closing date (the supplier is warned).</summary>
+    public record ProfileOption(int DocumentId, string Label, string Validity, bool ExpiresBeforeClosing);
 }
 
 /// <summary>Tender-fee payment page (design screen "sPay").</summary>

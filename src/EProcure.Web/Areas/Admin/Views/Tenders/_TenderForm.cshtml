@@ -172,6 +172,7 @@
                     }
                 </fieldset>
                 <span asp-validation-for="SelectedDocuments" class="ep-field-error"></span>
+                <div class="ep-afield__hint ep-mt-8">The <strong>technical proposal</strong> is the bidder's pitch: how they will do the work, their plan and their team. It is added automatically when functionality is evaluated, because it is what the BEC scores.</div>
                 <label class="ep-afield ep-mt-18" asp-for="OtherDocuments">OTHER REQUIRED DOCUMENTS (ONE PER LINE)
                     <textarea class="ep-ainput" name="OtherDocuments" id="OtherDocuments" rows="3" placeholder="e.g. CIDB registration certificate">@otherDocs</textarea>
                     <span asp-validation-for="OtherDocuments"></span>

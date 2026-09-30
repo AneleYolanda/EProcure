@@ -44,6 +44,22 @@
             <a class="ep-btn ep-btn--secondary ep-mt-14" asp-action="Edit">Edit company details</a>
         </section>
 
+        <section class="ep-card" aria-labelledby="compliance-title">
+            <h2 class="ep-card__title" id="compliance-title">Compliance documents</h2>
+            @{
+                var docs = ViewData["Compliance"] as IReadOnlyList<ComplianceDocument> ?? Array.Empty<ComplianceDocument>();
+                var todaySast = SaTime.ToSast(DateTime.UtcNow).Date;
+                var expired = docs.Count(d => ComplianceRules.Status(d.ExpiresOn, todaySast, d.IssuedOn) == ComplianceStatus.Expired);
+                var soon = docs.Count(d => ComplianceRules.Status(d.ExpiresOn, todaySast, d.IssuedOn) == ComplianceStatus.ExpiringSoon);
+            }
+            <p class="ep-card__text">
+                @(docs.Count == 0
+                    ? "None yet. Keep your CSD report, tax status, B-BBEE certificate or affidavit and other documents here to attach them to bids in one click. You will be reminded before they expire."
+                    : $"{docs.Count} of {ComplianceRules.All.Count} on file" + (soon > 0 ? $" · {soon} expiring within 30 days" : "") + (expired > 0 ? $" · {expired} expired" : "") + ".")
+            </p>
+            <a class="ep-btn @(expired + soon > 0 ? "ep-btn--primary" : "ep-btn--secondary") ep-mt-14" asp-action="Compliance">@(docs.Count == 0 ? "Add your documents" : expired + soon > 0 ? "Update documents" : "Manage documents")</a>
+        </section>
+
         <section class="ep-card" aria-labelledby="track-title">
             <h2 class="ep-card__title" id="track-title">Track record</h2>
             @{ var trackCount = ViewData["TrackRecordCount"] as int? ?? 0; }

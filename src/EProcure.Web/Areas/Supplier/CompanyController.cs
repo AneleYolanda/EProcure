@@ -1,4 +1,5 @@
 using EProcure.Web.Domain;
+using EProcure.Web.Infrastructure;
 using EProcure.Web.Infrastructure.Filters;
 using EProcure.Web.Services;
 using EProcure.Web.Services.External;
@@ -21,13 +22,16 @@ public class CompanyController : Controller
 {
     private readonly ICompanyService _companies;
     private readonly ITrackRecordService _trackRecord;
+    private readonly IComplianceService _compliance;
     private readonly IFileStorage _files;
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public CompanyController(ICompanyService companies, ITrackRecordService trackRecord, IFileStorage files, UserManager<ApplicationUser> userManager)
+    public CompanyController(ICompanyService companies, ITrackRecordService trackRecord, IComplianceService compliance, IFileStorage files,
+        UserManager<ApplicationUser> userManager)
     {
         _companies = companies;
         _trackRecord = trackRecord;
+        _compliance = compliance;
         _files = files;
         _userManager = userManager;
     }
@@ -37,6 +41,7 @@ public class CompanyController : Controller
     {
         var company = await _companies.GetForUserAsync(_userManager.GetUserId(User)!, ct);
         ViewData["TrackRecordCount"] = (await _trackRecord.ListOwnAsync(_userManager.GetUserId(User)!, ct)).Count;
+        ViewData["Compliance"] = await _compliance.ListCurrentAsync(_userManager.GetUserId(User)!, ct);
         return View(company);
     }
 
@@ -55,8 +60,8 @@ public class CompanyController : Controller
     {
         ViewData["Welcome"] = welcome;
         var saved = await SaveAsync(form, "Company saved. Tenders now show whether you qualify.", ct);
-        // Registration continues with the track record (step 3 of 3), which can also be done later.
-        return welcome && saved is RedirectToActionResult ? RedirectToAction(nameof(TrackRecord), new { welcome = true }) : saved;
+        // Registration continues with the compliance documents (step 3 of 4) and the track record (step 4 of 4); both can wait.
+        return welcome && saved is RedirectToActionResult ? RedirectToAction(nameof(Compliance), new { welcome = true }) : saved;
     }
 
     // GET /Supplier/Company/Edit
@@ -86,9 +91,60 @@ public class CompanyController : Controller
         return await SaveAsync(form, "Company details updated.", ct);
     }
 
+    // ---- Compliance documents: CSD report, tax status, B-BBEE, IDs ... (kept on the profile, reminded before expiry) ----
+
+    // GET /Supplier/Company/Compliance   (?welcome=true straight after adding the company: "Step 3 of 4")
+    public async Task<IActionResult> Compliance(bool welcome, CancellationToken ct)
+    {
+        if (await _companies.GetForUserAsync(_userManager.GetUserId(User)!, ct) is null)
+            return RedirectToAction(nameof(Create));
+        return View(await CompliancePageAsync(welcome, new ComplianceFormViewModel(), ct));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddCompliance(ComplianceFormViewModel form, IFormFile? file, bool welcome, CancellationToken ct)
+    {
+        var result = await _compliance.AddAsync(_userManager.GetUserId(User)!, new ComplianceInput(form.Type, form.IssuedOn, form.ExpiresOn), file, ct);
+        if (!result.Succeeded)
+        {
+            foreach (var (field, message) in result.Errors)
+                ModelState.AddModelError(field is "" or "File" ? field : "Form." + field, message); // the PDF is posted outside the form model
+            return View(nameof(Compliance), await CompliancePageAsync(welcome, form, ct));
+        }
+
+        TempData["Flash"] = "Saved. You will be reminded by email before it expires.";
+        return RedirectToAction(nameof(Compliance), new { welcome = welcome ? true : (bool?)null });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveCompliance(int documentId, CancellationToken ct)
+    {
+        var result = await _compliance.RemoveAsync(_userManager.GetUserId(User)!, documentId, ct);
+        if (result.NotFound) return NotFound();
+        TempData["Flash"] = "Removed from your profile. Bids that already used it keep their own copy.";
+        return RedirectToAction(nameof(Compliance));
+    }
+
+    // GET /Supplier/Company/ComplianceFile/7   The supplier's own document only.
+    public async Task<IActionResult> ComplianceFile(int id, CancellationToken ct)
+    {
+        var document = await _compliance.FindOwnAsync(_userManager.GetUserId(User)!, id, ct);
+        if (document is null) return NotFound();
+        var stream = await _files.OpenReadAsync(document.StorageKey, ct);
+        return stream is null ? NotFound() : File(stream, "application/pdf", document.OriginalFileName);
+    }
+
+    private async Task<CompliancePageViewModel> CompliancePageAsync(bool welcome, ComplianceFormViewModel form, CancellationToken ct) => new()
+    {
+        Welcome = welcome,
+        TodaySast = SaTime.ToSast(DateTime.UtcNow).Date,
+        Current = await _compliance.ListCurrentAsync(_userManager.GetUserId(User)!, ct),
+        Form = form
+    };
+
     // ---- Track record: past work, reference letters, company profile (uploaded once, part of every bid) ----
 
-    // GET /Supplier/Company/TrackRecord   (?welcome=true straight after adding the company: "Step 3 of 3")
+    // GET /Supplier/Company/TrackRecord   (?welcome=true after the compliance documents: "Step 4 of 4")
     public async Task<IActionResult> TrackRecord(bool welcome, CancellationToken ct)
     {
         if (await _companies.GetForUserAsync(_userManager.GetUserId(User)!, ct) is null)

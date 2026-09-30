@@ -201,6 +201,33 @@ public class CompanyDocumentConfiguration : IEntityTypeConfiguration<CompanyDocu
     }
 }
 
+public class ComplianceDocumentConfiguration : IEntityTypeConfiguration<ComplianceDocument>
+{
+    public void Configure(EntityTypeBuilder<ComplianceDocument> b)
+    {
+        b.Property(d => d.IssuedOn).HasColumnType("date");
+        b.Property(d => d.ExpiresOn).HasColumnType("date");
+        b.Property(d => d.OriginalFileName).HasMaxLength(255).IsRequired();
+        b.Property(d => d.StorageKey).HasMaxLength(200).IsRequired();
+        b.HasIndex(d => d.StorageKey).IsUnique();
+        b.Property(d => d.ContentType).HasMaxLength(100).IsRequired();
+        b.Property(d => d.Sha256).HasMaxLength(64).IsFixedLength().IsRequired();
+
+        // Current documents per company and type, and the daily expiry scan.
+        b.HasIndex(d => new { d.CompanyId, d.Type, d.ArchivedAtUtc });
+        b.HasIndex(d => d.ExpiresOn);
+
+        b.HasOne(d => d.Company)
+            .WithMany()
+            .HasForeignKey(d => d.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(d => d.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(d => d.UploadedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class TenderRequirementConfiguration : IEntityTypeConfiguration<TenderRequirement>
 {
     public void Configure(EntityTypeBuilder<TenderRequirement> b)

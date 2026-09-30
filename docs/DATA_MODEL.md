@@ -13,6 +13,7 @@ Generated SQL for review: [`schema/InitialCreate.sql`](schema/InitialCreate.sql)
 | `AddEvaluationAndAward` | New table `BidEvaluations` (one per submission: responsive yes/no with reason, bid price, notes, evaluator; points and rank frozen when the BEC submits; `IsRecommended`). `Tenders` gets `EvaluationSubmittedAtUtc`, `EvaluationSubmittedByUserId`, `RecommendationReason` and `BacReturnNote` (all nullable). No existing data changes. |
 | `AddApprovalsAndReminders` | `Organisations.RequireTenderApproval`; approval fields on `Tenders` (requested/approved by and when, return note); new table `SentNotifications` (unique `Key`: each scheduled email is sent once). |
 | `AddTrackRecordAndFunctionality` | New tables `CompanyDocuments` (track record on the company profile; `RemovedAtUtc` instead of deleting), `TenderFunctionalityCriteria` (name, weight, order per tender) and `FunctionalityRatings` (the BEC's 0-5 rating per bid and criterion, unique per pair). `Tenders.FunctionalityThreshold` (int, NULL = no functionality stage) and `BidEvaluations.FunctionalityScore` (decimal(5,2)). No existing data changes. |
+| `AddComplianceDocuments` | New table `ComplianceDocuments` (type, date on the document, calculated or printed expiry date, file details, `ArchivedAtUtc` when replaced or removed). No existing data changes. |
 
 ## Entity-relationship diagram
 
@@ -36,6 +37,7 @@ erDiagram
     Submissions ||--o| BidEvaluations : "evaluated in"
     Users ||--o{ BidEvaluations : "evaluated by"
     Companies ||--o{ CompanyDocuments : "track record"
+    Companies ||--o{ ComplianceDocuments : "compliance documents"
     Tenders ||--o{ TenderFunctionalityCriteria : "functionality criteria"
     BidEvaluations ||--o{ FunctionalityRatings : "rated on"
     TenderFunctionalityCriteria ||--o{ FunctionalityRatings : "rating of"
@@ -63,6 +65,7 @@ erDiagram
 | 13 | Submission 1 → * AwardRecord | The successful submission referenced by the award. | Restrict |
 | 13b | Submission 1 → 0..1 BidEvaluation | The BEC's evaluation of the bid (unique `SubmissionId`). People record responsiveness and price; points are calculated (PPPFA) and frozen at the BEC's submission. | Restrict |
 | 13c | Company 1 → * CompanyDocuments | Track record (reference letters, completion certificates, company profile), uploaded once and part of every bid. The BEC sees the documents held at the closing date. | Restrict (never deleted; "remove" sets `RemovedAtUtc`) |
+| 13f | Company 1 → * ComplianceDocuments | CSD report, tax status, B-BBEE, IDs and similar; one current per type, expiry from `ComplianceRules`. Attached to a bid as a COPY (an UploadedDocument), so the profile can change without changing bids. | Restrict (archived, never deleted) |
 | 13d | Tender 1 → * TenderFunctionalityCriteria | Functionality criteria and weights (adding up to 100), with `Tenders.FunctionalityThreshold`. | **Cascade** (edited with the draft) |
 | 13e | BidEvaluation 1 → * FunctionalityRatings → 1 TenderFunctionalityCriterion | The BEC's 0-5 rating per criterion; the percentage is calculated into `BidEvaluations.FunctionalityScore`. | **Cascade** from the evaluation (re-saved with it); Restrict to the criterion |
 | 14 | User 1 → * (Tenders, Documents, History, Awards) | "Created/uploaded/changed/recorded by" references for accountability. | Restrict |
@@ -86,6 +89,7 @@ erDiagram
 | TenderFunctionalityCriteria | via `Tender.OrganisationId` |
 | FunctionalityRatings | via `BidEvaluation.Submission.Tender.OrganisationId` + same paid rule |
 | CompanyDocuments | only if the company has a submitted (paid) bid to one of `@myOrg`'s tenders; pages add "after closing" and "held at the closing date" |
+| ComplianceDocuments | never: organisation staff see only the copy attached to a bid |
 | AuditLog | `OrganisationId = @myOrg` |
 
 4. If an admin has no organisation claim, `@myOrg` is NULL and they see **nothing** (fail closed).
@@ -123,6 +127,7 @@ erDiagram
 | SubmissionStatusHistory | Who changed status, when | Transparency to bidder, audit | Same as the parent submission |
 | BidEvaluations | Evaluating official reference; committee notes about a juristic person's bid | Record of the BEC's evaluation | Owning organisation only (bidders see only their outcome, points and rank, and the winner's published award notice) |
 | CompanyDocuments | Reference letters may name people at the client; uploader reference | Track record for evaluation | The supplier; an organisation only through a submitted bid to its own tender, after closing |
+| ComplianceDocuments | **Certified ID copies of directors** (identity numbers, photos); bank confirmation letters | Proving compliance when bidding | The supplier only; an organisation sees the copy attached to a bid to its own tender, after closing |
 | TenderFunctionalityCriteria / FunctionalityRatings | None (criteria); evaluating official via the evaluation | Functionality evaluation | Criteria public with the tender; ratings owning organisation only |
 | AwardRecords | Deciding official reference | Record of human decision | Owning organisation |
 | AuditLog | User id/email, IP address | Accountability, security | Platform operator; owning organisation for its own rows |

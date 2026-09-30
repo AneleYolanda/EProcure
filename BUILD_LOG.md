@@ -735,3 +735,37 @@ feat: closing-date reminders and tender-closed notices; approval queue with seco
 ```
 feat: supplier track record (also at registration) and an optional functionality stage in evaluation
 ```
+
+## Step 16: The technical proposal, and compliance documents with expiry reminders
+
+### What was built
+- Technical proposal (D54): a standard checklist item, added automatically when a tender evaluates functionality; guidance for
+  bidders on what to put in it; listed first on the BEC's bid page as "the bidder's pitch".
+- Compliance document vault (D55): table `ComplianceDocuments`, `ComplianceRules` (ten document types and their validity:
+  30 days for the CSD report, 3 months for certified IDs, bank letters and municipal statements, 12 months for B-BBEE
+  certificates and affidavits, the printed date for TCS PIN, COIDA and CIDB, none for CIPC), registration step 3 of 4, a
+  Compliance page, a feed banner, a company-page summary, reminders at 30 and 7 days and on expiry (short-lived documents only
+  at 7 days), and "Use from profile" at application step 4 (the bid gets its own copy; expired documents are not offered).
+- CSD validity set to 30 days after discussion: stricter than most tenders ask, and a fresh report is a free download.
+- Demo: compliance documents for Umhlathi (one expiring, one expired) and Siyakha. Migration `AddComplianceDocuments` (+ SQL).
+  Tests: 14 new (192 in total).
+
+### Verified in the browser (Visual Studio run, as supplier1@demo.co.za)
+- Feed banner "Compliance documents: 1 expired, 1 expiring within 30 days"; the Compliance page lists all ten types with their
+  state (amber, red, "does not expire", "not on your profile") and validity rule.
+- A CSD report dated today: "Expires in 30 days (30 Oct 2026)", not flagged amber; the older report was replaced.
+- A bank letter dated 30 May: refused ("expired on 29 Aug 2026. Validity: 3 months ..."); a TCS letter without its printed
+  expiry: refused; entries kept.
+- Scheduled run: "Expires in 9 days: your Municipal rates statement or clearance" with the validity rule and a link; the
+  send-once log showed the earlier CSD and bank-letter reminders sent by the background job after the previous restart.
+- Application step 4 (RBIDZ/2026/014): four of five checklist items offered "Use from profile" (including the differently named
+  "CSD summary report"); the CSD report attached and ticked. Crafted requests: an archived document and another company's
+  document returned 404; a municipal statement for the CSD item was refused.
+- Test data left: a draft application by Umhlathi on RBIDZ/2026/014 (not visible to the organisation). The seeded bank letter
+  was removed with the Remove button during the session (archived, file kept).
+- Not clicked through yet: the proposal on the admin tender form and BEC page (covered by tests).
+
+### Commit message
+```
+feat: technical proposal on the checklist; compliance documents with validity rules, expiry reminders and reuse in bids
+```

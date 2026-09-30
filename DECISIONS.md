@@ -784,3 +784,38 @@ principle of D42: people judge, the system does the arithmetic.
 **Not chosen:** automatic 80/20 or 90/10 from the estimated value; the SCM Officer chooses, as agreed with the product
 owner. Per-member scoring (each BEC member scores, then averages) is left for later: one consolidated BEC rating per
 criterion is captured, as on a consensus scoresheet.
+
+---
+
+## D54. The technical proposal is a first-class checklist item
+
+**What:** "Technical proposal (approach, work plan and team)" is a standard tender document. It is added to the checklist
+automatically when a tender evaluates functionality (it is what the BEC scores). Bidders see guidance on what to put in it
+(understanding of the work, method, plan and timeline, team, why them); on the BEC's bid page it is listed first as "the
+bidder's pitch", next to the track record.
+
+**Why:** RECADI pointed out that the proposal is what usually wins a tender, and eProcure only allowed it as a typed "other
+document". Tying it to functionality means a tender cannot ask the BEC to score methodology without asking bidders for one.
+
+---
+
+## D55. A compliance document vault with validity rules and expiry reminders
+
+**What:** Suppliers keep compliance documents on the company profile (registration step 3 of 4, or later): CSD report, SARS
+tax compliance status, B-BBEE certificate or affidavit, CIPC certificate, certified IDs, bank letter, COIDA letter, municipal
+statement, CIDB certificate. One current document per type (a newer upload archives the old one). The expiry date is worked
+out by `ComplianceRules`: 12 months from issue for B-BBEE certificates and affidavits; 30 days for the CSD report (most
+tenders ask for one no older than 30 days, and a fresh report is a free download); 3 months for certified copies, bank
+letters and municipal statements; the printed date for the TCS PIN, COIDA and CIDB; never for the CIPC
+certificate. The scheduled job emails the company's users at 30 days and 7 days before expiry and when it expires (each once,
+send-once keys), the feed shows a banner, (documents valid for a month or less, like the CSD report, are only
+warned about in their last 7 days, since a 30-day warning would arrive on upload), and an expired document cannot be uploaded or attached. At step 4 of an application,
+a matching, unexpired profile document can be attached in one click; the bid gets its own copy of the file, so later changes to
+the profile never change a submitted bid. Organisation staff never read the table (query filter), only the copy in a bid.
+
+**Why:** RECADI raised expiring documents (CSD, IDs) and document reuse; bids are regularly disqualified for an expired
+certificate. The periods follow common tender practice and the B-BBEE Commission's guidance; they are practice, not law, so
+they live in one place and a tender's own wording still wins (e.g. "CSD report not older than 30 days").
+
+**Later:** verifying documents with a provider (CSD, CIPC, SARS) once RECADI or the bank names one; a per-tender "not older
+than N days" rule.
