@@ -763,7 +763,10 @@ feat: supplier track record (also at registration) and an optional functionality
   document returned 404; a municipal statement for the CSD item was refused.
 - Test data left: a draft application by Umhlathi on RBIDZ/2026/014 (not visible to the organisation). The seeded bank letter
   was removed with the Remove button during the session (archived, file kept).
-- Not clicked through yet: the proposal on the admin tender form and BEC page (covered by tests).
+- SCM Officer: the tender form offers the technical proposal with its explanation; a draft with functionality ticked and the
+  proposal NOT ticked was saved with it added automatically (8 documents); Edit shows it ticked. The test draft TEST/PROP/001
+  was cancelled with a note. The BEC page ordering (proposal first) needs a closed tender with a proposal and was not clicked
+  through; the demo tender RBIDZ/2026/012 predates the rule.
 
 ### Commit message
 ```
