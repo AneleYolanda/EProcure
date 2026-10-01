@@ -15,6 +15,14 @@
     var displayName = signedInUser?.FullName ?? User.Identity?.Name ?? string.Empty;
     var roleLabel = RoleLabels.For(User);
     var activeNav = ViewData["Nav"] as string;
+    // The top-bar search searches the list you are on: applications or the audit trail, otherwise tenders.
+    var (searchController, searchLabel, searchHint) = activeNav switch
+    {
+        "applications" => ("Submissions", "Search applications", "Search applications by reference, tender or company"),
+        "audit" => ("Audit", "Search the audit trail", "Search actions, records or people"),
+        _ => ("Tenders", "Search tenders", "Search tenders by title or reference")
+    };
+    var searchTenderId = activeNav == "applications" ? Context.Request.Query["tenderId"].ToString() : string.Empty;
 
     // The design's full console menu. Items not built yet are shown greyed with "Soon" and are not links.
     var soonItems = Array.Empty<(string Label, string Path)>();
@@ -113,10 +121,14 @@
                 </button>
                 <h1 class="ep-adminbar__title">@ViewData["Title"]</h1>
                 <div class="ep-adminbar__spacer"></div>
-                <form class="ep-adminbar__search" method="get" asp-area="Admin" asp-controller="Tenders" asp-action="Index" role="search">
+                <form class="ep-adminbar__search" method="get" asp-area="Admin" asp-controller="@searchController" asp-action="Index" role="search">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8C9CAB" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
-                    <label class="ep-visually-hidden" for="ep-admin-search">Search tenders</label>
-                    <input id="ep-admin-search" type="search" name="q" value="@Context.Request.Query["q"]" placeholder="Search tenders by title or reference" />
+                    <label class="ep-visually-hidden" for="ep-admin-search">@searchLabel</label>
+                    <input id="ep-admin-search" type="search" name="q" value="@Context.Request.Query["q"]" placeholder="@searchHint" />
+                    @if (searchTenderId.Length > 0)
+                    {
+                        <input type="hidden" name="tenderId" value="@searchTenderId" />
+                    }
                 </form>
                 <span class="ep-role-badge">@roleLabel</span>
             </header>

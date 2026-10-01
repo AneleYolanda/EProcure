@@ -819,3 +819,30 @@ they live in one place and a tender's own wording still wins (e.g. "CSD report n
 
 **Later:** verifying documents with a provider (CSD, CIPC, SARS) once RECADI or the bank names one; a per-tender "not older
 than N days" rule.
+
+---
+
+## D56. The system works out the points; the committee chooses, with nothing pre-selected
+
+**What:** The scoresheet still calculates price and preference points (80/20 or 90/10, the formula in the regulations) and
+totals the functionality ratings the evaluators type in, and it still shows a ranking. But the BEC's recommendation form no
+longer pre-selects the top-ranked bid: the committee must actively choose. Choosing a bid that is not ranked first, or
+breaking a tie, still needs written reasons, as before. The page says so in plain words: "The points are worked out
+from the formula; the committee decides."
+
+**Why:** The formula is fixed by law, so working it out by hand adds only errors (wrong lowest price, rounding, wrong
+system), which are audit findings and grounds for challenges. But the system must assist, not decide: a pre-selected winner
+nudges the committee to accept the machine's answer. Bids below the functionality threshold are still not scored on price,
+because the regulations require that, and the threshold is applied to ratings people gave.
+
+---
+
+## D57. Search on applications, the audit trail and "My applications"; sealed bids cannot be found by company
+
+**What:** The admin top-bar search now searches the list you are on: tenders (as before), received applications (reference,
+tender, or company) or the audit trail (action, record, details, person's name or email). Suppliers get a search box on
+"My applications" (tender, organisation or reference). `SearchRules` holds the in-memory filtering.
+
+**Why:** Lists grow quickly once an organisation runs a year of tenders. A sealed bid's company name is hidden before
+closing, so the search does not match it either; otherwise typing a company name would reveal who has bid. Sealed bids can
+still be found by their reference or tender.

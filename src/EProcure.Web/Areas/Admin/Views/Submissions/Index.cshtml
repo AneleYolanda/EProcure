@@ -14,6 +14,11 @@
         }
     </div>
 
+    @if (Model.Query is not null)
+    {
+        <div class="ep-panel__sub">Showing results for “@Model.Query”. Sealed bids are found by reference or tender only. <a asp-action="Index" asp-route-tenderId="@Model.TenderId">Clear search</a></div>
+    }
+
     <section class="ep-register" aria-label="Applications">
         <div class="ep-register__head ep-register__head--apps" aria-hidden="true">
             <div>Reference</div><div>Company</div><div>Status</div><div>Tender</div><div>Submitted</div><div>Checks</div><div></div>
@@ -46,7 +51,7 @@
         }
         @if (Model.Rows.Count == 0)
         {
-            <div class="ep-register__empty">No submitted applications yet.</div>
+            <div class="ep-register__empty">@(Model.Query is null ? "No submitted applications yet." : "No applications match that search.")</div>
         }
     </section>
 </div>

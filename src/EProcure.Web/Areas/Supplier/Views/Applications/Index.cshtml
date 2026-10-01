@@ -1,5 +1,5 @@
-@* Design screen "sApps": every application of the supplier's company, newest first. *@
-@model IReadOnlyList<MyApplicationRow>
+@* Design screen "sApps": every application of the supplier's company, newest first, with a search box. *@
+@model MyApplicationsViewModel
 @{
     ViewData["Title"] = "My applications";
     ViewData["Tab"] = "applications";
@@ -8,10 +8,21 @@
 <header class="ep-page-head">
     <h1 class="ep-page-head__title">My applications</h1>
     <div class="ep-page-head__sub">Every application your company has started or submitted</div>
+    <form class="ep-page-head__search" method="get" asp-action="Index" role="search">
+        <label class="ep-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A6B7B" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M16.5 16.5L21 21" /></svg>
+            <span class="ep-visually-hidden">Search my applications</span>
+            <input type="search" name="q" value="@Model.Query" placeholder="Search by tender, organisation or reference" />
+        </label>
+    </form>
 </header>
 
 <section class="ep-tender-list" aria-label="Applications">
-    @foreach (var row in Model)
+    @if (Model.Query is not null)
+    {
+        <div class="ep-page-head__sub">Showing results for “@Model.Query”. <a asp-action="Index">Clear search</a></div>
+    }
+    @foreach (var row in Model.Rows)
     {
         var inProgress = row.Status is SubmissionStatus.Draft or SubmissionStatus.AwaitingPayment;
         <a class="ep-tender-card" asp-action="Details" asp-route-id="@row.Id">
@@ -27,8 +38,15 @@
             </div>
         </a>
     }
-    @if (Model.Count == 0)
+    @if (Model.Rows.Count == 0)
     {
-        <div class="ep-empty">You have not applied for any tenders yet. <a asp-controller="Dashboard" asp-action="Index">Browse open tenders</a>.</div>
+        if (Model.Query is null)
+        {
+            <div class="ep-empty">You have not applied for any tenders yet. <a asp-controller="Dashboard" asp-action="Index">Browse open tenders</a>.</div>
+        }
+        else
+        {
+            <div class="ep-empty">No applications match that search.</div>
+        }
     }
 </section>

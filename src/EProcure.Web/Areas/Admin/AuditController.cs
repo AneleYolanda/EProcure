@@ -1,4 +1,5 @@
 using EProcure.Web.Data;
+using EProcure.Web.Services;
 using EProcure.Web.ViewModels.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,13 +21,26 @@ public class AuditController : Controller
 
     public AuditController(EProcureDbContext db) => _db = db;
 
-    public async Task<IActionResult> Index(int page = 1, CancellationToken ct = default)
+    // GET /Admin/Audit?q=award&page=2
+    public async Task<IActionResult> Index(int page = 1, string? q = null, CancellationToken ct = default)
     {
-        var total = await _db.AuditEntries.CountAsync(ct);
+        var term = SearchRules.Term(q);
+        var query = _db.AuditEntries.AsNoTracking();
+        if (term is not null)
+        {
+            // Searches what the page shows: the action, the record, the details, and who did it (name or email).
+            var people = _db.Users.Where(u => u.FullName.Contains(term)).Select(u => u.Id);
+            query = query.Where(a => a.Action.Contains(term) || a.EntityId.Contains(term)
+                || (a.Details != null && a.Details.Contains(term))
+                || (a.UserEmail != null && a.UserEmail.Contains(term))
+                || (a.UserId != null && people.Contains(a.UserId)));
+        }
+
+        var total = await query.CountAsync(ct);
         var pages = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
         page = Math.Clamp(page, 1, pages);
 
-        var entries = await _db.AuditEntries.AsNoTracking()
+        var entries = await query
             .OrderByDescending(a => a.OccurredAtUtc).ThenByDescending(a => a.Id)
             .Skip((page - 1) * PageSize).Take(PageSize)
             .ToListAsync(ct);
@@ -37,6 +51,7 @@ public class AuditController : Controller
         {
             Page = page,
             TotalPages = pages,
+            Query = term,
             Rows = entries.Select(e => new AuditRow(e.OccurredAtUtc, e.Action, e.EntityType, e.EntityId,
                 e.UserId != null && names.TryGetValue(e.UserId, out var n) ? n : e.UserEmail ?? "System", e.Details, e.IpAddress)).ToList()
         });

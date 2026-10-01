@@ -236,6 +236,7 @@ select.ep-input { padding: 0 10px; }
 .ep-page-head { padding: 12px 18px 16px; background: #fff; border-bottom: 1px solid var(--ep-line); }
 .ep-page-head__title { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
 .ep-page-head__sub { margin-top: 3px; font-size: 12px; color: var(--ep-muted); }
+.ep-page-head__search { margin-top: 12px; max-width: 480px; }
 .ep-person { margin-top: 10px; display: flex; align-items: center; gap: 12px; }
 .ep-person__tile { width: 44px; height: 44px; border-radius: 12px; background: var(--ep-ink); color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
 .ep-person__name { display: block; font-size: 14.5px; font-weight: 600; }
@@ -251,6 +252,9 @@ select.ep-input { padding: 0 10px; }
 .ep-kv__k { color: var(--ep-muted); flex: none; white-space: nowrap; }
 .ep-kv__v { font-weight: 600; color: var(--ep-ink); text-align: right; }
 .ep-kvs { margin-top: 12px; display: flex; flex-direction: column; gap: 9px; }
+/* A long label (e.g. a functionality criterion) wraps, so its short value (rating, weight) always stays visible. */
+.ep-kv--long .ep-kv__k { flex: 1 1 auto; min-width: 0; white-space: normal; }
+.ep-kv--long .ep-kv__v { flex: none; white-space: nowrap; }
 .ep-icon-row { display: flex; gap: 10px; align-items: flex-start; }
 .ep-icon-row svg { flex: none; margin-top: 1px; }
 .ep-soon-pill { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: var(--ep-soft); color: var(--ep-muted); vertical-align: 1px; }
@@ -789,22 +793,27 @@ a.ep-action:hover { background: #F7FAFC; }
 .ep-options--single .ep-option__card { padding: 11px 13px; }
 .ep-option { position: relative; }
 .ep-option input:checked + .ep-option__card { border-color: var(--ep-accent-strong); box-shadow: 0 0 0 1px var(--ep-accent-strong); }
+/* Points columns are sized to fit "100.00" and right-aligned so the decimals line up. */
+.ep-register__row--score > :nth-child(5), .ep-register__row--score > :nth-child(6), .ep-register__row--score > :nth-child(7),
+.ep-register__head--score > :nth-child(5), .ep-register__head--score > :nth-child(6), .ep-register__head--score > :nth-child(7) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ep-register__row--score > :nth-child(4) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ep-register__row--score > .ep-badge { white-space: normal; text-align: center; }
+.ep-score__split { display: none; }
 @media (min-width: 992px) and (max-width: 1279.98px) {
-  /* Narrower screens drop the split points; total and rank stay. */
-  .ep-register__head--score, .ep-register__row--score { grid-template-columns: 40px minmax(0, 1fr) 120px 60px 110px; }
-  .ep-register__head--score > :nth-child(3), .ep-register__row--score > :nth-child(3),
-  .ep-register__head--score > :nth-child(5), .ep-register__row--score > :nth-child(5),
-  .ep-register__head--score > :nth-child(6), .ep-register__row--score > :nth-child(6) { display: none; }
+  /* Narrower screens keep every score: the columns tighten instead of disappearing. */
+  .ep-register__head--score, .ep-register__row--score { grid-template-columns: 36px minmax(0, 1fr) 60px 118px 50px 46px 54px 96px; gap: 10px; padding-left: 16px; padding-right: 16px; }
 }
 @media (max-width: 991.98px) {
-  /* Phone card: rank on the left; bidder and total on the first line; price and evaluation on the second. */
-  .ep-register__row--score { grid-template-columns: 26px minmax(0, 1fr) auto; grid-template-areas: "rank bidder total" "rank price badge"; gap: 6px 12px; align-items: start; }
+  /* Phone card: rank on the left; bidder and total on the first line; bid price and evaluation on the second;
+     price and preference points on the third, so no score is hidden. */
+  .ep-register__row--score { grid-template-columns: 26px minmax(0, 1fr) auto; grid-template-areas: "rank bidder total" "rank price badge" "rank split split"; gap: 6px 12px; align-items: start; }
   .ep-register__row--score > :nth-child(1) { grid-area: rank; }
   .ep-register__row--score > :nth-child(2) { grid-area: bidder; }
   .ep-register__row--score > :nth-child(4) { grid-area: price; display: block; color: var(--ep-muted); }
   .ep-register__row--score > :nth-child(7) { grid-area: total; display: block; text-align: right; }
   .ep-register__row--score > :nth-child(7)::after { content: " pts"; font-weight: 400; color: var(--ep-muted); }
   .ep-register__row--score > :nth-child(8) { grid-area: badge; justify-self: end; }
+  .ep-register__row--score > .ep-score__split { grid-area: split; display: block; font-size: 11.5px; color: var(--ep-muted); }
   .ep-register__row--score > :nth-child(3), .ep-register__row--score > :nth-child(5), .ep-register__row--score > :nth-child(6) { display: none; }
 }
 

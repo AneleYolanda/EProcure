@@ -772,3 +772,27 @@ feat: supplier track record (also at registration) and an optional functionality
 ```
 feat: technical proposal on the checklist; compliance documents with validity rules, expiry reminders and reuse in bids
 ```
+
+## Step 17: The committee chooses, and search across the lists
+
+### What was built
+- The BEC recommendation form no longer pre-selects the top-ranked bid; the guidance reads "The points are worked out from
+  the formula; the committee decides" (D56). Points, ranking and the written-reasons rule are unchanged.
+- Search (D57): the admin top bar searches tenders, received applications or the audit trail depending on the page (keeping a
+  tender filter on applications); the audit trail keeps the search across pages; suppliers can search "My applications".
+  Sealed bids are found by reference or tender only, never by company. `Services/SearchRules.cs`.
+- Tests: 6 new (198 in total).
+- Scores shown in full: between 992 and 1279 px the scoresheet used to hide the B-BBEE, price and preference columns, and on
+  the bid page long functionality criteria pushed the ratings off the card. The columns now tighten instead of disappearing
+  (phones get a "Level · Price · Pref." line), points are right-aligned, and long criterion labels wrap (`ep-kv--long`, also
+  on the supplier's tender page).
+
+### Verified in the browser (Visual Studio run, as the RBIDZ SCM Officer)
+- Applications: "siyakha" found 2 open bids; "EP-2026-000001" found the sealed bid by reference; "Ltd" returned only opened
+  bids, no sealed ones. The top bar read "Search applications" on that page.
+- Audit trail: "Evaluator" found the evaluator's entries by name (views, captures, recommendations).
+- Scoresheet RBIDZ/2026/012 at 1100 px: all eight columns shown, nothing clipped (before: B-BBEE, price and preference
+  hidden); at 1366 px: nothing clipped. Bid EP-2026-000012: the three criterion ratings were 75 to 218 px off the card before
+  the fix and fully visible after it (checked with the new class applied in the page; the view change shows after a restart).
+- Not clicked through: the recommendation form without pre-selection (needs a tender in the BEC stage with every bid
+  evaluated; none in the demo data) and supplier "My applications" search.

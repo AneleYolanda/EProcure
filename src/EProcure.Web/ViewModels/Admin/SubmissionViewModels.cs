@@ -12,6 +12,8 @@ public class ReceivedApplicationsViewModel
 {
     public int? TenderId { get; set; }
     public string? TenderReference { get; set; }
+    /// <summary>Search text (application reference, tender, or company once bids are open).</summary>
+    public string? Query { get; set; }
     public IReadOnlyList<ReceivedApplicationRow> Rows { get; set; } = Array.Empty<ReceivedApplicationRow>();
 }
 
@@ -53,5 +55,7 @@ public class AuditPageViewModel
 {
     public int Page { get; set; }
     public int TotalPages { get; set; }
+    /// <summary>Search text (action, details, record, person or email).</summary>
+    public string? Query { get; set; }
     public IReadOnlyList<AuditRow> Rows { get; set; } = Array.Empty<AuditRow>();
 }

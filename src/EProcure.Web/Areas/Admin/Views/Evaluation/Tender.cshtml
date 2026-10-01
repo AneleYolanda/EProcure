@@ -75,6 +75,8 @@
                             {
                                 <span class="ep-badge" title="@bid.Evaluation.NonResponsiveReason">Not responsive</span>
                             }
+                            @* Phones only: the split points, which have no column of their own there. *@
+                            <span class="ep-score__split">@(bid.Level == BbbeeLevel.NonCompliant ? "Non-compliant" : $"Level {(int)bid.Level}") · Price @DisplayFormat.Points(s.PricePoints) · Pref. @DisplayFormat.Points(s.PreferencePoints)</span>
                         </a>
                     }
                 </section>
@@ -140,7 +142,7 @@
                         }
                         else
                         {
-                            <div class="ep-side-card__text">Submitting locks the scoresheet exactly as it is now. Choosing a bid that is not ranked first, or breaking a tie, needs written reasons.</div>
+                            <div class="ep-side-card__text">The points are worked out from the formula; the committee decides. Choose the bid you recommend. Choosing a bid that is not ranked first, or breaking a tie, needs written reasons. Submitting locks the scoresheet exactly as it is now.</div>
                             <form asp-action="Recommend" asp-route-id="@sheet.TenderId" method="post" class="ep-mt-14">
                                 <div class="ep-options ep-options--single">
                                     @foreach (var bid in ranked)

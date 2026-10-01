@@ -140,7 +140,7 @@
                                 @foreach (var (criterionId, name, weight) in Model.Criteria)
                                 {
                                     var rating = f.Ratings.GetValueOrDefault(criterionId);
-                                    <div class="ep-kv"><span class="ep-kv__k">@name (@weight)</span><span class="ep-kv__v">@rating · @EvaluationRules.RatingLabel(rating ?? -1)</span></div>
+                                    <div class="ep-kv ep-kv--long"><span class="ep-kv__k">@name (@weight)</span><span class="ep-kv__v">@rating · @EvaluationRules.RatingLabel(rating ?? -1)</span></div>
                                 }
                             }
                             @if (responsive && f.BidPrice is decimal price)

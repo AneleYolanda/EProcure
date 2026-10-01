@@ -37,8 +37,8 @@ public class SubmissionsController : Controller
         _userManager = userManager;
     }
 
-    // GET /Admin/Submissions   or   /Admin/Submissions?tenderId=5
-    public async Task<IActionResult> Index(int? tenderId, CancellationToken ct)
+    // GET /Admin/Submissions   or   /Admin/Submissions?tenderId=5&q=plumbing
+    public async Task<IActionResult> Index(int? tenderId, string? q, CancellationToken ct)
     {
         var query = _db.Submissions.AsNoTracking();
         if (tenderId is not null) query = query.Where(s => s.TenderId == tenderId);
@@ -73,7 +73,10 @@ public class SubmissionsController : Controller
             : await _db.Tenders.Where(t => t.Id == tenderId).Select(t => t.ReferenceNumber).SingleOrDefaultAsync(ct);
         if (tenderId is not null && tenderRef is null) return NotFound(); // not this organisation's tender
 
-        return View(new ReceivedApplicationsViewModel { TenderId = tenderId, TenderReference = tenderRef, Rows = rows });
+        return View(new ReceivedApplicationsViewModel
+        {
+            TenderId = tenderId, TenderReference = tenderRef, Query = SearchRules.Term(q), Rows = SearchRules.FilterApplications(rows, q)
+        });
     }
 
     // GET /Admin/Submissions/Details/12

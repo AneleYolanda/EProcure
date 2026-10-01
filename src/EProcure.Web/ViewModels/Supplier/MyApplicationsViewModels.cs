@@ -6,6 +6,13 @@ namespace EProcure.Web.ViewModels.Supplier;
 public record MyApplicationRow(int Id, string TenderReference, string TenderTitle, string OrganisationName,
     string CompanyName, SubmissionStatus Status, DateTime CreatedAtUtc, DateTime? SubmittedAtUtc);
 
+/// <summary>"My applications" with the supplier's search text.</summary>
+public class MyApplicationsViewModel
+{
+    public string? Query { get; set; }
+    public IReadOnlyList<MyApplicationRow> Rows { get; set; } = Array.Empty<MyApplicationRow>();
+}
+
 /// <summary>One application as its supplier sees it (design screen "sAppDetail").</summary>
 public class MyApplicationDetailsViewModel
 {

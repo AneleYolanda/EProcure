@@ -40,17 +40,21 @@ public class ApplicationsController : Controller
     private string UserId => _userManager.GetUserId(User)!;
 
     // GET /Supplier/Applications   (journey step 6: track my applications; design "sApps")
-    public async Task<IActionResult> Index(CancellationToken ct)
+    public async Task<IActionResult> Index(string? q, CancellationToken ct)
     {
         var companyId = await _db.SupplierProfiles.Where(p => p.UserId == UserId).Select(p => p.CompanyId).SingleOrDefaultAsync(ct);
+        var term = SearchRules.Term(q);
         // Only this supplier's own company: another company's applications are never part of the query.
-        var rows = companyId is null ? new List<MyApplicationRow>() : await _db.Submissions.AsNoTracking()
-            .Where(s => s.CompanyId == companyId)
+        var query = _db.Submissions.AsNoTracking().Where(s => s.CompanyId == companyId);
+        if (term is not null)
+            query = query.Where(s => s.Tender.ReferenceNumber.Contains(term) || s.Tender.Title.Contains(term)
+                || s.Tender.Organisation.Name.Contains(term) || (s.ReferenceNumber != null && s.ReferenceNumber.Contains(term)));
+        var rows = companyId is null ? new List<MyApplicationRow>() : await query
             .OrderByDescending(s => s.CreatedAtUtc)
             .Select(s => new MyApplicationRow(s.Id, s.Tender.ReferenceNumber, s.Tender.Title, s.Tender.Organisation.Name,
                 s.Company.Name, s.Status, s.CreatedAtUtc, s.SubmittedAtUtc))
             .ToListAsync(ct);
-        return View("Index", rows);
+        return View("Index", new MyApplicationsViewModel { Query = term, Rows = rows });
     }
 
     // GET /Supplier/Applications/Details/12   (design "sAppDetail")

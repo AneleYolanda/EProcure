@@ -145,7 +145,8 @@ public class EvaluationController : Controller
             Sheet = sheet,
             IsBecMember = User.IsInRole(AppRoles.Evaluator),
             IsScmOfficer = User.IsInRole(AppRoles.OrgAdmin),
-            Recommend = new RecommendForm { RecommendedSubmissionId = sheet.TopRanked?.SubmissionId },
+            // Nothing is pre-selected: the BEC actively chooses the bid it recommends. The ranking is a guide.
+            Recommend = new RecommendForm(),
             Award = new AwardForm { SubmissionId = sheet.Recommended?.SubmissionId, DecisionDateLocal = Infrastructure.SaTime.ToSast(DateTime.UtcNow).Date }
         };
     }
